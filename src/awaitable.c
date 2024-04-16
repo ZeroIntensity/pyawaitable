@@ -1,5 +1,5 @@
 /* *INDENT-OFF* */
-// This code follows PEP 7
+// This code follows PEP 7 and CPython API conventions
 #include "pyerrors.h"
 #include <awaitable.h>
 #include <stdarg.h>
