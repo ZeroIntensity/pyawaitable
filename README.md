@@ -25,7 +25,8 @@ hello(PyObject *self, PyObject *coro) {
         Py_DECREF(awaitable);
         return NULL;
     }
-    
+
+    // Return the awaitable object to yield to the event loop
     return awaitable;
 }
 ```
@@ -36,6 +37,7 @@ async def coro():
     await asyncio.sleep(1)
     print("awaited from C!")
 
+# Use our C function to await coro
 await hello(coro())
 ```
 
