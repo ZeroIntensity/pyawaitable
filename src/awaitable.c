@@ -1,4 +1,5 @@
 /* *INDENT-OFF* */
+// This code follows PEP 7
 #include "pyerrors.h"
 #include <awaitable.h>
 #include <stdarg.h>
