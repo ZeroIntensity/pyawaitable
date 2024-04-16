@@ -8,11 +8,13 @@ Motivation
 
 CPython currently has no existing C interface for writing asynchronous functions or doing any sort of ``await`` operations, other than defining extension types and manually implementing methods like ``__await__`` from scratch. This lack of an API can be seen in some Python-to-C transpilers (such as ``mypyc``) having limited support for asynchronous code.
 
-In the current C API, developers are forced to do one of three things when it comes to asynchronous code:
+In the C API, developers are forced to do one of three things when it comes to asynchronous code:
 
 - Manually implementing coroutines using extension types.
 - Use an external tool to compile their asynchronous code to C.
 - Defer their asynchronous logic to a synchronous Python function, and then call that natively.
+
+``PyAwaitable`` provides a proper interface for interacting with asynchronous Python code from C.
 
 Rationale
 =========
