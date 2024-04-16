@@ -1,7 +1,5 @@
 # Overview
 
-## C API
-
 **NOTE:** For all functions returning ``int``, ``0`` is a successful result and ``-1`` is a failure, per the existing CPython ABI.
 
 PyAwaitable adds a suite of API functions under the prefix of ``awaitable_``, as well as a new ``AwaitableObject`` structure along with a ``AwaitableType`` (known in Python as ``awaitable``). This is an object that implements ``collections.abc.Coroutine``. The list of functions is as follows:
@@ -17,13 +15,11 @@ PyAwaitable adds a suite of API functions under the prefix of ``awaitable_``, as
 
 PyAwaitable also adds these typedefs:
 
-::
-
-    typedef int (*awaitcallback)(PyObject *, PyObject *);
-    typedef int (*awaitcallback_err)(PyObject *, PyObject *);
-    typedef struct _AwaitableObject AwaitableObject;
-
-## Lifecycle
+```c
+typedef int (*awaitcallback)(PyObject *, PyObject *);
+typedef int (*awaitcallback_err)(PyObject *, PyObject *);
+typedef struct _AwaitableObject AwaitableObject;
+```
 
 An ``AwaitableObject*`` stores an array of strong references to coroutines, which are then yielded to the event loop by an iterator returned by the ``AwaitableObject*``'s ``__await__``. This is done with an extra type, called ``_GenWrapper`` (in the API defined as ``_Awaitable_GenWrapper_Type``), which will defer the result to the ``__next__`` of the coroutine iterator currently being executed.
 
