@@ -1,6 +1,8 @@
 PyAwaitable
 ===========
-  
+
+**NOTE:** This README is a scrapped PEP from 
+
 Motivation
 ==========
 
@@ -314,47 +316,6 @@ An example of saving and unpacking values is shown below:
         return 39
 
     await spam(3, foo())  # 42
-
-Backwards Compatibility
-=======================
-
-This PEP does not break any existing code, but existing code relying on coroutines to be native generators (via something like ``inspect.iscoroutine``) will not work with a ``PyAwaitableObject*``. 
-
-How to Teach This
-=================
-
-This can be taught in the same way as other C API features: writing a section about it in the documentation.
-
-Reference Implementation
-========================
-
-An implementation of this PEP can be found `here <https://gist.github.com/ZeroIntensity/5cd960b0b9ce1e27a99fb11aee434d46>`_.
-
-Open Issues
-===========
-
-- Adding extra functions for values arrays, such as ``PyAwaitable_ClearValues``, ``PyAwaitable_SetValue``, and ``PyAwaitable_GetValue``. 
-
-Rejected Ideas
-==============
-
-- Adding a special case to ``inspect.iscoroutine`` to force it to return ``True`` for ``PyAwaitableObject*`` instances.
-
-Footnotes
-=========
-
-.. [1] Adding a C API for coroutines/awaitables
-    https://discuss.python.org/t/adding-a-c-api-for-coroutines-awaitables/22786
-.. [2] C API for asynchronous functions
-    https://discuss.python.org/t/c-api-for-asynchronous-functions/42842
-.. [3] collections.abc.Coroutine
-    https://docs.python.org/3/library/collections.abc.html#collections.abc.Coroutine
-.. [4] Reference Implementation
-    https://gist.github.com/ZeroIntensity/5cd960b0b9ce1e27a99fb11aee434d46
-.. [5] mypyc - Finish async support
-    https://github.com/mypyc/mypyc/issues/868
-.. [6] abstract.c - PyIter_Send
-    https://github.com/python/cpython/blob/main/Objects/abstract.c#L2942
 
 Copyright
 =========
