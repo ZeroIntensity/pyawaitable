@@ -5,6 +5,10 @@ repo_name: ZeroIntensity/pyawaitable
 
 nav:
     - Home: index.md
+    - Overview: overview.md
+    - Awaiting Coroutines: adding_coros.md
+    - Callbacks: callbacks.md
+    - Storing and Fetching Values: storing_and_fetching.md
 
 theme: readthedocs
 
