@@ -1,10 +1,8 @@
-PyAwaitable
-===========
+# PyAwaitable
 
-**NOTE:** This README is a scrapped PEP. For the original text, see `here <https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926>`_.
+**NOTE:** This README is a scrapped PEP. For the original text, see [here](https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926).
 
-Motivation
-==========
+## Motivation
 
 CPython currently has no existing C interface for writing asynchronous functions or doing any sort of ``await`` operations, other than defining extension types and manually implementing methods like ``__await__`` from scratch. This lack of an API can be seen in some Python-to-C transpilers (such as ``mypyc``) having limited support for asynchronous code.
 
@@ -16,18 +14,13 @@ In the C API, developers are forced to do one of three things when it comes to a
 
 ``PyAwaitable`` provides a proper interface for interacting with asynchronous Python code from C.
 
-Rationale
-=========
+## Rationale
 
 This API aims to provide a *generic* interface for working with asynchronous primitives only, as there are other event loop implementations.
 
 For this reason, ``PyAwaitable`` does not provide any interface for executing C blocking I/O, as that would likely require leveraging something in the event loop implementation (in ``asyncio``, it would be something like ``asyncio.to_thread``).
 
-Specification
-=============
-
-C API
------
+## C API
 
 **NOTE:** For all functions returning ``int``, ``0`` is a successful result and ``-1`` is a failure, per the existing CPython ABI.
 
@@ -42,7 +35,7 @@ PyAwaitable adds a suite of API functions under the prefix of ``awaitable_``, as
 - ``int awaitable_unpack(PyObject *awaitable, ...)``
 - ``int awaitable_unpack_arb(PyObject *awaitable, ...)``
 
-This PEP also adds these new typedefs:
+PyAwaitable also adds these typedefs:
 
 ::
 
@@ -50,8 +43,7 @@ This PEP also adds these new typedefs:
     typedef int (*awaitcallback_err)(PyObject *, PyObject *);
     typedef struct _AwaitableObject AwaitableObject;
 
-Overview
---------
+## Overview
 
 An ``AwaitableObject*`` stores an array of strong references to coroutines, which are then yielded to the event loop by an iterator returned by the ``AwaitableObject*``'s ``__await__``. This is done with an extra type, called ``_GenWrapper`` (in the API defined as ``_Awaitable_GenWrapper_Type``), which will defer the result to the ``__next__`` of the coroutine iterator currently being executed.
 
@@ -66,8 +58,7 @@ The lifecycle of this process is as follows:
 - Finally, once the final coroutine is done, the iterator must raise ``StopIteration`` with the return value upon the next call to ``__next__``. After a ``StopIteration`` has been raised, then the awaitable object is marked as done. At this point, a ``RuntimeError`` should be raised upon trying to call ``__next__``, ``__await__``, or any ``PyAwaitable*`` functions.
 - If at any point during this process, an exception is raised (including by coroutine result callbacks), the error callback of the coroutine being executed is called with the raised exception.
 
-Semantics
----------
+## Semantics
 
 Returning an ``AwaitableObject*`` from a C function will mimic a Python function defined with ``async def``. This means it supports using ``await`` on the result of the function, as well as functions relating to coroutine operations, such as ``asyncio.run``, regardless of whether it has any coroutines stored. The public interface for creating an ``AwaitableObject*`` is ``awaitalbe_new``, which may return a ``PyObject*`` or ``NULL``.
 
@@ -88,8 +79,7 @@ An example of basic usage would look like:
     await spam()
 
 
-Adding Coroutines
------------------
+## Adding Coroutines
 
 The public interface for adding a coroutine to be executed by the event loop is ``awaitable_await``, which takes four parameters:
 
@@ -148,8 +138,7 @@ An example of ``awaitable_await`` (without callbacks) is as follows:
     # foo! is printed, then bar!
 
 
-Callbacks
----------
+## Callbacks
 
 The first argument in an ``awaitcallback`` is the ``AwaitableObject*`` (casted to a ``PyObject*``, once again), and the second argument is the result of the coroutine. Both of these are borrowed references, and should not be ``Py_DECREF``'d by the user. The return value of this function must be an integer. Any value below ``0`` denotes an error occurred, but there are two different ways to handle it:
 
@@ -195,13 +184,11 @@ An example of using callbacks is shown below:
         return awaitable;
     }
 
-Setting Results
----------------
+## Setting Results
 
 ``awaitable_res_result`` is the API function for setting the return value of an ``AwaitableObject*``. If ``awaitable_set_result`` is never called, the default return value is ``None``. This function may be called multiple times, in which case the previous return value is replaced. The ``AwaitableObject*`` will store a strong reference to the result, and is only decremented upon deallocation (or upon setting a new result).
 
-Cancelling
-----------
+## Cancelling
 
 The function for cancelling an ``AwaitableObject*`` is ``awaitable_cancel``. This function will decrement any references to coroutines added. This function should only be used in callbacks and will raise a ``SystemError`` if called without any coroutines added. Note that coroutines may be added after this function is called, but is only possible to do in the same callback (as execution will stop when no coroutines are left). An example of usage is below:
 
@@ -220,8 +207,7 @@ The function for cancelling an ``AwaitableObject*`` is ``awaitable_cancel``. Thi
         return 0;
     }
 
-Storing and Fetching Values
----------------------------
+## Storing and Fetching Values
 
 Every ``AwaitableObject*`` will contain an array of strong references to ``PyObject*``'s, as well as an array of ``void*`` (referred to as arbitrary values here). Both of these arrays are separate, and deallocated at the end of the object's lifetime. ``awaitable_save*`` functions are the public functions for saving values to a ``AwaitableObject*``. ``awaitable_save*`` functions append to the existing array if called multiple times. These functions are varadic, and are supplied a ``nargs`` parameter specifying the number of values. 
 
@@ -293,7 +279,6 @@ An example of saving and unpacking values is shown below:
 
     await spam(3, foo())  # 42
 
-Copyright
-=========
+## Copyright
 
-`pyawaitable` is distributed under the terms of the `MIT <https://spdx.org/licenses/MIT.html>`_ license.
+`pyawaitable` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html>) license.
