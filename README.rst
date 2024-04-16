@@ -24,8 +24,8 @@ For this reason, ``PyAwaitable`` does not provide any interface for executing C 
 Specification
 =============
 
-Additions to the C API
-----------------------
+C API
+-----
 
 **NOTE:** For all functions returning ``int``, ``0`` is a successful result and ``-1`` is a failure, per the existing CPython ABI.
 
