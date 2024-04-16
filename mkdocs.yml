@@ -13,14 +13,7 @@ nav:
 theme: readthedocs
 
 markdown_extensions:
-    - pymdownx.highlight:
-        anchor_linenums: true
-    - pymdownx.superfences
-    - pymdownx.inlinehilite
-    - pymdownx.snippets
     - admonition
-    - pymdownx.details
-    - pymdownx.tabbed:
-          alternate_style: true
+
 plugins:
     - search
