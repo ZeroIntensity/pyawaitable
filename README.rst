@@ -27,7 +27,7 @@ Specification
 Additions to the C API
 ----------------------
 
-**NOTE:** For all functions returning ``int`` in this PEP, ``0`` is a successful result and ``-1`` is a failure.
+**NOTE:** For all functions returning ``int``, ``0`` is a successful result and ``-1`` is a failure, per the existing CPython ABI.
 
 PyAwaitable adds a suite of API functions under the prefix of ``awaitable_``, as well as a new ``AwaitableObject`` structure along with a ``AwaitableType`` (known in Python as ``awaitable``). This is an object that implements ``collections.abc.Coroutine``. The list of functions is as follows:
 
