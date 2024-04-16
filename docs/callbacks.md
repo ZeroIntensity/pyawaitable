@@ -14,32 +14,33 @@ If either of these callbacks return an error value without an exception set, a `
 
 An example of using callbacks is shown below:
 
-::
-    static int
-    spam_callback(PyObject *awaitable, PyObject *result)
-    {
-        printf("coro returned result: ");
-        PyObject_Print(result, stdout, Py_PRINT_RAW);
-        putc('\n');
+```d
+static int
+spam_callback(PyObject *awaitable, PyObject *result)
+{
+    printf("coro returned result: ");
+    PyObject_Print(result, stdout, Py_PRINT_RAW);
+    putc('\n');
 
-        return 0;
+    return 0;
+}
+
+
+static PyObject *
+spam(PyObject *self, PyObject *args)
+{
+    PyObject *coro;
+    if (!PyArg_ParseTuple(args, "O", &coro))
+        return NULL;
+
+    PyObject *awaitable = awaitable_new();
+
+    if (awaitable_await(awaitable, coro, spam_callback, NULL) < 0)
+    {
+        Py_DECREF(awaitable);
+        return NULL;
     }
 
-
-    static PyObject *
-    spam(PyObject *self, PyObject *args)
-    {
-        PyObject *coro;
-        if (!PyArg_ParseTuple(args, "O", &coro))
-            return NULL;
-
-        PyObject *awaitable = awaitable_new();
-
-        if (awaitable_await(awaitable, coro, spam_callback, NULL) < 0)
-        {
-            Py_DECREF(awaitable);
-            return NULL;
-        }
-
-        return awaitable;
-    }
+    return awaitable;
+}
+```
