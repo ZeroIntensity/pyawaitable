@@ -431,7 +431,7 @@ awaitable_cancel(PyObject *aw)
 }
 
 int
-PyAwaitable_AddAwait(
+awaitable_await(
     PyObject *aw,
     PyObject *coro,
     awaitcallback cb,
@@ -442,7 +442,7 @@ PyAwaitable_AddAwait(
     assert(coro != NULL);
     Py_INCREF(coro);
     Py_INCREF(aw);
-    PyAwaitableObject *a = (PyAwaitableObject *) aw;
+    AwaitableObject *a = (AwaitableObject *) aw;
 
     awaitable_callback *aw_c = malloc(sizeof(awaitable_callback));
     if (aw_c == NULL) {
@@ -481,30 +481,30 @@ PyAwaitable_AddAwait(
 }
 
 int
-PyAwaitable_SetResult(PyObject *awaitable, PyObject *result)
+awaitable_set_result(PyObject *awaitable, PyObject *result)
 {
     assert(awaitable != NULL);
     assert(result != NULL);
     Py_INCREF(result);
     Py_INCREF(awaitable);
 
-    PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
+    AwaitableObject *aw = (AwaitableObject *) awaitable;
     if (aw->aw_gen == NULL) {
         PyErr_SetString(PyExc_TypeError, "no generator is currently present");
         Py_DECREF(awaitable);
         Py_DECREF(result);
         return -1;
     }
-    _PyAwaitable_GenWrapper_SetResult(aw->aw_gen, result);
+    _awaitable_genwrapper_set_result(aw->aw_gen, result);
     Py_DECREF(awaitable);
     Py_DECREF(result);
     return 0;
 }
 
 int
-PyAwaitable_UnpackValues(PyObject *awaitable, ...) {
+awaitable_unpack(PyObject *awaitable, ...) {
     assert(awaitable != NULL);
-    PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
+    AwaitableObject *aw = (AwaitableObject *) awaitable;
     Py_INCREF(awaitable);
 
     if (aw->aw_values == NULL) {
@@ -530,11 +530,11 @@ PyAwaitable_UnpackValues(PyObject *awaitable, ...) {
 }
 
 int
-PyAwaitable_SaveValues(PyObject *awaitable, Py_ssize_t nargs, ...) {
+awaitable_save(PyObject *awaitable, Py_ssize_t nargs, ...) {
     assert(awaitable != NULL);
     assert(nargs != 0);
     Py_INCREF(awaitable);
-    PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
+    AwaitableObject *aw = (AwaitableObject *) awaitable;
 
     va_list vargs;
     va_start(vargs, nargs);
@@ -568,9 +568,9 @@ PyAwaitable_SaveValues(PyObject *awaitable, Py_ssize_t nargs, ...) {
 }
 
 int
-PyAwaitable_UnpackArbValues(PyObject *awaitable, ...) {
+awaitable_unpack_arb(PyObject *awaitable, ...) {
     assert(awaitable != NULL);
-    PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
+    AwaitableObject *aw = (AwaitableObject *) awaitable;
     Py_INCREF(awaitable);
 
     if (aw->aw_values == NULL) {
@@ -594,23 +594,12 @@ PyAwaitable_UnpackArbValues(PyObject *awaitable, ...) {
     return 0;
 }
 
-void
-PyAwaitable_SetArbValue(PyObject *awaitable, Py_ssize_t index, void *ptr) {
-    assert(awaitable != NULL);
-    assert(index >= 0);
-    Py_INCREF(awaitable);
-    PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
-
-    aw->aw_arb_values[index] = ptr;
-    Py_DECREF(awaitable);
-}
-
 int
-PyAwaitable_SaveArbValues(PyObject *awaitable, Py_ssize_t nargs, ...) {
+awaitable_save_arb(PyObject *awaitable, Py_ssize_t nargs, ...) {
     assert(awaitable != NULL);
     assert(nargs != 0);
     Py_INCREF(awaitable);
-    PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
+    AwaitableObject *aw = (AwaitableObject *) awaitable;
 
     va_list vargs;
     va_start(vargs, nargs);
@@ -644,8 +633,8 @@ PyAwaitable_SaveArbValues(PyObject *awaitable, Py_ssize_t nargs, ...) {
 }
 
 PyObject *
-PyAwaitable_New()
+awaitable_new()
 {
-    PyObject *aw = awaitable_new(&PyAwaitable_Type, NULL, NULL);
+    PyObject *aw = awaitable_new_func(&AwaitableType, NULL, NULL);
     return aw;
 }
