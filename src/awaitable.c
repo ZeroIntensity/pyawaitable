@@ -29,7 +29,7 @@ struct _AwaitableObject {
 typedef struct {
     PyObject_HEAD
     PyObject *gw_result;
-    PyAwaitableObject *gw_aw;
+    AwaitableObject *gw_aw;
     PyObject *gw_current_await;
 } GenWrapperObject;
 
@@ -91,17 +91,17 @@ gen_dealloc(PyObject *self)
 }
 
 static PyObject *
-_awaitable_genwrapper_new(PyAwaitableObject *aw)
+_awaitable_genwrapper_new(AwaitableObject *aw)
 {
     assert(aw != NULL);
     GenWrapperObject *g = (GenWrapperObject *) gen_new(
-        &_PyAwaitable_GenWrapper_Type,
+        &AwaitableGenWrapperType,
         NULL,
         NULL
     );
 
     if (g == NULL) return NULL;
-    g->gw_aw = (PyAwaitableObject *) Py_NewRef((PyObject *) aw);
+    g->gw_aw = (AwaitableObject *) Py_NewRef((PyObject *) aw);
     return (PyObject *) g;
 }
 
@@ -271,7 +271,7 @@ gen_next(PyObject *self)
 static PyObject *
 awaitable_next(PyObject *self)
 {
-    PyAwaitableObject *aw = (PyAwaitableObject *) self;
+    AwaitableObject *aw = (AwaitableObject *) self;
 
 
     if (aw->aw_done) {
