@@ -12,7 +12,7 @@ typedef struct {
     bool done;
 } awaitable_callback;
 
-struct _PyAwaitableObject {
+struct _AwaitableObject {
     PyObject_HEAD
     awaitable_callback **aw_callbacks;
     Py_ssize_t aw_callback_size;
@@ -37,7 +37,7 @@ PyDoc_STRVAR(awaitable_doc,
     "Awaitable transport utility for the C API.");
 
 static PyObject *
-awaitable_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
+awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
 {
     assert(tp != NULL);
     assert(tp->tp_alloc != NULL);
@@ -47,7 +47,7 @@ awaitable_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    PyAwaitableObject *aw = (PyAwaitableObject *) self;
+    AwaitableObject *aw = (AwaitableObject *) self;
     aw->aw_callbacks = NULL;
     aw->aw_callback_size = 0;
     aw->aw_result = NULL;
@@ -91,7 +91,7 @@ gen_dealloc(PyObject *self)
 }
 
 static PyObject *
-_PyAwaitable_GenWrapper_New(PyAwaitableObject *aw)
+_awaitable_genwrapper_new(PyAwaitableObject *aw)
 {
     assert(aw != NULL);
     GenWrapperObject *g = (GenWrapperObject *) gen_new(
@@ -106,7 +106,7 @@ _PyAwaitable_GenWrapper_New(PyAwaitableObject *aw)
 }
 
 static void
-_PyAwaitable_GenWrapper_SetResult(PyObject *gen, PyObject *result)
+_awaitable_genwrapper_set_result(PyObject *gen, PyObject *result)
 {
     assert(gen != NULL);
     assert(result != NULL);
@@ -162,7 +162,7 @@ static PyObject *
 gen_next(PyObject *self)
 {
     GenWrapperObject *g = (GenWrapperObject *) self;
-    PyAwaitableObject *aw = g->gw_aw;
+    AwaitableObject *aw = g->gw_aw;
     awaitable_callback *cb;
     if (((aw->aw_state + 1) > aw->aw_callback_size) &&
         g->gw_current_await == NULL) {
@@ -279,7 +279,7 @@ awaitable_next(PyObject *self)
         return NULL;
     }
 
-    PyObject* gen = _PyAwaitable_GenWrapper_New(aw);
+    PyObject* gen = _awaitable_genwrapper_new(aw);
 
     if (gen == NULL) {
         return NULL;
@@ -293,7 +293,7 @@ awaitable_next(PyObject *self)
 static void
 awaitable_dealloc(PyObject *self)
 {
-    PyAwaitableObject *aw = (PyAwaitableObject *) self;
+    AwaitableObject *aw = (AwaitableObject *) self;
     if (aw->aw_values) {
         for (int i = 0; i < aw->aw_values_size; i++)
             Py_DECREF(aw->aw_values[i]);
@@ -316,12 +316,12 @@ awaitable_dealloc(PyObject *self)
 static PyObject *
 awaitable_repr(PyObject *self) {
     assert(self != NULL);
-    PyAwaitableObject *aw = (PyAwaitableObject *) self;
+    AwaitableObject *aw = (AwaitableObject *) self;
     Py_ssize_t done_size = 0;
     for (int i = 0; i < aw->aw_callback_size; i++) {
         if (aw->aw_callbacks[i]->done) ++done_size;
     }
-    return PyUnicode_FromFormat("<builtin awaitable at %p>",
+    return PyUnicode_FromFormat("<built-in awaitable at %p>",
                                 self);
 }
 
@@ -329,7 +329,7 @@ static PyAsyncMethods async_methods = {
     .am_await = awaitable_next
 };
 
-PyTypeObject _PyAwaitable_GenWrapper_Type = {
+PyTypeObject _GenWrapperType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "_GenWrapper", 
     sizeof(GenWrapperObject),
@@ -370,10 +370,10 @@ PyTypeObject _PyAwaitable_GenWrapper_Type = {
     gen_new,                                    /* tp_new */
 };
 
-PyTypeObject PyAwaitable_Type = {
+PyTypeObject AwaitableType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "awaitable",
-    sizeof(PyAwaitableObject),
+    sizeof(AwaitableObject),
     0,
     awaitable_dealloc,                          /* tp_dealloc */
     0,                                          /* tp_vectorcall_offset */
@@ -412,12 +412,12 @@ PyTypeObject PyAwaitable_Type = {
 };
 
 void
-PyAwaitable_Cancel(PyObject *aw)
+awaitable_cancel(PyObject *aw)
 {
     assert(aw != NULL);
     Py_INCREF(aw);
 
-    PyAwaitableObject *a = (PyAwaitableObject *) aw;
+    AwaitableObject *a = (AwaitableObject *) aw;
 
     for (int i = 0; i < a->aw_callback_size; i++) {
         awaitable_callback* cb = a->aw_callbacks[i];
