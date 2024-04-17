@@ -306,7 +306,7 @@ awaitable_dealloc(PyObject *self)
     for (int i = 0; i < aw->aw_callback_size; i++) {
         awaitable_callback *cb = aw->aw_callbacks[i];
         if (!cb->done) Py_DECREF(cb->coro);
-        free(cb);
+        PyMem_Free(cb);
     }
 
     if (aw->aw_arb_values) PyMem_Free(aw->aw_arb_values);
@@ -444,7 +444,7 @@ awaitable_await(
     Py_INCREF(aw);
     AwaitableObject *a = (AwaitableObject *) aw;
 
-    awaitable_callback *aw_c = malloc(sizeof(awaitable_callback));
+    awaitable_callback *aw_c = PyMem_Malloc(sizeof(awaitable_callback));
     if (aw_c == NULL) {
         Py_DECREF(aw);
         Py_DECREF(coro);
@@ -466,7 +466,7 @@ awaitable_await(
         --a->aw_callback_size;
         Py_DECREF(aw);
         Py_DECREF(coro);
-        free(aw_c);
+        PyMem_Free(aw_c);
         PyErr_NoMemory();
         return -1;
     }
