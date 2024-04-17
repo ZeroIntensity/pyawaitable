@@ -7,10 +7,10 @@
 typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *, PyObject *, PyObject *);
 
-typedef struct _PyAwaitableObject AwaitableObject;
+typedef struct _AwaitableObject AwaitableObject;
 
 extern PyTypeObject AwaitableType;
-extern PyTypeObject _Awaitable_GenWrapperType;
+extern PyTypeObject AwaitableGenWrapperType;
 
 PyObject *awaitable_new();
 
