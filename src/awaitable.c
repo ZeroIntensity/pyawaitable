@@ -1,5 +1,5 @@
 /* *INDENT-OFF* */
-// This code follows PEP 7 and CPython API conventions
+// This code follows PEP 7 and CPython ABI conventions
 #include "pyerrors.h"
 #include <awaitable.h>
 #include <stdarg.h>
@@ -329,7 +329,7 @@ static PyAsyncMethods async_methods = {
     .am_await = awaitable_next
 };
 
-PyTypeObject _GenWrapperType = {
+PyTypeObject AwaitableGenWrapperType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "_GenWrapper", 
     sizeof(GenWrapperObject),
