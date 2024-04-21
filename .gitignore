@@ -1,0 +1,8 @@
+__pycache__/
+.venv/
+compile_flags.txt
+*.egg-info
+build/
+test.py
+test/
+dist/

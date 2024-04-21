@@ -2,9 +2,9 @@
 
 ## CPython API for asynchronous functions
 
-- [Docs](https://awaitable.zintensity.dev)
-- [Sponsor](https://github.com/ZeroIntensity/sponsors)
-- [Scrapped PEP](https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926)
+-   [Docs](https://awaitable.zintensity.dev)
+-   [Sponsor](https://github.com/sponsors/ZeroIntensity)
+-   [Scrapped PEP](https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926)
 
 This project originates from a scrapped PEP. For the original text, see [here](https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926).
 

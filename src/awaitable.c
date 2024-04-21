@@ -1,9 +1,24 @@
 /* *INDENT-OFF* */
 // This code follows PEP 7 and CPython ABI conventions
+#include <Python.h>
 #include "pyerrors.h"
 #include <awaitable.h>
 #include <stdarg.h>
 #include <stdbool.h>
+
+#ifndef Py_NewRef
+static inline PyObject* Py_NewRef(PyObject* o) {
+    Py_INCREF(o);
+    return o;
+}
+#endif
+
+#ifndef Py_XNewRef
+static inline PyObject* Py_XNewRef(PyObject* o) {
+    Py_XINCREF(o);
+    return o;
+}
+#endif
 
 typedef struct {
     PyObject *coro;
@@ -313,102 +328,31 @@ awaitable_dealloc(PyObject *self)
     Py_TYPE(self)->tp_free(self);
 }
 
-static PyObject *
-awaitable_repr(PyObject *self) {
-    assert(self != NULL);
-    AwaitableObject *aw = (AwaitableObject *) self;
-    Py_ssize_t done_size = 0;
-    for (int i = 0; i < aw->aw_callback_size; i++) {
-        if (aw->aw_callbacks[i]->done) ++done_size;
-    }
-    return PyUnicode_FromFormat("<built-in awaitable at %p>",
-                                self);
-}
-
 static PyAsyncMethods async_methods = {
     .am_await = awaitable_next
 };
 
 PyTypeObject AwaitableGenWrapperType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "_GenWrapper", 
-    sizeof(GenWrapperObject),
-    0,
-    gen_dealloc,                                /* tp_dealloc */
-    0,                                          /* tp_vectorcall_offset */
-    0,                                          /* tp_getattr */
-    0,                                          /* tp_setattr */
-    0,                                          /* tp_as_async */
-    0,                                          /* tp_repr */
-    0,                                          /* tp_as_number */
-    0,                                          /* tp_as_sequence */
-    0,                                          /* tp_as_mapping */
-    0,                                          /* tp_hash */
-    0,                                          /* tp_call */
-    0,                                          /* tp_str */
-    0,                                          /* tp_getattro */
-    0,                                          /* tp_setattro */
-    0,                                          /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                         /* tp_flags */
-    PyDoc_STR(""),                              /* tp_doc */
-    0,                                          /* tp_traverse */
-    0,                                          /* tp_clear */
-    0,                                          /* tp_richcompare */
-    0,                                          /* tp_weaklistoffset */
-    PyObject_SelfIter,                          /* tp_iter */
-    gen_next,                                   /* tp_iternext */
-    0,                                          /* tp_methods */
-    0,                                          /* tp_members */
-    0,                                          /* tp_getset */
-    0,                                          /* tp_base */
-    0,                                          /* tp_dict */
-    0,                                          /* tp_descr_get */
-    0,                                          /* tp_descr_set */
-    0,                                          /* tp_dictoffset */
-    0,                                          /* tp_init */
-    0,                                          /* tp_alloc */
-    gen_new,                                    /* tp_new */
+    .tp_name = "_GenWrapper", 
+    .tp_basicsize = sizeof(GenWrapperObject),
+    .tp_dealloc = gen_dealloc,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_iter = PyObject_SelfIter,
+    .tp_iternext = gen_next,
+    .tp_new = gen_new,
 };
 
 PyTypeObject AwaitableType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "awaitable",
-    sizeof(AwaitableObject),
-    0,
-    awaitable_dealloc,                          /* tp_dealloc */
-    0,                                          /* tp_vectorcall_offset */
-    0,                                          /* tp_getattr */
-    0,                                          /* tp_setattr */
-    &async_methods,                             /* tp_as_async */
-    awaitable_repr,                             /* tp_repr */
-    0,                                          /* tp_as_number */
-    0,                                          /* tp_as_sequence */
-    0,                                          /* tp_as_mapping */
-    0,                                          /* tp_hash */
-    0,                                          /* tp_call */
-    0,                                          /* tp_str */
-    0,                                          /* tp_getattro */
-    0,                                          /* tp_setattro */
-    0,                                          /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                         /* tp_flags */
-    awaitable_doc,                              /* tp_doc */
-    0,                                          /* tp_traverse */
-    0,                                          /* tp_clear */
-    0,                                          /* tp_richcompare */
-    0,                                          /* tp_weaklistoffset */
-    0,                                          /* tp_iter */
-    awaitable_next,                             /* tp_iternext */
-    0,                                          /* tp_methods */
-    0,                                          /* tp_members */
-    0,                                          /* tp_getset */
-    0,                                          /* tp_base */
-    0,                                          /* tp_dict */
-    0,                                          /* tp_descr_get */
-    0,                                          /* tp_descr_set */
-    0,                                          /* tp_dictoffset */
-    0,                                          /* tp_init */
-    0,                                          /* tp_alloc */
-    awaitable_new,                              /* tp_new */
+    .tp_name = "_awaitable",
+    .tp_basicsize = sizeof(AwaitableObject),
+    .tp_dealloc = awaitable_dealloc,
+    .tp_as_async = &async_methods,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_doc = awaitable_doc,
+    .tp_iternext = awaitable_next,
+    .tp_new = awaitable_new_func,
 };
 
 void
@@ -502,7 +446,8 @@ awaitable_set_result(PyObject *awaitable, PyObject *result)
 }
 
 int
-awaitable_unpack(PyObject *awaitable, ...) {
+awaitable_unpack(PyObject *awaitable, ...)
+{
     assert(awaitable != NULL);
     AwaitableObject *aw = (AwaitableObject *) awaitable;
     Py_INCREF(awaitable);
@@ -530,7 +475,8 @@ awaitable_unpack(PyObject *awaitable, ...) {
 }
 
 int
-awaitable_save(PyObject *awaitable, Py_ssize_t nargs, ...) {
+awaitable_save(PyObject *awaitable, Py_ssize_t nargs, ...)
+{
     assert(awaitable != NULL);
     assert(nargs != 0);
     Py_INCREF(awaitable);
@@ -568,7 +514,8 @@ awaitable_save(PyObject *awaitable, Py_ssize_t nargs, ...) {
 }
 
 int
-awaitable_unpack_arb(PyObject *awaitable, ...) {
+awaitable_unpack_arb(PyObject *awaitable, ...)
+{
     assert(awaitable != NULL);
     AwaitableObject *aw = (AwaitableObject *) awaitable;
     Py_INCREF(awaitable);
@@ -595,7 +542,8 @@ awaitable_unpack_arb(PyObject *awaitable, ...) {
 }
 
 int
-awaitable_save_arb(PyObject *awaitable, Py_ssize_t nargs, ...) {
+awaitable_save_arb(PyObject *awaitable, Py_ssize_t nargs, ...)
+{
     assert(awaitable != NULL);
     assert(nargs != 0);
     Py_INCREF(awaitable);
@@ -633,8 +581,27 @@ awaitable_save_arb(PyObject *awaitable, Py_ssize_t nargs, ...) {
 }
 
 PyObject *
-awaitable_new()
+awaitable_new(void)
 {
     PyObject *aw = awaitable_new_func(&AwaitableType, NULL, NULL);
     return aw;
+}
+
+int
+awaitable_init(void)
+{
+    PyGILState_STATE state = PyGILState_Ensure();
+    if ((PyType_Ready(&AwaitableType) < 0) ||
+        (PyType_Ready(&AwaitableGenWrapperType) < 0))
+        return -1;
+
+    PyGILState_Release(state);
+    return 0;
+}
+
+
+PyMODINIT_FUNC PyInit__pyawaitable()
+{
+    PyErr_SetString(PyExc_RuntimeError, "_pyawaitable is not meant to be imported!");
+    return NULL;
 }
