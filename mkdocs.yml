@@ -14,8 +14,8 @@ theme:
     name: material
     palette:
         - media: "(prefers-color-scheme)"
-          primary: teal
-          accent: green
+          primary: grey
+          accent: light blue
           toggle:
               icon: material/brightness-auto
               name: Switch to light mode
@@ -23,8 +23,8 @@ theme:
         # Palette toggle for light mode
         - media: "(prefers-color-scheme: light)"
           scheme: default
-          primary: teal
-          accent: green
+          primary: grey
+          accent: light blue
           toggle:
               icon: material/brightness-7
               name: Switch to dark mode
@@ -32,8 +32,8 @@ theme:
         # Palette toggle for dark mode
         - media: "(prefers-color-scheme: dark)"
           scheme: slate
-          primary: teal
-          accent: green
+          primary: grey
+          accent: light blue
           toggle:
               icon: material/brightness-4
               name: Switch to system preference
