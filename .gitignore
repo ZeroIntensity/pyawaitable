@@ -6,3 +6,4 @@ build/
 test.py
 test/
 dist/
+.vscode/
