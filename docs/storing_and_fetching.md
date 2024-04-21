@@ -1,8 +1,18 @@
 # Storing and Fetching Values
 
-Every ``AwaitableObject*`` will contain an array of strong references to ``PyObject*``'s, as well as an array of ``void*`` (referred to as arbitrary values here). Both of these arrays are separate, and deallocated at the end of the object's lifetime. ``awaitable_save*`` functions are the public functions for saving values to a ``AwaitableObject*``. ``awaitable_save*`` functions append to the existing array if called multiple times. These functions are varadic, and are supplied a ``nargs`` parameter specifying the number of values. 
+## Basics
 
-An example of saving and unpacking values is shown below:
+Every ``AwaitableObject*`` will contain an array of strong references to ``PyObject*``'s, as well as an array of ``void*``. Both of these arrays are separate, and deallocated or `Py_DECREF`'d at the end of the object's lifetime. The two public interfaces for saving values are `awaitable_save` and `awaitable_save_arb`. These functions are variadic, and are supplied a ``nargs`` parameter specifying the number of values. 
+
+
+## Arbitrary vs Normal Values
+
+"Normal value" refers to a `PyObject*`, while "arbitrary value" refers to a `void*`. The main difference when using them is that the awaitable will increment the reference count of a normal value, while an arbitrary value has all memory management deferred to the user.
+
+- `awaitable_save` and `awaitable_unpack` are both about normal values, so they will increment and decrement reference counts accordingly.
+- `awaitable_save_arb` and `awaitable_unpack_arb` are both about *arbitrary* values, so they will not try to `Py_DECREF` nor `free` the pointer.
+
+## Example
 
 ```c
 static int
