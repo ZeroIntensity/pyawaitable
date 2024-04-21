@@ -41,6 +41,7 @@ spam(PyObject *self, PyObject *args)
     
     return awaitable;
 }
+```
 
 ```py
 import asyncio
