@@ -11,48 +11,47 @@ The awaitable is guaranteed to yield (or ``await``) each coroutine in the order 
 
 An example of ``awaitable_await`` (without callbacks) is as follows:
 
-::
-
-    static PyObject *
-    spam(PyObject *self, PyObject *args)
-    {
-        PyObject *foo;
-        PyObject *bar;
-        // In this example, these are both coroutines, not asynchronous functions
-        
-        if (!PyArg_ParseTuple(args, "OOO", &foo, &bar))
-            return NULL;
-
-        PyObject *awaitable = awaitable_new();
-
-        if (awaitable == NULL)
-            return NULL;
-
-        if (awaitable_await(awaitable, foo, NULL, NULL) < 0)
-        {
-            Py_DECREF(awaitable);
-            return NULL;
-        }
-        
-        if (awaitable_await(awaitable, bar, NULL, NULL) < 0)
-        {
-            Py_DECREF(awaitable);
-            return NULL;
-        }
-        
-        return awaitable;
-    }
-
-::
+```c
+static PyObject *
+spam(PyObject *self, PyObject *args)
+{
+    PyObject *foo;
+    PyObject *bar;
+    // In this example, these are both coroutines, not asynchronous functions
     
-    import asyncio
+    if (!PyArg_ParseTuple(args, "OOO", &foo, &bar))
+        return NULL;
 
-    async def foo():
-        print("foo!")
+    PyObject *awaitable = awaitable_new();
 
-    async def bar():
-        print("bar!")
+    if (awaitable == NULL)
+        return NULL;
 
-    asyncio.run(spam(foo(), bar()))
-    # foo! is printed, then bar!
+    if (awaitable_await(awaitable, foo, NULL, NULL) < 0)
+    {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+    
+    if (awaitable_await(awaitable, bar, NULL, NULL) < 0)
+    {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+    
+    return awaitable;
+}
+
+```py
+import asyncio
+
+async def foo():
+    print("foo!")
+
+async def bar():
+    print("bar!")
+
+asyncio.run(spam(foo(), bar()))
+# foo! is printed, then bar!
+```
 
