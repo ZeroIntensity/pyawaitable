@@ -14,7 +14,7 @@ If either of these callbacks return an error value without an exception set, a `
 
 An example of using callbacks is shown below:
 
-```d
+```c
 static int
 spam_callback(PyObject *awaitable, PyObject *result)
 {
