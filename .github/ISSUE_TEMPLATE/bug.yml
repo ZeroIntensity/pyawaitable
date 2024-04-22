@@ -23,8 +23,8 @@ body:
       required: true
   - type: dropdown
     attributes:
-      label: "Operating system:"
-      multiple: false
+      label: "Operating system(s) tested on:"
+      multiple: true
       options:
         - Linux
         - macOS
