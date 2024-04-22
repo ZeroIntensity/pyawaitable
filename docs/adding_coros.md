@@ -1,5 +1,7 @@
 # Adding Coroutines
 
+## Basics
+
 The public interface for adding a coroutine to be executed by the event loop is ``awaitable_await``, which takes four parameters:
 
 - ``aw`` is the ``AwaitableObject*``.
@@ -9,7 +11,7 @@ The public interface for adding a coroutine to be executed by the event loop is 
 
 The awaitable is guaranteed to yield (or ``await``) each coroutine in the order they were added to the awaitable. For example, if ``foo`` was added, then ``bar``, then ``baz``, first ``foo`` would be awaited (with its respective callbacks), then ``bar``, and finally ``baz``.
 
-An example of ``awaitable_await`` (without callbacks) is as follows:
+## Example
 
 ```c
 static PyObject *
