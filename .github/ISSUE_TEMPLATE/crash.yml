@@ -12,7 +12,7 @@ body:
 
       value: |
         ```c
-        # Add your code here, if needed
+        // Add your code here, if needed
         ```
     validations:
       required: true
