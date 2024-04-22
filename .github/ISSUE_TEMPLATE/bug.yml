@@ -1,0 +1,34 @@
+name: Bug report
+description: Submit a bug report
+labels: ["bug"]
+body:
+  - type: textarea
+    attributes:
+      label: "Problem:"
+      description: >
+        Give a clear description on what's going wrong and how to reproduce it, if possible.
+
+      value: |
+        ```c
+        # Add your code here, if needed
+        ```
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: "Version:"
+      value: |
+        What version(s) of PyAwaitable are you using?
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: "Operating system:"
+      multiple: false
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other
+    validations:
+      required: false
