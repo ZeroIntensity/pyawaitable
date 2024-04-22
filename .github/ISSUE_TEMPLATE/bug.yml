@@ -8,6 +8,8 @@ body:
       description: >
         Give a clear description on what's going wrong and how to reproduce it, if possible.
 
+        This should only be for *bugs*, not crashes. For that, use the crash template.
+
       value: |
         ```c
         # Add your code here, if needed
