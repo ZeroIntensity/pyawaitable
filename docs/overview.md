@@ -36,7 +36,11 @@ typedef struct _AwaitableObject AwaitableObject;
 
 ## Lifecycle
 
-An ``AwaitableObject*`` stores an array of strong references to coroutines, which are then yielded to the event loop by an iterator returned by the ``AwaitableObject*``'s ``__await__``. This is done with an extra type, called ``_GenWrapper`` (in the API defined as ``_Awaitable_GenWrapper_Type``), which will defer the result to the ``__next__`` of the coroutine iterator currently being executed.
+!!! note
+
+    This section is not critical to knowing how to use PyAwaitable. It simply explains how it works.
+
+An ``AwaitableObject*`` stores an array of strong references to coroutines, which are then yielded to the event loop by an iterator returned by the ``AwaitableObject*``'s ``__await__``. This is done with an extra type, called ``GenWrapper`` (in the API defined as ``AwaitableGenWrapperType``), which will defer the result to the ``__next__`` of the coroutine iterator currently being executed.
 
 The lifecycle of this process is as follows:
 
@@ -46,5 +50,5 @@ The lifecycle of this process is as follows:
 - Inside of ``__next__``, the ``__next__`` is called on the current coroutine iterator (the result of ``coro.__await__()``, once again). If the object has no ``__await__`` attribute, a ``TypeError`` is raised.
 - When the coroutine iterator raises ``StopIteration``, the callback for the current coroutine (if it exists) is called with the value and sets the current iterator to a ``NULL``-like value (any value denoting "no coroutine iterator is being executed". This is ``NULL`` in the reference implementation).
 - This process is repeated inside ``__next__`` calls until the end of the coroutine array is reached. Note that coroutine callbacks may add extra coroutines to be awaited during their execution.
-- Finally, once the final coroutine is done, the iterator must raise ``StopIteration`` with the return value upon the next call to ``__next__``. After a ``StopIteration`` has been raised, then the awaitable object is marked as done. At this point, a ``RuntimeError`` should be raised upon trying to call ``__next__``, ``__await__``, or any ``PyAwaitable*`` functions.
+- Finally, once the final coroutine is done, the iterator must raise ``StopIteration`` with the return value upon the next call to ``__next__``. After a ``StopIteration`` has been raised, then the awaitable object is marked as done. At this point, a ``RuntimeError`` should be raised upon trying to call ``__next__``, ``__await__``, or any ``awaitable*`` functions.
 - If at any point during this process, an exception is raised (including by coroutine result callbacks), the error callback of the coroutine being executed is called with the raised exception. If no error callback is set, then `__next__` throws the error to the event loop.
