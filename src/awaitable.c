@@ -6,6 +6,19 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
+// Special thanks to Petr Viktorin for this snippet
+#if PY_VERSION_HEX < 0x030c0000
+PyObject *PyErr_GetRaisedException(void) {
+    PyObject *type, *val, *tb;
+    PyErr_Fetch(&type, &val, &tb);
+    PyErr_NormalizeException(&type, &val, &tb);
+    Py_XDECREF(type);
+    Py_XDECREF(tb);
+    // technically some entry in the traceback might be lost; ignore that
+    return val;
+}
+#endif
+
 #ifndef Py_NewRef
 static inline PyObject* Py_NewRef(PyObject* o) {
     Py_INCREF(o);
