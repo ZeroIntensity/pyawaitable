@@ -6,7 +6,13 @@
 
     For all functions returning ``int``, ``0`` is a successful result and ``-1`` is a failure, per the existing CPython ABI.
 
-PyAwaitable adds a suite of API functions under the prefix of ``awaitable_``, as well as a new ``AwaitableObject`` structure along with a ``AwaitableType`` (known in Python as ``_awaitable``). This is an object that implements ``collections.abc.Coroutine``. The list of functions is as follows:
+PyAwaitable provides a suite of API functions under the prefix of ``awaitable_``, as well as a ``AwaitableObject`` structure along with a ``AwaitableType`` (known in Python as ``_awaitable``). This is an object that implements ``collections.abc.Coroutine``.
+
+!!! warning
+
+    While an `AwaitableObject*` *implements* `collections.abc.Coroutine`, it is *not* a `type.CoroutineType`. This means that performing `inspect.iscoroutine(awaitable)` will return `False`. Instead, use `isinstance(awaitable, collections.abc.Coroutine)`.
+
+The list of public functions is as follows:
 
 - ``#!c PyObject *awaitable_new()``
 - ``#!c void awaitable_cancel(PyObject *aw)``
