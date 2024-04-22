@@ -8,14 +8,14 @@
 
 PyAwaitable adds a suite of API functions under the prefix of ``awaitable_``, as well as a new ``AwaitableObject`` structure along with a ``AwaitableType`` (known in Python as ``awaitable``). This is an object that implements ``collections.abc.Coroutine``. The list of functions is as follows:
 
-- ``PyObject *awaitable_new()``
-- ``void awaitable_cancel(PyObject *aw)``
-- ``int awaitable_await(PyObject *aw, PyObject *coro, awaitcallback cb, awaitcallback_err err)``
-- ``int awaitable_set_result(PyObject *awaitable, PyObject *result)``
-- ``int awaitable_save(PyObject *awaitable, Py_ssize_t nargs, ...)``
-- ``int awaitable_save_arb(PyObject *awaitable, Py_ssize_t nargs, ...)``
-- ``int awaitable_unpack(PyObject *awaitable, ...)``
-- ``int awaitable_unpack_arb(PyObject *awaitable, ...)``
+- ``#!c PyObject *awaitable_new()``
+- ``#!c void awaitable_cancel(PyObject *aw)``
+- ``#!c int awaitable_await(PyObject *aw, PyObject *coro, awaitcallback cb, awaitcallback_err err)``
+- ``#!c int awaitable_set_result(PyObject *awaitable, PyObject *result)``
+- ``#!c int awaitable_save(PyObject *awaitable, Py_ssize_t nargs, ...)``
+- ``#!c int awaitable_save_arb(PyObject *awaitable, Py_ssize_t nargs, ...)``
+- ``#!c int awaitable_unpack(PyObject *awaitable, ...)``
+- ``#!c int awaitable_unpack_arb(PyObject *awaitable, ...)``
 
 !!! tip
 
