@@ -24,7 +24,7 @@ For this reason, ``PyAwaitable`` does not provide any interface for executing C 
 $ pip install pyawaitable
 ```
 
-You can then use it in your extension module as such:
+You can then use it in your extension module (example with `setuptools`):
 
 ```py
 from setuptools import setup, Extension
@@ -36,9 +36,11 @@ if __name__ == "__main__":
         ext_modules=[
             Extension(
                 ...,
-                include_dirs=[pyawaitable.include()],
-                library_dirs=[pyawaitable.lib()]
             )
         ]
     )
 ```
+
+!!! question "Why don't I have to add include or library directories?"
+
+    PyAwaitable only ships you a header file (which is stored in `$dataroot/include`, which is included by `setuptools` automatically. The header file then uses [capsules](https://docs.python.org/3/extending/extending.html#using-capsules) to load PyAwaitable and all of it's API functions.
