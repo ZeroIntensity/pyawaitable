@@ -2,7 +2,6 @@
 // This code follows PEP 7 and CPython ABI conventions
 #include <Python.h>
 #include "pyerrors.h"
-#include <awaitable.h>
 #include <stdarg.h>
 #include <stdbool.h>
 
@@ -505,7 +504,7 @@ static PyMethodDef awaitable_methods[] = {
 };
 
 static PyAsyncMethods async_methods = {
-    #if PY_MINOR_VERSION == 8
+    #if PY_MINOR_VERSION < 10
     .am_await = awaitable_next
     #else
     .am_await = awaitable_next,
