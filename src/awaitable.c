@@ -758,7 +758,7 @@ static PyModuleDef awaitable_module = {
     -1
 };
 
-PyMODINIT_FUNC PyInit__pyawaitable()
+PyMODINIT_FUNC PyInit_pyawaitable()
 {
     if ((PyType_Ready(&_AwaitableType) < 0) ||
         (PyType_Ready(&_AwaitableGenWrapperType) < 0))

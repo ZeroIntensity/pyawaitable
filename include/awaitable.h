@@ -3,6 +3,10 @@
 #define PYAWAITABLE_H
 #include <Python.h>
 
+#define PYAWAITABLE_MAJOR_VERSION 1
+#define PYAWAITABLE_MINOR_VERSION 0
+#define PYAWAITABLE_MICRO_VERSION 0
+
 typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *);
 
@@ -47,7 +51,7 @@ typedef int (*_awaitable_unpack_type)(PyObject *, ...);
 static int
 awaitable_init()
 {
-    PyObject *pyawaitable = PyImport_ImportModule("_pyawaitable");
+    PyObject *pyawaitable = PyImport_ImportModule("pyawaitable");
     if (pyawaitable == NULL)
         return -1;
 
@@ -58,7 +62,7 @@ awaitable_init()
         return -1;
 
     if (!PyCapsule_CheckExact(c_api)) {
-        PyErr_SetString(PyExc_TypeError, "_pyawaitable._api is not a capsule");
+        PyErr_SetString(PyExc_TypeError, "pyawaitable._api is not a capsule");
         Py_DECREF(c_api);
         return -1;
     }
