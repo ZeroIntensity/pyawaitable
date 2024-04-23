@@ -48,13 +48,13 @@ PyObject *PyErr_GetRaisedException(void) {
     return val;
 }
 
-// forward declaration
-static PyTypeObject _AwaitableGenWrapperType;
-
 void PyErr_SetRaisedException(PyObject *err) {
     PyErr_Restore(err, NULL, NULL);
 }
 #endif
+
+// forward declaration
+static PyTypeObject _AwaitableGenWrapperType;
 
 #ifndef Py_NewRef
 static inline PyObject* Py_NewRef(PyObject* o) {
