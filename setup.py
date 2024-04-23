@@ -1,7 +1,5 @@
 from setuptools import Extension, setup
 
-HEADER_FILES: list[str] = ["./include/awaitable.h"]
-
 if __name__ == "__main__":
     setup(
         ext_modules=[
@@ -12,5 +10,5 @@ if __name__ == "__main__":
                 define_macros=[("PYAWAITABLE_IS_COMPILING", None)],
             )
         ],
-        data_files=[("include", HEADER_FILES)],
+        data_files=[("include", ["./include/awaitable.h"])],
     )
