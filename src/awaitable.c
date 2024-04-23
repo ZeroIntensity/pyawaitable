@@ -2,10 +2,9 @@
 // This code follows PEP 7 and CPython ABI conventions
 #include <Python.h>
 #include "pyerrors.h"
-#include <awaitable.h>
 #include <stdarg.h>
 #include <stdbool.h>
-
+#include <awaitable.h>
 
 #ifndef _PyObject_Vectorcall
 #define PyObject_CallNoArgs(o) PyObject_CallObject( \
@@ -471,7 +470,7 @@ awaitable_throw(PyObject *self, PyObject *args)
     assert(NULL);
 }
 
-#if PY_MINOR_VERSION > 8
+#if PY_MINOR_VERSION > 9
 static PySendResult
 awaitable_am_send(PyObject *self, PyObject *arg, PyObject **presult) {
     PyObject *send_res = awaitable_send_with_arg(self, arg);
@@ -505,7 +504,7 @@ static PyMethodDef awaitable_methods[] = {
 };
 
 static PyAsyncMethods async_methods = {
-    #if PY_MINOR_VERSION == 8
+    #if PY_MINOR_VERSION < 10
     .am_await = awaitable_next
     #else
     .am_await = awaitable_next,
