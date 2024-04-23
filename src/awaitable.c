@@ -4,7 +4,7 @@
 #include "pyerrors.h"
 #include <stdarg.h>
 #include <stdbool.h>
-
+#include <awaitable.h>
 
 #ifndef _PyObject_Vectorcall
 #define PyObject_CallNoArgs(o) PyObject_CallObject( \
