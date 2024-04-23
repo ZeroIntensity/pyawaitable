@@ -9,4 +9,4 @@ get_pointer.restype = ct.c_void_p
 
 @test("awaitable creation")
 async def _():
-  ptr = get_pointer(pyawaitable._api)
+  ptr = get_pointer(pyawaitable._api, None)
