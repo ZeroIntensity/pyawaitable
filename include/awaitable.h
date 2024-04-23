@@ -3,60 +3,75 @@
 #define PYAWAITABLE_H
 #include <Python.h>
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && \
-    !defined(__CYGWIN__)
-#define PYAWAITABLE_PLATFORM_WIN
-#endif
-
-#ifdef PYAWAITABLE_PLATFORM_WIN
-    #define IMPORT __declspec(dllimport)
-    #define EXPORT __declspec(dllexport)
-    #define LOCAL
-#else
-    #ifndef __has_attribute
-    #define __has_attribute(x) 0  // Compatibility with non-clang compilers.
-    #endif
-
-    #if (defined(__GNUC__) && (__GNUC__ >= 4)) || \
-    (defined(__clang__) && __has_attribute(visibility))
-        #define IMPORT __attribute__ ((visibility ("default")))
-        #define EXPORT __attribute__ ((visibility ("default")))
-        #define LOCAL __attribute__ ((visibility ("hidden")))
-    #else
-        #define IMPORT
-        #define EXPORT
-        #define LOCAL
-    #endif
-#endif
-
-#ifdef PYAWAITABLE_IS_COMPILING
-#define API EXPORT
-#else
-#define API IMPORT
-#endif
-
 typedef int (*awaitcallback)(PyObject *, PyObject *);
-typedef int (*awaitcallback_err)(PyObject *, PyObject *, PyObject *, PyObject *);
+typedef int (*awaitcallback_err)(PyObject *, PyObject *);
 
 typedef struct _AwaitableObject AwaitableObject;
+#define PYAWAITABLE_API_SIZE 10
 
-extern API PyTypeObject AwaitableType;
-extern API PyTypeObject AwaitableGenWrapperType;
+void *awaitable_api[PYAWAITABLE_API_SIZE];
 
-API PyObject *awaitable_new(void);
+PyTypeObject AwaitableType;
+PyTypeObject AwaitableGenWrapperType;
 
-API int awaitable_await(PyObject *aw, PyObject *coro, awaitcallback cb, awaitcallback_err err);
-API void awaitable_cancel(PyObject *aw);
+// PyObject *awaitable_new(void);
+typedef PyObject *(*_awaitable_new_type)(void);
+#define awaitable_new ((_awaitable_new_type) awaitable_api[2])
 
-API int awaitable_set_result(PyObject *awaitable, PyObject *result);
+// int awaitable_await(PyObject *aw, PyObject *coro, awaitcallback cb, awaitcallback_err err);
+typedef int (*_awaitable_await_type)(PyObject *, PyObject *, awaitcallback, awaitcallback_err);
+#define awaitable_await ((_awaitable_await_type) awaitable_api[3])
 
-API int awaitable_save(PyObject *awaitable, Py_ssize_t nargs, ...);
-API int awaitable_save_arb(PyObject *awaitable, Py_ssize_t nargs, ...);
+// void awaitable_cancel(PyObject *aw);
+typedef void (*_awaitable_cancel_type)(PyObject *);
+#define awaitable_cancel ((_awaitable_cancel_type) awaitable_api[4])
 
-API int awaitable_unpack(PyObject *awaitable, ...);
-API int awaitable_unpack_arb(PyObject *awaitable, ...);
+// int awaitable_set_result(PyObject *awaitable, PyObject *result);
+typedef int (*_awaitable_set_result_type)(PyObject *, PyObject *);
+#define awaitable_set_result ((_awaitable_set_result_type) awaitable_api[5])
 
-API int awaitable_init(void);
+// int awaitable_save(PyObject *awaitable, Py_ssize_t nargs, ...);
+typedef int (*_awaitable_save_type)(PyObject *, Py_ssize_t, ...);
+#define awaitable_save ((_awaitable_save_type) awaitable_api[6])
+
+// int awaitable_save_arb(PyObject *awaitable, Py_ssize_t nargs, ...);
+#define awaitable_save_arb ((_awaitable_save_type) awaitable_api[7])
+
+// int awaitable_unpack(PyObject *awaitable, ...);
+typedef int (*_awaitable_unpack_type)(PyObject *, ...);
+#define awaitable_unpack ((_awaitable_unpack_type) awaitable_api[8])
+
+// int awaitable_unpack_arb(PyObject *awaitable, ...);
+#define awaitable_unpack_arb ((_awaitable_unpack_type) awaitable_api[9])
+
+static int
+awaitable_init()
+{
+    PyObject *pyawaitable = PyImport_ImportModule("_pyawaitable");
+    if (pyawaitable == NULL)
+        return -1;
+
+    PyObject *c_api = PyObject_GetAttrString(pyawaitable, "_api");
+    Py_DECREF(pyawaitable);
+
+    if (c_api == NULL)
+        return -1;
+
+    if (!PyCapsule_CheckExact(c_api)) {
+        PyErr_SetString(PyExc_TypeError, "_pyawaitable._api is not a capsule");
+        Py_DECREF(c_api);
+        return -1;
+    }
+
+    void** api = PyCapsule_GetPointer(c_api, NULL);
+    AwaitableType = *((PyTypeObject*) api[0]);
+    AwaitableGenWrapperType = *((PyTypeObject*) api[1]);
+
+    for (int i = 2; i < PYAWAITABLE_API_SIZE; ++i)
+        awaitable_api[i] = api[i];
+
+    return 0;
+}
 
 #ifdef PYAWAITABLE_PYAPI
 #define PyAwaitable_New awaitable_new
@@ -68,6 +83,7 @@ API int awaitable_init(void);
 #define PyAwaitable_UnpackValues awaitable_unpack
 #define PyAwaitable_UnpackArbValues awaitable_unpack_arb
 #define PyAwaitable_Init awaitable_init
+#define PyAwaitable_API awaitable_api
 #endif
 
 #endif

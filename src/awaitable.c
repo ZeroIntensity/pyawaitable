@@ -6,7 +6,37 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
-// Special thanks to Petr Viktorin for this snippet
+
+#ifndef _PyObject_Vectorcall
+#define PyObject_CallNoArgs(o) PyObject_CallObject( \
+    o, \
+    NULL \
+)
+static PyObject* _PyObject_VectorcallBackport(PyObject* obj,
+                                              PyObject** args,
+                                              size_t nargsf, PyObject* kwargs) {
+    PyObject* tuple = PyTuple_New(nargsf);
+    if (!tuple) return NULL;
+    for (size_t i = 0; i < nargsf; i++) {
+        Py_INCREF(args[i]);
+        PyTuple_SET_ITEM(
+            tuple,
+            i,
+            args[i]
+        );
+    }
+    PyObject* o = PyObject_Call(
+        obj,
+        tuple,
+        kwargs
+    );
+    Py_DECREF(tuple);
+    return o;
+}
+#define PyObject_Vectorcall _PyObject_VectorcallBackport
+#define PyObject_VectorcallDict _PyObject_FastCallDict
+#endif
+
 #if PY_VERSION_HEX < 0x030c0000
 PyObject *PyErr_GetRaisedException(void) {
     PyObject *type, *val, *tb;
@@ -16,6 +46,13 @@ PyObject *PyErr_GetRaisedException(void) {
     Py_XDECREF(tb);
     // technically some entry in the traceback might be lost; ignore that
     return val;
+}
+
+// forward declaration
+static PyTypeObject _AwaitableGenWrapperType;
+
+void PyErr_SetRaisedException(PyObject *err) {
+    PyErr_Restore(err, NULL, NULL);
 }
 #endif
 
@@ -123,7 +160,7 @@ _awaitable_genwrapper_new(AwaitableObject *aw)
 {
     assert(aw != NULL);
     GenWrapperObject *g = (GenWrapperObject *) gen_new(
-        &AwaitableGenWrapperType,
+        &_AwaitableGenWrapperType,
         NULL,
         NULL
     );
@@ -155,33 +192,30 @@ fire_err_callback(PyObject *self, PyObject *await, awaitable_callback *cb)
         Py_XDECREF(await);
         return -1;
     }
-    PyObject *res_type, *res_value, *res_traceback;
-    PyErr_Fetch(&res_type, &res_value, &res_traceback);
-    PyErr_NormalizeException(&res_type, &res_value, &res_traceback);
-    Py_INCREF(self);
-    Py_INCREF(res_type);
-    Py_XINCREF(res_value);
-    Py_XINCREF(res_traceback);
 
-    int e_res = cb->err_callback(self, res_type, res_value, res_traceback);
+    Py_INCREF(self);
+    PyObject *err = PyErr_GetRaisedException();
+
+    int e_res = cb->err_callback(self, err);
     cb->done = true;
 
     Py_DECREF(self);
-    Py_DECREF(res_type);
-    Py_XDECREF(res_value);
-    Py_XDECREF(res_traceback);
 
     if (e_res < 0) {
         if (PyErr_Occurred())
             PyErr_Print();
 
         if (e_res == -1)
-            PyErr_Restore(res_type, res_value, res_traceback);
+            PyErr_SetRaisedException(err);
+
         // if the res is -1, the error is restored. otherwise, it is not
+        Py_DECREF(err);
         Py_DECREF(cb->coro);
         Py_XDECREF(await);
         return -1;
     };
+
+    Py_DECREF(err);
 
     return 0;
 }
@@ -341,35 +375,8 @@ awaitable_dealloc(PyObject *self)
     Py_TYPE(self)->tp_free(self);
 }
 
-static PyAsyncMethods async_methods = {
-    .am_await = awaitable_next
-};
-
-PyTypeObject AwaitableGenWrapperType = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "_GenWrapper", 
-    .tp_basicsize = sizeof(GenWrapperObject),
-    .tp_dealloc = gen_dealloc,
-    .tp_flags = Py_TPFLAGS_DEFAULT,
-    .tp_iter = PyObject_SelfIter,
-    .tp_iternext = gen_next,
-    .tp_new = gen_new,
-};
-
-PyTypeObject AwaitableType = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "_awaitable",
-    .tp_basicsize = sizeof(AwaitableObject),
-    .tp_dealloc = awaitable_dealloc,
-    .tp_as_async = &async_methods,
-    .tp_flags = Py_TPFLAGS_DEFAULT,
-    .tp_doc = awaitable_doc,
-    .tp_iternext = awaitable_next,
-    .tp_new = awaitable_new_func,
-};
-
 void
-awaitable_cancel(PyObject *aw)
+_awaitable_cancel(PyObject *aw)
 {
     assert(aw != NULL);
     Py_INCREF(aw);
@@ -387,8 +394,152 @@ awaitable_cancel(PyObject *aw)
     Py_DECREF(aw);
 }
 
+static PyObject *
+awaitable_send_with_arg(PyObject *self, PyObject *value)
+{
+    AwaitableObject *aw = (AwaitableObject *) self;
+    if (aw->aw_gen == NULL) {
+        PyObject* gen = awaitable_next(self);
+        if (gen == NULL)
+            return NULL;
+
+        Py_RETURN_NONE;
+    }
+
+    return gen_next(aw->aw_gen);
+}
+
+static PyObject *
+awaitable_send(PyObject *self, PyObject *args)
+{
+    PyObject *value;
+
+    if (!PyArg_ParseTuple(args, "O", &value))
+        return NULL;
+
+    return awaitable_send_with_arg(self, value);
+}
+
+static PyObject *
+awaitable_close(PyObject *self, PyObject *args)
+{
+    _awaitable_cancel(self);
+    AwaitableObject *aw = (AwaitableObject *) self;
+    aw->aw_done = true;
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+awaitable_throw(PyObject *self, PyObject *args)
+{
+    PyObject *type;
+    PyObject *value = NULL;
+    PyObject *traceback = NULL;
+
+    if (!PyArg_ParseTuple(args, "O|OO", &type, &value, &traceback))
+        return NULL;
+
+    if (PyType_Check(type)) {
+        PyObject *err = PyObject_Vectorcall(type, (PyObject*[]) { value }, 1, NULL);
+        if (err == NULL) {
+            return NULL;
+        }
+
+        if (traceback)
+            if (PyException_SetTraceback(err, traceback) < 0)
+            {
+                Py_DECREF(err);
+                return NULL;
+            }
+
+        PyErr_Restore(err, NULL, NULL);
+    } else
+        PyErr_Restore(Py_NewRef(type), Py_XNewRef(value), Py_XNewRef(traceback));
+
+    AwaitableObject *aw = (AwaitableObject *) self;
+    if ((aw->aw_gen != NULL) && (aw->aw_state != 0)) {
+        GenWrapperObject *gw = (GenWrapperObject *) aw->aw_gen;
+        awaitable_callback* cb = aw->aw_callbacks[aw->aw_state - 1];
+        if (cb == NULL)
+            return NULL;
+
+        if (fire_err_callback(self, gw->gw_current_await, cb) < 0)
+            return NULL;
+    } else
+        return NULL;
+
+    assert(NULL);
+}
+
+#if PY_MINOR_VERSION > 8
+static PySendResult
+awaitable_am_send(PyObject *self, PyObject *arg, PyObject **presult) {
+    PyObject *send_res = awaitable_send_with_arg(self, arg);
+    if (send_res == NULL) {
+        PyObject *occurred = PyErr_Occurred();
+        if (PyErr_GivenExceptionMatches(occurred, PyExc_StopIteration)) {
+            PyObject *item = PyObject_GetAttrString(occurred, "value");
+
+            if (item == NULL) {
+                return PYGEN_ERROR;
+            }
+
+            *presult = item;
+            return PYGEN_RETURN;
+        }
+        *presult = NULL;
+        return PYGEN_ERROR;
+    }
+    AwaitableObject *aw = (AwaitableObject *) self;
+    *presult = send_res;
+
+    return PYGEN_NEXT;
+}
+#endif
+
+static PyMethodDef awaitable_methods[] = {
+    {"send", awaitable_send, METH_VARARGS, NULL},
+    {"close", awaitable_close, METH_VARARGS, NULL},
+    {"throw", awaitable_throw, METH_VARARGS, NULL},
+    {NULL, NULL, 0, NULL}
+};
+
+static PyAsyncMethods async_methods = {
+    #if PY_MINOR_VERSION == 8
+    .am_await = awaitable_next
+    #else
+    .am_await = awaitable_next,
+    .am_send = awaitable_am_send
+    #endif
+};
+
+static PyTypeObject _AwaitableGenWrapperType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "_genwrapper", 
+    .tp_basicsize = sizeof(GenWrapperObject),
+    .tp_dealloc = gen_dealloc,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_iter = PyObject_SelfIter,
+    .tp_iternext = gen_next,
+    .tp_new = gen_new,
+};
+
+static PyTypeObject _AwaitableType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "_awaitable",
+    .tp_basicsize = sizeof(AwaitableObject),
+    .tp_dealloc = awaitable_dealloc,
+    .tp_as_async = &async_methods,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_doc = awaitable_doc,
+    .tp_iternext = awaitable_next,
+    .tp_new = awaitable_new_func,
+    .tp_methods = awaitable_methods
+};
+
+
 int
-awaitable_await(
+_awaitable_await(
     PyObject *aw,
     PyObject *coro,
     awaitcallback cb,
@@ -438,7 +589,7 @@ awaitable_await(
 }
 
 int
-awaitable_set_result(PyObject *awaitable, PyObject *result)
+_awaitable_set_result(PyObject *awaitable, PyObject *result)
 {
     assert(awaitable != NULL);
     assert(result != NULL);
@@ -459,7 +610,7 @@ awaitable_set_result(PyObject *awaitable, PyObject *result)
 }
 
 int
-awaitable_unpack(PyObject *awaitable, ...)
+_awaitable_unpack(PyObject *awaitable, ...)
 {
     assert(awaitable != NULL);
     AwaitableObject *aw = (AwaitableObject *) awaitable;
@@ -488,7 +639,7 @@ awaitable_unpack(PyObject *awaitable, ...)
 }
 
 int
-awaitable_save(PyObject *awaitable, Py_ssize_t nargs, ...)
+_awaitable_save(PyObject *awaitable, Py_ssize_t nargs, ...)
 {
     assert(awaitable != NULL);
     assert(nargs != 0);
@@ -527,7 +678,7 @@ awaitable_save(PyObject *awaitable, Py_ssize_t nargs, ...)
 }
 
 int
-awaitable_unpack_arb(PyObject *awaitable, ...)
+_awaitable_unpack_arb(PyObject *awaitable, ...)
 {
     assert(awaitable != NULL);
     AwaitableObject *aw = (AwaitableObject *) awaitable;
@@ -555,7 +706,7 @@ awaitable_unpack_arb(PyObject *awaitable, ...)
 }
 
 int
-awaitable_save_arb(PyObject *awaitable, Py_ssize_t nargs, ...)
+_awaitable_save_arb(PyObject *awaitable, Py_ssize_t nargs, ...)
 {
     assert(awaitable != NULL);
     assert(nargs != 0);
@@ -594,27 +745,69 @@ awaitable_save_arb(PyObject *awaitable, Py_ssize_t nargs, ...)
 }
 
 PyObject *
-awaitable_new(void)
+_awaitable_new(void)
 {
-    PyObject *aw = awaitable_new_func(&AwaitableType, NULL, NULL);
+    PyObject *aw = awaitable_new_func(&_AwaitableType, NULL, NULL);
     return aw;
 }
 
-int
-awaitable_init(void)
-{
-    PyGILState_STATE state = PyGILState_Ensure();
-    if ((PyType_Ready(&AwaitableType) < 0) ||
-        (PyType_Ready(&AwaitableGenWrapperType) < 0))
-        return -1;
-
-    PyGILState_Release(state);
-    return 0;
-}
-
+static PyModuleDef awaitable_module = {
+    PyModuleDef_HEAD_INIT,
+    "_pyawaitable",
+    NULL,
+    -1
+};
 
 PyMODINIT_FUNC PyInit__pyawaitable()
 {
-    PyErr_SetString(PyExc_RuntimeError, "_pyawaitable is not meant to be imported!");
-    return NULL;
+    if ((PyType_Ready(&_AwaitableType) < 0) ||
+        (PyType_Ready(&_AwaitableGenWrapperType) < 0))
+        return NULL;
+
+    PyObject *m = PyModule_Create(&awaitable_module);
+    if (m == NULL)
+        return NULL;
+
+    Py_INCREF(&_AwaitableType);
+    if (PyModule_AddObject(m, "_awaitable", (PyObject *) &_AwaitableType) < 0)
+    {
+        Py_DECREF(m);
+        Py_DECREF(&_AwaitableType);
+        return NULL;
+    }
+
+    Py_INCREF(&_AwaitableGenWrapperType);
+    if (PyModule_AddObject(m, "_genwrapper", (PyObject *) &_AwaitableGenWrapperType) < 0)
+    {
+        Py_DECREF(m);
+        Py_DECREF(&_AwaitableGenWrapperType);
+        return NULL;
+    }
+
+    awaitable_api[0] = &_AwaitableType;
+    awaitable_api[1] = &_AwaitableGenWrapperType;
+    awaitable_api[2] = _awaitable_new;
+    awaitable_api[3] = _awaitable_await;
+    awaitable_api[4] = _awaitable_cancel;
+    awaitable_api[5] = _awaitable_set_result;
+    awaitable_api[6] = _awaitable_save;
+    awaitable_api[7] = _awaitable_save_arb;
+    awaitable_api[8] = _awaitable_unpack;
+    awaitable_api[9] = _awaitable_unpack_arb;
+
+    PyObject *capsule = PyCapsule_New((void *) awaitable_api, NULL, NULL);
+    if (capsule == NULL)
+    {
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    if (PyModule_AddObject(m, "_api", capsule) < 0)
+    {
+        Py_DECREF(m);
+        Py_DECREF(capsule);
+        return NULL;
+    }
+
+    return m;
 }
