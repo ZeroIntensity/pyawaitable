@@ -40,6 +40,14 @@ async def coro():
 await hello(coro())
 ```
 
+## Installation
+
+```console
+$ pip install pyawaitable
+```
+
+Easy as that!
+
 ## Copyright
 
 `pyawaitable` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
