@@ -5,6 +5,20 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <awaitable.h>
+#define VERSION_VAR(name, value) \
+    version = PyLong_FromLong(value); \
+    if (version == NULL) \
+    { \
+        Py_DECREF(m); \
+        return NULL; \
+    } \
+    if (PyModule_AddObject(m, #name, version) < 0) \
+    { \
+        Py_DECREF(m); \
+        Py_DECREF(version); \
+        return NULL; \
+    }
+
 
 #ifndef _PyObject_Vectorcall
 #define PyObject_CallNoArgs(o) PyObject_CallObject( \
@@ -807,6 +821,11 @@ PyMODINIT_FUNC PyInit_pyawaitable()
         Py_DECREF(capsule);
         return NULL;
     }
+
+    PyObject *version;
+    VERSION_VAR(major, PYAWAITABLE_MAJOR_VERSION);
+    VERSION_VAR(minor, PYAWAITABLE_MINOR_VERSION);
+    VERSION_VAR(micro, PYAWAITABLE_MICRO_VERSION);
 
     return m;
 }
