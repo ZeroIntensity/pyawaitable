@@ -48,7 +48,7 @@ def test_api_types():
 
 def limit_leaks(memstring: str):
     def decorator(func: Callable):
-        if platform().system != "Windows":
+        if platform.system() != "Windows":
             func = pytest.mark.limit_leaks(memstring)(func)
             print(func)
             return func
