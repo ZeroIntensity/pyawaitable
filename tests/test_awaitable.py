@@ -5,14 +5,6 @@ import pytest
 import asyncio
 import platform
 from typing import Callable
-import sys
-
-tstate_init = pythonapi.PyGILState_Ensure
-tstate_init.restype = ctypes.c_long
-tstate_init.argtypes = ()
-
-tstate_release = pythonapi.PyGILState_Release
-tstate_release.argtypes = ctypes.c_long,
 
 get_pointer = pythonapi.PyCapsule_GetPointer
 get_pointer.argtypes = (ctypes.py_object, ctypes.c_void_p)
@@ -47,6 +39,7 @@ def test_api_types():
     assert AwaitableType is pyawaitable._awaitable
     assert AwaitableGenWrapperType is pyawaitable._genwrapper
 
+
 def limit_leaks(memstring: str):
     def decorator(func: Callable):
         if platform.system() != "Windows":
@@ -56,7 +49,6 @@ def limit_leaks(memstring: str):
         else:
             return func
     return decorator
-state = tstate_init()
 
 
 @limit_leaks("5 KB")
@@ -96,6 +88,3 @@ async def test_await_cb():
         return 0
 
     awaitable_await(awaitable, coro(21), cb, awaitcallback_err(0))
-
-def pytest_endsession(*_):
-    tstate_release(state)
