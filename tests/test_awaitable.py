@@ -3,12 +3,14 @@ import ctypes
 from ctypes import pythonapi
 import pytest
 import asyncio
+import platform
+from typing import Callable
 
 get_pointer = pythonapi.PyCapsule_GetPointer
 get_pointer.argtypes = (ctypes.py_object, ctypes.c_void_p)
 get_pointer.restype = ctypes.c_void_p
 
-awaitcallback = ctypes.CFUNCTYPE(ctypes.py_object, ctypes.py_object)
+awaitcallback = ctypes.PYFUNCTYPE(ctypes.py_object, ctypes.py_object)
 awaitcallback_err = awaitcallback
 
 # Initialize API array
@@ -20,10 +22,10 @@ AwaitableType = ctypes.cast(api[0], ctypes.py_object).value
 AwaitableGenWrapperType = ctypes.cast(api[1], ctypes.py_object).value
 
 # API Functions
-awaitable_new = ctypes.cast(api[2], ctypes.CFUNCTYPE(ctypes.py_object))
+awaitable_new = ctypes.cast(api[2], ctypes.PYFUNCTYPE(ctypes.py_object))
 awaitable_await = ctypes.cast(
     api[3],
-    ctypes.CFUNCTYPE(
+    ctypes.PYFUNCTYPE(
         ctypes.c_int,
         ctypes.py_object,
         ctypes.py_object,
@@ -38,7 +40,18 @@ def test_api_types():
     assert AwaitableGenWrapperType is pyawaitable._genwrapper
 
 
-@pytest.mark.limit_leaks("5 KB")
+def limit_leaks(memstring: str):
+    def decorator(func: Callable):
+        if platform.system() != "Windows":
+            func = pytest.mark.limit_leaks(memstring)(func)
+            print(func)
+            return func
+        else:
+            return func
+    return decorator
+
+
+@limit_leaks("5 KB")
 @pytest.mark.asyncio
 async def test_new():
     assert isinstance(awaitable_new(), pyawaitable._awaitable)
@@ -46,7 +59,7 @@ async def test_new():
     await awaitable_new()
 
 
-@pytest.mark.limit_leaks("5 KB")
+@limit_leaks("5 KB")
 @pytest.mark.asyncio
 async def test_await():
     event = asyncio.Event()
@@ -60,7 +73,7 @@ async def test_await():
     assert event.is_set()
 
 
-@pytest.mark.limit_leaks("5 KB")
+@limit_leaks("5 KB")
 @pytest.mark.asyncio
 async def test_await_cb():
     awaitable = awaitable_new()
