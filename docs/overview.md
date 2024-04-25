@@ -32,13 +32,23 @@ The list of public functions is as follows:
     #include <awaitable.h> // e.g. awaitable_init can now be used via PyAwaitable_Init
     ```
 
-PyAwaitable also comes with these typedefs:
+PyAwaitable also comes with these types:
 
 ```c
 typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *);
 typedef struct _AwaitableObject AwaitableObject;
 ```
+
+!!! info "Calling Conventions"
+
+    The PyAwaitable DLL doesn't ship with exported function names, but instead loads an array of function pointers (this is done by `awaitable_init`). For example, `awaitable_new` defined from the headers isn't actually the `awaitable_new` definition, but instead is:
+
+    ```c
+    #define awaitable_new ((_awaitable_new_type) awaitable_api[2])
+    ```
+
+    This means that you *cannot* use PyAwaitable's functions from an FFI or something similar. While this isn't the greatest way of doing things, it's Python convention. For information why this is the behavior, see [this discussion](https://discuss.python.org/t/linking-against-installed-extension-modules/51710).
 
 ## Lifecycle
 
