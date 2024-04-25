@@ -55,6 +55,8 @@ def limit_leaks(memstring: str):
         else:
             return func
     return decorator
+state = tstate_init()
+
 
 @limit_leaks("5 KB")
 @pytest.mark.asyncio
@@ -93,3 +95,6 @@ async def test_await_cb():
         return 0
 
     awaitable_await(awaitable, coro(21), cb, awaitcallback_err(0))
+
+def pytest_endsession(*_):
+    tstate_release(state)
