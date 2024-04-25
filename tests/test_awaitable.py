@@ -7,11 +7,6 @@ import platform
 from typing import Callable
 import sys
 
-tstate_get = pythonapi.PyThreadState_Get
-tstate_get.restype = ctypes.c_void_p
-
-sys.stderr.write(tstate_get())
-
 tstate_init = pythonapi.PyGILState_Ensure
 tstate_init.restype = ctypes.c_long
 tstate_init.argtypes = ()
