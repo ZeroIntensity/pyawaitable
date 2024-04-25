@@ -46,10 +46,12 @@ def test_api_types():
     assert AwaitableType is pyawaitable._awaitable
     assert AwaitableGenWrapperType is pyawaitable._genwrapper
 
-def limit_leaks(memstring: str) -> None:
+def limit_leaks(memstring: str):
     def decorator(func: Callable):
         if platform().system != "Windows":
-            return pytest.mark.limit_leaks(memstring)(func)
+            func = pytest.mark.limit_leaks(memstring)(func)
+            print(func)
+            return func
         else:
             return func
     return decorator
