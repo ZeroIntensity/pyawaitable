@@ -3,6 +3,8 @@ import ctypes
 from ctypes import pythonapi
 import pytest
 import asyncio
+import platform
+from typing import Callable
 
 tstate_init = pythonapi.PyGILState_Ensure
 tstate_init.restype = ctypes.c_long
@@ -44,8 +46,14 @@ def test_api_types():
     assert AwaitableType is pyawaitable._awaitable
     assert AwaitableGenWrapperType is pyawaitable._genwrapper
 
+def limit_leaks(memstring: str) -> None:
+    def decorator(func: Callable):
+        if platform().system != "Windows":
+            return pytest.mark.limit_leaks(memstring)(func)
+        else:
+            return func
 
-@pytest.mark.limit_leaks("5 KB")
+@limit_leaks("5 KB")
 @pytest.mark.asyncio
 async def test_new():
     assert isinstance(awaitable_new(), pyawaitable._awaitable)
@@ -53,7 +61,7 @@ async def test_new():
     await awaitable_new()
 
 
-@pytest.mark.limit_leaks("5 KB")
+@limit_leaks("5 KB")
 @pytest.mark.asyncio
 async def test_await():
     event = asyncio.Event()
@@ -67,7 +75,7 @@ async def test_await():
     assert event.is_set()
 
 
-@pytest.mark.limit_leaks("5 KB")
+@limit_leaks("5 KB")
 @pytest.mark.asyncio
 async def test_await_cb():
     awaitable = awaitable_new()
