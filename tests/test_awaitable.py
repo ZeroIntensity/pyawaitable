@@ -4,6 +4,13 @@ from ctypes import pythonapi
 import pytest
 import asyncio
 
+tstate_init = pythonapi.PyGILState_Ensure
+tstate_init.restype = ctypes.c_long
+tstate_init.argtypes = ()
+
+tstate_release = pythonapi.PyGILState_Release
+tstate_release.argtypes = ctypes.c_long,
+
 get_pointer = pythonapi.PyCapsule_GetPointer
 get_pointer.argtypes = (ctypes.py_object, ctypes.c_void_p)
 get_pointer.restype = ctypes.c_void_p
