@@ -10,7 +10,7 @@ get_pointer = pythonapi.PyCapsule_GetPointer
 get_pointer.argtypes = (ctypes.py_object, ctypes.c_void_p)
 get_pointer.restype = ctypes.c_void_p
 
-awaitcallback = ctypes.CFUNCTYPE(ctypes.py_object, ctypes.py_object)
+awaitcallback = ctypes.PYFUNCTYPE(ctypes.py_object, ctypes.py_object)
 awaitcallback_err = awaitcallback
 
 # Initialize API array
@@ -22,10 +22,10 @@ AwaitableType = ctypes.cast(api[0], ctypes.py_object).value
 AwaitableGenWrapperType = ctypes.cast(api[1], ctypes.py_object).value
 
 # API Functions
-awaitable_new = ctypes.cast(api[2], ctypes.CFUNCTYPE(ctypes.py_object))
+awaitable_new = ctypes.cast(api[2], ctypes.PYFUNCTYPE(ctypes.py_object))
 awaitable_await = ctypes.cast(
     api[3],
-    ctypes.CFUNCTYPE(
+    ctypes.PYFUNCTYPE(
         ctypes.c_int,
         ctypes.py_object,
         ctypes.py_object,
