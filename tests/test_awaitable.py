@@ -52,6 +52,7 @@ def limit_leaks(memstring: str) -> None:
             return pytest.mark.limit_leaks(memstring)(func)
         else:
             return func
+    return decorator
 
 @limit_leaks("5 KB")
 @pytest.mark.asyncio
