@@ -5,83 +5,11 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <awaitable.h>
-#define VERSION_VAR(name, value) \
-    version = PyLong_FromLong(value); \
-    if (version == NULL) \
-    { \
-        Py_DECREF(m); \
-        return NULL; \
-    } \
-    if (PyModule_AddObject(m, #name, version) < 0) \
-    { \
-        Py_DECREF(m); \
-        Py_DECREF(version); \
-        return NULL; \
-    }
-
-
-#ifndef _PyObject_Vectorcall
-#define PyObject_CallNoArgs(o) PyObject_CallObject( \
-    o, \
-    NULL \
-)
-static PyObject* _PyObject_VectorcallBackport(PyObject* obj,
-                                              PyObject** args,
-                                              size_t nargsf, PyObject* kwargs) {
-    PyObject* tuple = PyTuple_New(nargsf);
-    if (!tuple) return NULL;
-    for (size_t i = 0; i < nargsf; i++) {
-        Py_INCREF(args[i]);
-        PyTuple_SET_ITEM(
-            tuple,
-            i,
-            args[i]
-        );
-    }
-    PyObject* o = PyObject_Call(
-        obj,
-        tuple,
-        kwargs
-    );
-    Py_DECREF(tuple);
-    return o;
-}
-#define PyObject_Vectorcall _PyObject_VectorcallBackport
-#define PyObject_VectorcallDict _PyObject_FastCallDict
-#endif
-
-#if PY_VERSION_HEX < 0x030c0000
-PyObject *PyErr_GetRaisedException(void) {
-    PyObject *type, *val, *tb;
-    PyErr_Fetch(&type, &val, &tb);
-    PyErr_NormalizeException(&type, &val, &tb);
-    Py_XDECREF(type);
-    Py_XDECREF(tb);
-    // technically some entry in the traceback might be lost; ignore that
-    return val;
-}
-
-void PyErr_SetRaisedException(PyObject *err) {
-    PyErr_Restore(err, NULL, NULL);
-}
-#endif
+#include <pyawaitable/defines.h>
+#include <pyawaitable/backport.h>
 
 // forward declaration
 static PyTypeObject _AwaitableGenWrapperType;
-
-#ifndef Py_NewRef
-static inline PyObject* Py_NewRef(PyObject* o) {
-    Py_INCREF(o);
-    return o;
-}
-#endif
-
-#ifndef Py_XNewRef
-static inline PyObject* Py_XNewRef(PyObject* o) {
-    Py_XINCREF(o);
-    return o;
-}
-#endif
 
 typedef struct {
     PyObject *coro;
@@ -518,11 +446,11 @@ static PyMethodDef awaitable_methods[] = {
 };
 
 static PyAsyncMethods async_methods = {
-    #if PY_MINOR_VERSION < 10
-    .am_await = awaitable_next
-    #else
+    #if PY_MINOR_VERSION > 9
     .am_await = awaitable_next,
     .am_send = awaitable_am_send
+    #else
+    .am_await = awaitable_next
     #endif
 };
 
@@ -773,29 +701,11 @@ static PyModuleDef awaitable_module = {
 
 PyMODINIT_FUNC PyInit_pyawaitable()
 {
-    if ((PyType_Ready(&_AwaitableType) < 0) ||
-        (PyType_Ready(&_AwaitableGenWrapperType) < 0))
-        return NULL;
-
-    PyObject *m = PyModule_Create(&awaitable_module);
-    if (m == NULL)
-        return NULL;
-
-    Py_INCREF(&_AwaitableType);
-    if (PyModule_AddObject(m, "_awaitable", (PyObject *) &_AwaitableType) < 0)
-    {
-        Py_DECREF(m);
-        Py_DECREF(&_AwaitableType);
-        return NULL;
-    }
-
-    Py_INCREF(&_AwaitableGenWrapperType);
-    if (PyModule_AddObject(m, "_genwrapper", (PyObject *) &_AwaitableGenWrapperType) < 0)
-    {
-        Py_DECREF(m);
-        Py_DECREF(&_AwaitableGenWrapperType);
-        return NULL;
-    }
+    PY_TYPE_IS_READY_OR_RETURN_NULL(_AwaitableType);
+    PY_TYPE_IS_READY_OR_RETURN_NULL(_AwaitableGenWrapperType);
+    PY_CREATE_MODULE(awaitable_module);
+    PY_TYPE_ADD_TO_MODULE_OR_RETURN_NULL(_awaitable, _AwaitableType);
+    PY_TYPE_ADD_TO_MODULE_OR_RETURN_NULL(_genwrapper, _AwaitableGenWrapperType);
 
     awaitable_api[0] = &_AwaitableType;
     awaitable_api[1] = &_AwaitableGenWrapperType;
@@ -807,25 +717,13 @@ PyMODINIT_FUNC PyInit_pyawaitable()
     awaitable_api[7] = _awaitable_save_arb;
     awaitable_api[8] = _awaitable_unpack;
     awaitable_api[9] = _awaitable_unpack_arb;
-
-    PyObject *capsule = PyCapsule_New((void *) awaitable_api, NULL, NULL);
-    if (capsule == NULL)
-    {
-        Py_DECREF(m);
-        return NULL;
-    }
-
-    if (PyModule_AddObject(m, "_api", capsule) < 0)
-    {
-        Py_DECREF(m);
-        Py_DECREF(capsule);
-        return NULL;
-    }
+    PY_ADD_CAPSULE_TO_MODULE_OR_RETURN_NULL(_api, awaitable_api, NULL);
 
     PyObject *version;
     VERSION_VAR(major, PYAWAITABLE_MAJOR_VERSION);
     VERSION_VAR(minor, PYAWAITABLE_MINOR_VERSION);
     VERSION_VAR(micro, PYAWAITABLE_MICRO_VERSION);
+    PY_ADD_ALL_ATTRIBUTE(5, "major", "minor", "micro", "_awaitable", "_genwrapper");
 
     return m;
 }
