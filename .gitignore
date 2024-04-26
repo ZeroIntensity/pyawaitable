@@ -7,3 +7,7 @@ test.py
 test/
 dist/
 .vscode/
+.vs/
+*.user
+*.sln
+*.vcxproj*
