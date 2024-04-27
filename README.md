@@ -9,13 +9,13 @@ This project originates from a scrapped PEP. For the original text, see [here](h
 
 ## Installation
 
-## Console
+### Console
 
 ```console
 $ pip install pyawaitable
 ```
 
-## Add it to your project
+### Add it to your project
 
 ```toml
 # pyproject.toml example with setuptools
