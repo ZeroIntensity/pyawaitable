@@ -7,9 +7,17 @@
 
 This project originates from a scrapped PEP. For the original text, see [here](https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926).
 
+## Installation
+
+```console
+$ pip install pyawaitable
+```
+
 ## Example
 
 ```c
+#include <awaitable.h>
+
 // Assuming that this is using METH_O
 static PyObject *
 hello(PyObject *self, PyObject *coro) {
@@ -39,14 +47,6 @@ async def coro():
 # Use our C function to await coro
 await hello(coro())
 ```
-
-## Installation
-
-```console
-$ pip install pyawaitable
-```
-
-Easy as that!
 
 ## Copyright
 
