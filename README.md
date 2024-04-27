@@ -9,8 +9,19 @@ This project originates from a scrapped PEP. For the original text, see [here](h
 
 ## Installation
 
+## Console
+
 ```console
 $ pip install pyawaitable
+```
+
+## Add it to your project
+
+```toml
+# pyproject.toml example with setuptools
+[build-system]
+requires = ["setuptools", "pyawaitable>=1.0,<2.0"]
+build-backend = "setuptools.build_meta"
 ```
 
 ## Example
