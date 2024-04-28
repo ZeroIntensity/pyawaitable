@@ -86,13 +86,14 @@ return m
 #define PyType_CreateInstance(type, typeobj, args, kwargs) ((type *)_PyType_CreateInstance(typeobj, args, kwargs))
 #define PyObject_GetCallableMethod(type, name) _PyObject_GetCallableMethod((PyObject*)type, name)
 
-#define VERSION_VAR(name, value) \
+#define VERSION_VAR(name, value, index) \
     version = PyLong_FromLong(value); \
     if (version == NULL) \
     { \
         Py_DECREF(m); \
         return NULL; \
     } \
+    awaitable_api[index] = (long) value; \
     if (PyModule_AddObject(m, #name, version) < 0) \
     { \
         Py_DECREF(m); \

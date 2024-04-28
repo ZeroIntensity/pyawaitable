@@ -11,4 +11,5 @@ if __name__ == "__main__":
             )
         ],
         data_files=[("include", ["./include/awaitable.h"])],
+        package_data={"pyawaitable": ["./src/py.typed", "./src/pyawaitable.pyi"]}
     )

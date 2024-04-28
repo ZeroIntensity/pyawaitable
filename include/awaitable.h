@@ -6,12 +6,13 @@
 #define PYAWAITABLE_MAJOR_VERSION 1
 #define PYAWAITABLE_MINOR_VERSION 0
 #define PYAWAITABLE_MICRO_VERSION 0
+#define PYAWAITABLE_RELEASE_NUMBER 1
 
 typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *);
 
 typedef struct _AwaitableObject AwaitableObject;
-#define PYAWAITABLE_API_SIZE 10
+#define PYAWAITABLE_API_SIZE 14
 
 void *awaitable_api[PYAWAITABLE_API_SIZE];
 
@@ -48,24 +49,17 @@ typedef int (*_awaitable_unpack_type)(PyObject *, ...);
 // int awaitable_unpack_arb(PyObject *awaitable, ...);
 #define awaitable_unpack_arb ((_awaitable_unpack_type) awaitable_api[9])
 
+#define awaitable_runtime_major ((long) awaitable_api[10])
+#define awaitable_runtime_minor ((long) awaitable_api[11])
+#define awaitable_runtime_micro ((long) awaitable_api[12])
+#define awaitable_runtime_release_number ((long) awaitable_api[13])
+
 static int
 awaitable_init()
 {
-    PyObject *pyawaitable = PyImport_ImportModule("pyawaitable");
-    if (pyawaitable == NULL)
-        return -1;
-
-    PyObject *c_api = PyObject_GetAttrString(pyawaitable, "_api");
-    Py_DECREF(pyawaitable);
-
+    PyObject *c_api = PyCapsule_Import("pyawaitable.api", 0);
     if (c_api == NULL)
         return -1;
-
-    if (!PyCapsule_CheckExact(c_api)) {
-        PyErr_SetString(PyExc_TypeError, "pyawaitable._api is not a capsule");
-        Py_DECREF(c_api);
-        return -1;
-    }
 
     void** api = PyCapsule_GetPointer(c_api, NULL);
     AwaitableType = *((PyTypeObject*) api[0]);
@@ -73,6 +67,17 @@ awaitable_init()
 
     for (int i = 2; i < PYAWAITABLE_API_SIZE; ++i)
         awaitable_api[i] = api[i];
+
+    if (awaitable_runtime_major != PYAWAITABLE_MAJOR_VERSION)
+    {
+        PyErr_Format(
+            PyExc_RuntimeError,
+            "pyawaitable version mismatch! header is v%d, while runtime is v%d",
+            PYAWAITABLE_MAJOR_VERSION,
+            awaitable_runtime_major
+        );
+        return -1;
+    }
 
     return 0;
 }
@@ -88,6 +93,10 @@ awaitable_init()
 #define PyAwaitable_UnpackArbValues awaitable_unpack_arb
 #define PyAwaitable_Init awaitable_init
 #define PyAwaitable_API awaitable_api
+#define PyAwaitable_RuntimeMajorVersion awaitable_runtime_major
+#define PyAwaitable_RuntimeMinorVersion awaitable_runtime_minor
+#define PyAwaitable_RuntimeMicroVersion awaitable_runtime_micro
+#define PyAwaitable_RuntimeReleaseNumber awaitable_runtime_release_number
 #endif
 
 #endif

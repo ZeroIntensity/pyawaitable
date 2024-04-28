@@ -717,13 +717,24 @@ PyMODINIT_FUNC PyInit_pyawaitable()
     awaitable_api[7] = _awaitable_save_arb;
     awaitable_api[8] = _awaitable_unpack;
     awaitable_api[9] = _awaitable_unpack_arb;
-    PY_ADD_CAPSULE_TO_MODULE_OR_RETURN_NULL(_api, awaitable_api, NULL);
+    PY_ADD_CAPSULE_TO_MODULE_OR_RETURN_NULL(_api, awaitable_api, "pyawaitable._api");
 
     PyObject *version;
-    VERSION_VAR(major, PYAWAITABLE_MAJOR_VERSION);
-    VERSION_VAR(minor, PYAWAITABLE_MINOR_VERSION);
-    VERSION_VAR(micro, PYAWAITABLE_MICRO_VERSION);
-    PY_ADD_ALL_ATTRIBUTE(5, "major", "minor", "micro", "_awaitable", "_genwrapper");
+    VERSION_VAR(major, PYAWAITABLE_MAJOR_VERSION, 10);
+    VERSION_VAR(minor, PYAWAITABLE_MINOR_VERSION, 11);
+    VERSION_VAR(micro, PYAWAITABLE_MICRO_VERSION, 12);
+    VERSION_VAR(release_number, PYAWAITABLE_RELEASE_NUMBER, 13);
+
+    PY_ADD_ALL_ATTRIBUTE(
+        6,
+        "major",
+        "minor",
+        "micro",
+        "_awaitable",
+        "_genwrapper",
+        "_api",
+        "release_numer"
+    );
 
     return m;
 }
