@@ -770,6 +770,7 @@ static AwaitableABI _abi_interface = {
     _awaitable_save_arb,
     _awaitable_unpack,
     _awaitable_unpack_arb,
+    &_AwaitableType
 };
 
 PyMODINIT_FUNC PyInit_pyawaitable()
