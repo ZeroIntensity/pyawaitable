@@ -56,7 +56,7 @@ AwaitableABI* awaitable_abi = NULL;
 static int
 awaitable_init()
 {
-    AwaitableABI *capsule = PyCapsule_Import("pyawaitable.abi.v1");
+    AwaitableABI *capsule = PyCapsule_Import("pyawaitable.abi.v1", 0);
     if (capsule == NULL)
         return NULL;
 
