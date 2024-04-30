@@ -5,11 +5,9 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <awaitable.h>
-/*
- * To avoid any possible include conflicts if other
- * headers have the same file name.
- */
-#include "../include/defines.h"
+#include <pyawaitable/util.h>
+#include <pyawaitable/backport.h>
+
 
 #ifndef _PyObject_Vectorcall
 #define PyObject_CallNoArgs(o) PyObject_CallObject( \
