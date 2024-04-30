@@ -45,7 +45,7 @@ class PyABI(ctypes.Structure):
 awaitcallback = ctypes.PYFUNCTYPE(ctypes.py_object, ctypes.py_object)
 awaitcallback_err = awaitcallback
 
-class AwaitableABI(ctypes.PyABI):
+class AwaitableABI(PyABI):
     _fields_ = [
         ("awaitable_new", ctypes.PYFUNCTYPE(ctypes.py_object)),
         (
