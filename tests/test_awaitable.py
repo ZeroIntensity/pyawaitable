@@ -175,4 +175,51 @@ async def test_await_cb_noerr():
 
     with pytest.raises(SystemError):
         await awaitable
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_cb_err_restore():
+    awaitable = abi.awaitable_new()
+    event = asyncio.Event()
+
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: float) -> int:
+        raise RuntimeError("test")
+
+    @awaitcallback_err
+    def cb_err(awaitable_inner: pyawaitable.Awaitable, err: Exception) -> int:
+        assert str(err) == "test"
+        event.set()
+        return -1
+
+    abi.awaitable_await(awaitable, coro(), cb, cb_err)
+
+    with pytest.raises(RuntimeError):
+        await awaitable
+
+    assert event.is_set()
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_cb_err_norestore():
+    awaitable = abi.awaitable_new()
+    event = asyncio.Event()
+
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: float) -> int:
+        raise RuntimeError("test")
+
+    @awaitcallback_err
+    def cb_err(awaitable_inner: pyawaitable.Awaitable, err: Exception) -> int:
+        assert str(err) == "test"
+        event.set()
+        raise ZeroDivisionError("42")
+        return -2
+
+    abi.awaitable_await(awaitable, coro(), cb, cb_err)
+
+    with pytest.raises(ZeroDivisionError):
+        await awaitable
+
+    assert event.is_set()
     
