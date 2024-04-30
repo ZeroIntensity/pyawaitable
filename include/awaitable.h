@@ -11,69 +11,56 @@ typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *);
 
 typedef struct _AwaitableObject AwaitableObject;
-#define PYAWAITABLE_API_SIZE 10
 
-void *awaitable_api[PYAWAITABLE_API_SIZE];
+typedef struct _awaitable_abi {
+    Py_ssize_t size;
+    PyObject *(*awaitable_new)(void);
+    int (*awaitable_await)(PyObject *, PyObject *, awaitcallback, awaitcallback_err);
+    void (*awaitable_cancel)(PyObject *);
+    int (*awaitable_set_result)(PyObject *, PyObject *);
+    int (*awaitable_save)(PyObject *, Py_ssize_t, ...);
+    int (*awaitable_save_arb)(PyObject *, Py_ssize_t, ...);
+    int (*awaitable_unpack)(PyObject *, ...);
+    int (*awaitable_unpack_arb)(PyObject *, ...);
+    PyTypeObject *AwaitableType;
+} AwaitableABI;
 
-PyTypeObject AwaitableType;
-PyTypeObject AwaitableGenWrapperType;
+AwaitableABI* awaitable_abi = NULL;
 
 // PyObject *awaitable_new(void);
-typedef PyObject *(*_awaitable_new_type)(void);
-#define awaitable_new ((_awaitable_new_type) awaitable_api[2])
+#define awaitable_new awaitable_abi->awaitable_new
 
 // int awaitable_await(PyObject *aw, PyObject *coro, awaitcallback cb, awaitcallback_err err);
-typedef int (*_awaitable_await_type)(PyObject *, PyObject *, awaitcallback, awaitcallback_err);
-#define awaitable_await ((_awaitable_await_type) awaitable_api[3])
+#define awaitable_await awaitable_abi->awaitable_await
 
 // void awaitable_cancel(PyObject *aw);
-typedef void (*_awaitable_cancel_type)(PyObject *);
-#define awaitable_cancel ((_awaitable_cancel_type) awaitable_api[4])
+#define awaitable_cancel awaitable_abi->awaitable_cancel
 
 // int awaitable_set_result(PyObject *awaitable, PyObject *result);
-typedef int (*_awaitable_set_result_type)(PyObject *, PyObject *);
-#define awaitable_set_result ((_awaitable_set_result_type) awaitable_api[5])
+#define awaitable_set_result awaitable_abi->awaitable_set_result
 
 // int awaitable_save(PyObject *awaitable, Py_ssize_t nargs, ...);
-typedef int (*_awaitable_save_type)(PyObject *, Py_ssize_t, ...);
-#define awaitable_save ((_awaitable_save_type) awaitable_api[6])
+#define awaitable_save awaitable_abi->awaitable_save
 
 // int awaitable_save_arb(PyObject *awaitable, Py_ssize_t nargs, ...);
-#define awaitable_save_arb ((_awaitable_save_type) awaitable_api[7])
+#define awaitable_save_arb awaitable_abi->awaitable_save_arb
 
 // int awaitable_unpack(PyObject *awaitable, ...);
-typedef int (*_awaitable_unpack_type)(PyObject *, ...);
-#define awaitable_unpack ((_awaitable_unpack_type) awaitable_api[8])
+#define awaitable_unpack awaitable_abi->awaitable_unpack
 
 // int awaitable_unpack_arb(PyObject *awaitable, ...);
-#define awaitable_unpack_arb ((_awaitable_unpack_type) awaitable_api[9])
+#define awaitable_unpack_arb awaitable_abi->awaitable_unpack_arb
+
+#define AwaitableType awaitable_abi->AwaitableType
 
 static int
 awaitable_init()
 {
-    PyObject *pyawaitable = PyImport_ImportModule("pyawaitable");
-    if (pyawaitable == NULL)
-        return -1;
+    AwaitableABI *capsule = PyCapsule_Import("pyawaitable.abi.v1", 0);
+    if (capsule == NULL)
+        return NULL;
 
-    PyObject *c_api = PyObject_GetAttrString(pyawaitable, "_api");
-    Py_DECREF(pyawaitable);
-
-    if (c_api == NULL)
-        return -1;
-
-    if (!PyCapsule_CheckExact(c_api)) {
-        PyErr_SetString(PyExc_TypeError, "pyawaitable._api is not a capsule");
-        Py_DECREF(c_api);
-        return -1;
-    }
-
-    void** api = PyCapsule_GetPointer(c_api, NULL);
-    AwaitableType = *((PyTypeObject*) api[0]);
-    AwaitableGenWrapperType = *((PyTypeObject*) api[1]);
-
-    for (int i = 2; i < PYAWAITABLE_API_SIZE; ++i)
-        awaitable_api[i] = api[i];
-
+    awaitable_abi = capsule;
     return 0;
 }
 
@@ -87,7 +74,8 @@ awaitable_init()
 #define PyAwaitable_UnpackValues awaitable_unpack
 #define PyAwaitable_UnpackArbValues awaitable_unpack_arb
 #define PyAwaitable_Init awaitable_init
-#define PyAwaitable_API awaitable_api
+#define PyAwaitable_ABI awaitable_abi
+#define PyAwaitable_Type AwaitableType
 #endif
 
 #endif

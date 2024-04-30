@@ -38,9 +38,9 @@ jobs:
             - name:  Install PyTest
               run:   |
                      if [ "$RUNNER_OS" == "Windows" ]; then
-                          pip install pytest pytest-asyncio
+                          pip install pytest pytest-asyncio typing_extensions
                      else
-                          pip install pytest pytest-asyncio pytest-memray
+                          pip install pytest pytest-asyncio pytest-memray typing_extensions
                      fi
               shell: bash
     

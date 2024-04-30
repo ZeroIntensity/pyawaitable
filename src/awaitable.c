@@ -1,78 +1,20 @@
 /* *INDENT-OFF* */
 // This code follows PEP 7 and CPython ABI conventions
-#include <Python.h>
-#include "pyerrors.h"
+// Stdlib headers
 #include <stdarg.h>
 #include <stdbool.h>
+
+// Python headers
+#include <Python.h>
+#include "pyerrors.h"
+
+// PyAwaitable headers
 #include <awaitable.h>
-/*
- * To avoid any possible include conflicts if other
- * headers have the same file name.
- */
-#include "../include/defines.h"
-
-#ifndef _PyObject_Vectorcall
-#define PyObject_CallNoArgs(o) PyObject_CallObject( \
-    o, \
-    NULL \
-)
-static PyObject* _PyObject_VectorcallBackport(PyObject* obj,
-                                              PyObject** args,
-                                              size_t nargsf, PyObject* kwargs) {
-    PyObject* tuple = PyTuple_New(nargsf);
-    if (!tuple) return NULL;
-    for (size_t i = 0; i < nargsf; i++) {
-        Py_INCREF(args[i]);
-        PyTuple_SET_ITEM(
-            tuple,
-            i,
-            args[i]
-        );
-    }
-    PyObject* o = PyObject_Call(
-        obj,
-        tuple,
-        kwargs
-    );
-    Py_DECREF(tuple);
-    return o;
-}
-#define PyObject_Vectorcall _PyObject_VectorcallBackport
-#define PyObject_VectorcallDict _PyObject_FastCallDict
-#endif
-
-#if PY_VERSION_HEX < 0x030c0000
-PyObject *PyErr_GetRaisedException(void) {
-    PyObject *type, *val, *tb;
-    PyErr_Fetch(&type, &val, &tb);
-    PyErr_NormalizeException(&type, &val, &tb);
-    Py_XDECREF(type);
-    Py_XDECREF(tb);
-    // technically some entry in the traceback might be lost; ignore that
-    return val;
-}
-
-void PyErr_SetRaisedException(PyObject *err) {
-    PyErr_Restore(err, NULL, NULL);
-}
-#endif
+#include <pyawaitable/util.h>
+#include <pyawaitable/backport.h>
 
 // forward declaration
 static PyTypeObject _AwaitableGenWrapperType;
-
-#ifndef Py_NewRef
-static inline PyObject* Py_NewRef(PyObject* o) {
-    Py_INCREF(o);
-    return o;
-}
-#endif
-
-#ifndef Py_XNewRef
-static inline PyObject* Py_XNewRef(PyObject* o) {
-    Py_XINCREF(o);
-    return o;
-}
-#endif
 
 typedef struct {
     PyObject *coro;
@@ -762,24 +704,27 @@ static PyModuleDef awaitable_module = {
     -1
 };
 
-PyMODINIT_FUNC PyInit_pyawaitable()
+static AwaitableABI _abi_interface = {
+    sizeof(AwaitableABI),
+    _awaitable_new,
+    _awaitable_await,
+    _awaitable_cancel,
+    _awaitable_set_result,
+    _awaitable_save,
+    _awaitable_save_arb,
+    _awaitable_unpack,
+    _awaitable_unpack_arb,
+    &_AwaitableType
+};
+
+PyMODINIT_FUNC PyInit__pyawaitable()
 {
     PY_TYPE_IS_READY_OR_RETURN_NULL(_AwaitableType);
     PY_TYPE_IS_READY_OR_RETURN_NULL(_AwaitableGenWrapperType);
     PY_CREATE_MODULE(awaitable_module);
     PY_TYPE_ADD_TO_MODULE_OR_RETURN_NULL(_awaitable, _AwaitableType);
     PY_TYPE_ADD_TO_MODULE_OR_RETURN_NULL(_genwrapper, _AwaitableGenWrapperType);
-
-    awaitable_api[0] = &_AwaitableType;
-    awaitable_api[1] = &_AwaitableGenWrapperType;
-    awaitable_api[2] = _awaitable_new;
-    awaitable_api[3] = _awaitable_await;
-    awaitable_api[4] = _awaitable_cancel;
-    awaitable_api[5] = _awaitable_set_result;
-    awaitable_api[6] = _awaitable_save;
-    awaitable_api[7] = _awaitable_save_arb;
-    awaitable_api[8] = _awaitable_unpack;
-    awaitable_api[9] = _awaitable_unpack_arb;
-    PY_ADD_CAPSULE_TO_MODULE_OR_RETURN_NULL(_api, awaitable_api, NULL);
+    
+    PY_ADD_CAPSULE_TO_MODULE_OR_RETURN_NULL(abiv1, &_abi_interface, "pyawaitable.abi.v1");
     return m;
 }
