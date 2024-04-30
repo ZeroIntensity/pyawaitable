@@ -58,7 +58,7 @@ if (m == NULL) { \
 if (PyType_Ready(&type) < 0) \
   return NULL
 #define PY_TYPE_ADD_TO_MODULE_OR_RETURN_NULL(name, type) \
-if (PyModule_AddObject(m, Py_STRINGIFY(name), Py_NewRef(&type)) < 0) \
+if (PyModule_AddObject(m, Py_STRINGIFY(name), Py_NewRef((PyObject *) &type)) < 0) \
   return _DecrefModuleAndReturnNULL(m)
 #define PY_ADD_CAPSULE_TO_MODULE_OR_RETURN_NULL(objname, ptr, capsuleName) \
 PyObject *capsule = PyCapsule_New((void *)ptr, capsuleName, NULL); \
