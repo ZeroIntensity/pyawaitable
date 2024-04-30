@@ -69,11 +69,6 @@ class AwaitableABI(PyABI):
 
 abi = AwaitableABI.from_capsule(pyawaitable.abi.v1)
 
-def test_api_types():
-    assert AwaitableType is pyawaitable._awaitable
-    assert AwaitableGenWrapperType is pyawaitable._genwrapper
-
-
 def limit_leaks(memstring: str):
     def decorator(func: Callable):
         if platform.system() != "Windows":
@@ -115,7 +110,7 @@ async def test_await_cb():
         return value * 2
 
     @awaitcallback
-    def cb(awaitable_inner: AwaitableType, result: int) -> int:
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
         assert awaitable_inner is awaitable
         assert result == 42
         return 0
