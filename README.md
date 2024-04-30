@@ -20,7 +20,7 @@ $ pip install pyawaitable
 ```toml
 # pyproject.toml example with setuptools
 [build-system]
-requires = ["setuptools", "pyawaitable>=1.0,<2.0"]
+requires = ["setuptools", "pyawaitable"]
 build-backend = "setuptools.build_meta"
 ```
 
