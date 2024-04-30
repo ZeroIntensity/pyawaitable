@@ -10,30 +10,63 @@ get_pointer = pythonapi.PyCapsule_GetPointer
 get_pointer.argtypes = (ctypes.py_object, ctypes.c_void_p)
 get_pointer.restype = ctypes.c_void_p
 
+get_name = pythonapi.PyCapsule_GetName
+get_name.argtypes = (ctypes.py_object,)
+get_name.restype = ctypes.c_char_p
+
+class PyABI(ctypes.Structure):
+    @classmethod
+    def from_capsule(cls, capsule: Any) -> Self:
+        # Assume that argtypes and restype have been properly set
+        capsule_name = get_name(capsule)
+        abi = ctypes.cast(
+            get_pointer(capsule, capsule_name),
+            ctypes.POINTER(cls)
+        )
+
+        return abi.contents
+
+    def __init_subclass__(cls, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+        # Assume that _fields_ is a list
+        cls._fields_.insert(0, ("size", ctypes.c_ssize_t))
+
+    def __getattribute__(self, name: str) -> Any:
+        size = super().__getattribute__("size")
+        offset = getattr(type(self), name).offset
+
+        if size <= offset:
+            raise ValueError(f"{name!r} is not available on this ABI version")
+
+        attr = super().__getattribute__(name)
+        return attr
+
 awaitcallback = ctypes.PYFUNCTYPE(ctypes.py_object, ctypes.py_object)
 awaitcallback_err = awaitcallback
 
-# Initialize API array
-ptr = get_pointer(pyawaitable._api, None)
-api = (ctypes.c_void_p * 10).from_address(ptr)
+class AwaitableABI(ctypes.PyABI):
+    _fields_ = [
+        ("awaitable_new", ctypes.PYFUNCTYPE(ctypes.py_object)),
+        (
+            "awaitable_await",
+            ctypes.PYFUNCTYPE(
+                ctypes.c_int,
+                ctypes.py_object,
+                ctypes.py_object,
+                awaitcallback,
+                awaitcallback_err,
+            )
+        ),
+        ("awaitable_cancel", ctypes.PYFUNCTYPE(None, ctypes.py_object)),
+        ("awaitable_set_result", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object, ctypes.py_object)),
+        ("awaitable_save", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object, ctypes.c_ssize_t)),
+        ("awaitable_save_arb", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object, ctypes.c_ssize_t)),
+        ("awaitable_unpack", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object)),
+        ("awaitable_unpack_arb", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object)),
+    ]
 
-# Types
-AwaitableType = ctypes.cast(api[0], ctypes.py_object).value
-AwaitableGenWrapperType = ctypes.cast(api[1], ctypes.py_object).value
 
-# API Functions
-awaitable_new = ctypes.cast(api[2], ctypes.PYFUNCTYPE(ctypes.py_object))
-awaitable_await = ctypes.cast(
-    api[3],
-    ctypes.PYFUNCTYPE(
-        ctypes.c_int,
-        ctypes.py_object,
-        ctypes.py_object,
-        awaitcallback,
-        awaitcallback_err,
-    ),
-)
-
+abi = AwaitableABI.from_capsule(pyawaitable.abi.v1)
 
 def test_api_types():
     assert AwaitableType is pyawaitable._awaitable
@@ -44,7 +77,6 @@ def limit_leaks(memstring: str):
     def decorator(func: Callable):
         if platform.system() != "Windows":
             func = pytest.mark.limit_leaks(memstring)(func)
-            print(func)
             return func
         else:
             return func
@@ -54,9 +86,9 @@ def limit_leaks(memstring: str):
 @limit_leaks("5 KB")
 @pytest.mark.asyncio
 async def test_new():
-    assert isinstance(awaitable_new(), pyawaitable._awaitable)
-    await asyncio.create_task(awaitable_new())
-    await awaitable_new()
+    assert isinstance(abi.awaitable_new(), pyawaitable._awaitable)
+    await asyncio.create_task(abi.awaitable_new())
+    await abi.awaitable_new()
 
 
 @limit_leaks("5 KB")
@@ -67,8 +99,8 @@ async def test_await():
     async def coro():
         event.set()
 
-    awaitable = awaitable_new()
-    awaitable_await(awaitable, coro(), awaitcallback(0), awaitcallback_err(0))
+    awaitable = abi.awaitable_new()
+    abi.awaitable_await(awaitable, coro(), awaitcallback(0), awaitcallback_err(0))
     await awaitable
     assert event.is_set()
 
@@ -76,7 +108,7 @@ async def test_await():
 @limit_leaks("5 KB")
 @pytest.mark.asyncio
 async def test_await_cb():
-    awaitable = awaitable_new()
+    awaitable = abi.awaitable_new()
 
     async def coro(value: int):
         return value * 2
@@ -87,4 +119,4 @@ async def test_await_cb():
         assert result == 42
         return 0
 
-    awaitable_await(awaitable, coro(21), cb, awaitcallback_err(0))
+    abi.awaitable_await(awaitable, coro(21), cb, awaitcallback_err(0))
