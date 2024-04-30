@@ -11,9 +11,6 @@ typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *);
 
 typedef struct _AwaitableObject AwaitableObject;
-#define PYAWAITABLE_API_SIZE 10
-
-void *awaitable_api[PYAWAITABLE_API_SIZE];
 
 typedef struct _awaitable_abi {
     Py_ssize_t size;
@@ -25,7 +22,7 @@ typedef struct _awaitable_abi {
     int (*awaitable_save_arb)(PyObject *, Py_ssize_t, ...);
     int (*awaitable_unpack)(PyObject *, ...);
     int (*awaitable_unpack_arb)(PyObject *, ...);
-    PyTypeObject* AwaitableType;
+    PyTypeObject *AwaitableType;
 } AwaitableABI;
 
 AwaitableABI* awaitable_abi = NULL;
@@ -52,7 +49,9 @@ AwaitableABI* awaitable_abi = NULL;
 #define awaitable_unpack awaitable_abi->awaitable_unpack
 
 // int awaitable_unpack_arb(PyObject *awaitable, ...);
-#define awaitable_unpack_arb awaitable-abi->awaitable_unpack_arb
+#define awaitable_unpack_arb awaitable_abi->awaitable_unpack_arb
+
+#define AwaitableType awaitable_abi->AwaitableType
 
 static int
 awaitable_init()
@@ -75,7 +74,8 @@ awaitable_init()
 #define PyAwaitable_UnpackValues awaitable_unpack
 #define PyAwaitable_UnpackArbValues awaitable_unpack_arb
 #define PyAwaitable_Init awaitable_init
-#define PyAwaitable_API awaitable_api
+#define PyAwaitable_ABI awaitable_abi
+#define PyAwaitable_Type AwaitableType
 #endif
 
 #endif
