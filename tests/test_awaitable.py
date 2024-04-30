@@ -168,7 +168,7 @@ async def test_await_cb_noerr():
         return 42
     
     @awaitcallback
-    def cb(awaitable_inner: pyawaitable.Awaitable, result: float) -> int:
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
         return -1
     
     abi.awaitable_await(awaitable, coro(), cb, awaitcallback_err(0))
@@ -182,8 +182,11 @@ async def test_await_cb_err_restore():
     awaitable = abi.awaitable_new()
     event = asyncio.Event()
 
+    async def coro() -> int:
+        return 42
+    
     @awaitcallback
-    def cb(awaitable_inner: pyawaitable.Awaitable, result: float) -> int:
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
         raise RuntimeError("test")
 
     @awaitcallback_err
@@ -205,8 +208,11 @@ async def test_await_cb_err_norestore():
     awaitable = abi.awaitable_new()
     event = asyncio.Event()
 
+    async def coro() -> int:
+        return 42
+    
     @awaitcallback
-    def cb(awaitable_inner: pyawaitable.Awaitable, result: float) -> int:
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
         raise RuntimeError("test")
 
     @awaitcallback_err
