@@ -762,6 +762,18 @@ static PyModuleDef awaitable_module = {
     -1
 };
 
+static AwaitableABI _abi_interface = {
+    sizeof(AwaitableABI),
+    _awaitable_new,
+    _awaitable_await,
+    _awaitable_cancel,
+    _awaitable_set_result,
+    _awaitable_save,
+    _awaitable_save_arb,
+    _awaitable_unpack,
+    _awaitable_unpack_arb
+};
+
 PyMODINIT_FUNC PyInit_pyawaitable()
 {
     PY_TYPE_IS_READY_OR_RETURN_NULL(_AwaitableType);
@@ -769,17 +781,7 @@ PyMODINIT_FUNC PyInit_pyawaitable()
     PY_CREATE_MODULE(awaitable_module);
     PY_TYPE_ADD_TO_MODULE_OR_RETURN_NULL(_awaitable, _AwaitableType);
     PY_TYPE_ADD_TO_MODULE_OR_RETURN_NULL(_genwrapper, _AwaitableGenWrapperType);
-
-    awaitable_api[0] = &_AwaitableType;
-    awaitable_api[1] = &_AwaitableGenWrapperType;
-    awaitable_api[2] = _awaitable_new;
-    awaitable_api[3] = _awaitable_await;
-    awaitable_api[4] = _awaitable_cancel;
-    awaitable_api[5] = _awaitable_set_result;
-    awaitable_api[6] = _awaitable_save;
-    awaitable_api[7] = _awaitable_save_arb;
-    awaitable_api[8] = _awaitable_unpack;
-    awaitable_api[9] = _awaitable_unpack_arb;
-    PY_ADD_CAPSULE_TO_MODULE_OR_RETURN_NULL(_api, awaitable_api, NULL);
+    
+    PY_ADD_CAPSULE_TO_MODULE_OR_RETURN_NULL(abiv1, &_abi_interface, "pyawaitable.abi.v1");
     return m;
 }
