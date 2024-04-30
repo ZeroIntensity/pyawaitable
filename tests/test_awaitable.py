@@ -15,6 +15,10 @@ get_name = pythonapi.PyCapsule_GetName
 get_name.argtypes = (ctypes.py_object,)
 get_name.restype = ctypes.c_char_p
 
+set_err_str = pythonapi.PyErr_SetString
+set_err_str.argtypes = (ctypes.py_object, ctypes.c_char_p)
+set_err_str.restype = None
+
 class PyABI(ctypes.Structure):
     @classmethod
     def from_capsule(cls, capsule: Any) -> Self:
@@ -128,7 +132,7 @@ async def test_await_cb_err():
 
     @awaitcallback
     def cb(awaitable_inner: pyawaitable.Awaitable, result: float) -> int:
-        raise RuntimeError("shouldn't be here!")
+        set_err_str(RuntimeError, "no good!")
 
     @awaitcallback_err
     def cb_err(awaitable_inner: pyawaitable.Awaitable, err: Exception) -> int:
@@ -148,7 +152,8 @@ async def test_await_cb_err_cb():
 
     @awaitcallback
     def cb(awaitable_inner: pyawaitable.Awaitable, result: float) -> int:
-        raise RuntimeError("test")
+        set_err_str(RuntimeError, "test")
+        return -1
 
     @awaitcallback_err
     def cb_err(awaitable_inner: pyawaitable.Awaitable, err: Exception) -> int:
@@ -187,7 +192,7 @@ async def test_await_cb_err_restore():
     
     @awaitcallback
     def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
-        raise RuntimeError("test")
+        set_err_str(RuntimeError, "test")
 
     @awaitcallback_err
     def cb_err(awaitable_inner: pyawaitable.Awaitable, err: Exception) -> int:
@@ -213,13 +218,14 @@ async def test_await_cb_err_norestore():
     
     @awaitcallback
     def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
-        raise RuntimeError("test")
+        set_err_str(RuntimeError, "test")
+        return -1
 
     @awaitcallback_err
     def cb_err(awaitable_inner: pyawaitable.Awaitable, err: Exception) -> int:
         assert str(err) == "test"
         event.set()
-        raise ZeroDivisionError("42")
+        set_err_str(ZeroDivisionError, "42")
         return -2
 
     abi.awaitable_await(awaitable, coro(), cb, cb_err)
