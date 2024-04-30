@@ -15,9 +15,6 @@ typedef struct _AwaitableObject AwaitableObject;
 
 void *awaitable_api[PYAWAITABLE_API_SIZE];
 
-PyTypeObject AwaitableType;
-PyTypeObject AwaitableGenWrapperType;
-
 typedef struct _awaitable_abi {
     Py_ssize_t size;
     PyObject *(*awaitable_new)(void);
@@ -28,6 +25,7 @@ typedef struct _awaitable_abi {
     int (*awaitable_save_arb)(PyObject *, Py_ssize_t, ...);
     int (*awaitable_unpack)(PyObject *, ...);
     int (*awaitable_unpack_arb)(PyObject *, ...);
+    PyTypeObject* AwaitableType;
 } AwaitableABI;
 
 AwaitableABI* awaitable_abi = NULL;
