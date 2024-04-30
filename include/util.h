@@ -1,7 +1,5 @@
-/*
- * defines.h
- */
-#pragma once
+#ifndef PYAWAITABLE_UTIL_H
+#define PYAWAITABLE_UTIL_H
 #include <Python.h>
 #include <structmember.h>
 #include <datetime.h>
@@ -87,3 +85,4 @@ return m
 
 #define PyType_CreateInstance(type, typeobj, args, kwargs) ((type *)_PyType_CreateInstance(typeobj, args, kwargs))
 #define PyObject_GetCallableMethod(type, name) _PyObject_GetCallableMethod((PyObject*)type, name)
+#endif
