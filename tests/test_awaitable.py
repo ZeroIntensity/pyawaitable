@@ -4,7 +4,8 @@ from ctypes import pythonapi
 import pytest
 import asyncio
 import platform
-from typing import Callable
+from typing import Callable, Any
+from typing_extensions import Self
 
 get_pointer = pythonapi.PyCapsule_GetPointer
 get_pointer.argtypes = (ctypes.py_object, ctypes.c_void_p)
