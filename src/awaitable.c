@@ -773,7 +773,7 @@ static AwaitableABI _abi_interface = {
     &_AwaitableType
 };
 
-PyMODINIT_FUNC PyInit_pyawaitable()
+PyMODINIT_FUNC PyInit__pyawaitable()
 {
     PY_TYPE_IS_READY_OR_RETURN_NULL(_AwaitableType);
     PY_TYPE_IS_READY_OR_RETURN_NULL(_AwaitableGenWrapperType);
