@@ -282,3 +282,26 @@ async def test_await_cancel():
 
     await awaitable
     assert data == [1]
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_awaitable_chaining():
+    data = []
+
+    awaitable = abi.awaitable_new()
+
+    async def echo(value: int) -> int:
+        return value
+    
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
+        abi.awaitable_cancel(awaitable_inner)
+        data.append(result)
+        return 0
+
+    awaitable2 = abi.awaitable_new()
+    abi.awaitable_await(awaitable2, echo(1), cb, awaitcallback_err(0))
+    abi.awaitable_await(awaitable, awaitable2, awaitcallback(0), awaitcallback_err(0))
+    
+    await awaitable
+    assert data == [1]
