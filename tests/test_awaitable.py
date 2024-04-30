@@ -181,6 +181,9 @@ async def test_await_cb_noerr():
     with pytest.raises(SystemError):
         await awaitable
 
+"""
+TODO: figure out how to raise from ctypes callback
+
 @limit_leaks("5 KB")
 @pytest.mark.asyncio
 async def test_await_cb_err_restore():
@@ -235,3 +238,47 @@ async def test_await_cb_err_norestore():
 
     assert event.is_set()
     
+"""
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_order():
+    data = []
+
+    awaitable = abi.awaitable_new()
+
+    async def echo(value: int) -> int:
+        return value
+    
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
+        data.append(result)
+        return 0
+
+    for i in (1, 2, 3):
+        abi.awaitable_await(awaitable, echo(i), cb, awaitcallback_err(0))
+
+    await awaitable
+    assert data == [1, 2, 3]
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_cancel():
+    data = []
+
+    awaitable = abi.awaitable_new()
+
+    async def echo(value: int) -> int:
+        return value
+    
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
+        abi.awaitable_cancel(awaitable_inner)
+        data.append(result)
+        return 0
+
+    for i in (1, 2, 3):
+        abi.awaitable_await(awaitable, echo(i), cb, awaitcallback_err(0))
+
+    await awaitable
+    assert data == [1]
