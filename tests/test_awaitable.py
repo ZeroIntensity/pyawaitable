@@ -132,7 +132,7 @@ async def test_await_cb_err():
 
     @awaitcallback
     def cb(awaitable_inner: pyawaitable.Awaitable, result: float) -> int:
-        set_err_str(RuntimeError, "no good!")
+        set_err_str(RuntimeError, b"no good!")
 
     @awaitcallback_err
     def cb_err(awaitable_inner: pyawaitable.Awaitable, err: Exception) -> int:
@@ -152,7 +152,7 @@ async def test_await_cb_err_cb():
 
     @awaitcallback
     def cb(awaitable_inner: pyawaitable.Awaitable, result: float) -> int:
-        set_err_str(RuntimeError, "test")
+        set_err_str(RuntimeError, b"test")
         return -1
 
     @awaitcallback_err
@@ -218,14 +218,14 @@ async def test_await_cb_err_norestore():
     
     @awaitcallback
     def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
-        set_err_str(RuntimeError, "test")
+        set_err_str(RuntimeError, b"test")
         return -1
 
     @awaitcallback_err
     def cb_err(awaitable_inner: pyawaitable.Awaitable, err: Exception) -> int:
         assert str(err) == "test"
         event.set()
-        set_err_str(ZeroDivisionError, "42")
+        set_err_str(ZeroDivisionError, b"42")
         return -2
 
     abi.awaitable_await(awaitable, coro(), cb, cb_err)
