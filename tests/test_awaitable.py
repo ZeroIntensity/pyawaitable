@@ -42,7 +42,7 @@ class PyABI(ctypes.Structure):
         attr = super().__getattribute__(name)
         return attr
 
-awaitcallback = ctypes.PYFUNCTYPE(ctypes.py_object, ctypes.py_object)
+awaitcallback = ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object, ctypes.py_object)
 awaitcallback_err = awaitcallback
 
 class AwaitableABI(PyABI):
