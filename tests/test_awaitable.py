@@ -116,3 +116,63 @@ async def test_await_cb():
         return 0
 
     abi.awaitable_await(awaitable, coro(21), cb, awaitcallback_err(0))
+    await awaitable
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_cb_err():
+    awaitable = abi.awaitable_new()
+
+    async def coro_raise() -> float:
+        return 0 / 0
+
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: float) -> int:
+        raise RuntimeError("shouldn't be here!")
+
+    @awaitcallback_err
+    def cb_err(awaitable_inner: pyawaitable.Awaitable, err: Exception) -> int:
+        assert isinstance(err, ZeroDivisionError)
+        return 0
+    
+    abi.awaitable_await(awaitable, coro_raise(), cb, cb_err)
+    await awaitable
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_cb_err_cb():
+    awaitable = abi.awaitable_new()
+
+    async def coro() -> int:
+        return 42
+
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: float) -> int:
+        raise RuntimeError("test")
+
+    @awaitcallback_err
+    def cb_err(awaitable_inner: pyawaitable.Awaitable, err: Exception) -> int:
+        assert isinstance(err, RuntimeError)
+        assert str(err) == "test"
+        return 0
+
+    abi.awaitable_await(awaitable, coro(), cb, cb_err)
+    await awaitable
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_cb_noerr():
+    awaitable = abi.awaitable_new()
+
+    async def coro() -> int:
+        return 42
+    
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: float) -> int:
+        return -1
+    
+    abi.awaitable_await(awaitable, coro(), cb, awaitcallback_err(0))
+
+    with pytest.raises(SystemError):
+        await awaitable
+    
