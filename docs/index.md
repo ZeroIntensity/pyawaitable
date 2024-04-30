@@ -41,6 +41,15 @@ if __name__ == "__main__":
     )
 ```
 
+However, if you're distributing a library or something similar, then you want to specify PyAwaitable as a [build dependency](https://peps.python.org/pep-0517/#build-requirements):
+
+```toml
+# pyproject.toml example with setuptools
+[build-system]
+requires = ["setuptools", "pyawaitable"]
+build-backend = "setuptools.build_meta"
+```
+
 !!! question "Why don't I have to add include or library directories?"
 
     PyAwaitable only ships you a header file (which is stored in `$dataroot/include`, which is included by `setuptools` automatically. The header file then uses [capsules](https://docs.python.org/3/extending/extending.html#using-capsules) to load PyAwaitable and all of it's API functions.
