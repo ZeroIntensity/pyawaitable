@@ -42,7 +42,12 @@ typedef struct _AwaitableObject AwaitableObject;
 
 !!! info "Calling Conventions"
 
-    PyAwaitable distributes it's functions via [capsules](https://docs.python.org/3/extending/extending.html#using-capsules). For information why this is the behavior, see [this discussion](https://discuss.python.org/t/linking-against-installed-extension-modules/51710).
+    PyAwaitable distributes it's functions via [capsules](https://docs.python.org/3/extending/extending.html#using-capsules), meaning that the PyAwaitable library file doesn't actually export the functions above. Instead, calling `awaitable_init` initializes the ABI in your file. This means that, for example, `awaitable_new` is *actually* defined as:
+    ```c
+    #define awaitable_new awaitable_abi->awaitable_new
+    ```
+
+    For information why this is the behavior, see [this discussion](https://discuss.python.org/t/linking-against-installed-extension-modules/51710).
 
 ## Lifecycle
 
