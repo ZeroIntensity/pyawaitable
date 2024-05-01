@@ -305,3 +305,26 @@ async def test_awaitable_chaining():
     
     await awaitable
     assert data == [1]
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_no_cb_raise():
+    awaitable = abi.awaitable_new()
+
+    async def coro() -> None:
+        raise ZeroDivisionError("test")
+
+    abi.awaitable_await(awaitable, coro(), awaitcallback(0), awaitcallback_err(0))
+
+    with pytest.raises(ZeroDivisionError):
+        await awaitable
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_no_cb_raise():
+    awaitable = abi.awaitable_new()
+
+    abi.awaitable_await(awaitable, 42, awaitcallback(0), awaitcallback_err(0))
+
+    with pytest.raises(TypeError):
+        await awaitable
