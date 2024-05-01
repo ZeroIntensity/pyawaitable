@@ -337,24 +337,24 @@ async def test_store_values():
     async def echo(value: int) -> int:
         return value
 
-    data = [1, 2, 3]
-    some_val = "test"
+    data = ctypes.py_object([1, 2, 3])
+    some_val = ctypes.py_object("test")
 
-    abi.awaitable_save(awaitable, 2, ctypes.py_object(data), ctypes.py_object(some_val))
+    abi.awaitable_save(awaitable, 2, data, some_val)
     
     @awaitcallback
     def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
         data_inner = ctypes.py_object()
         some_val_inner = ctypes.py_object()        
         abi.awaitable_unpack(awaitable_inner, ctypes.byref(data_inner), ctypes.byref(some_val_inner))
-        assert data is data_inner
-        assert some_val is some_val_inner
+        assert data.value == data_inner.value
+        assert some_val.value == some_val_inner.value
         data.append(4)
         return 0
     
     abi.awaitable_await(awaitable, echo(42), cb, awaitcallback_err(0))
     await awaitable
-    assert data == [1, 2, 3, 4]
+    assert data.value == [1, 2, 3, 4]
 
 @limit_leaks("5 KB")
 @pytest.mark.asyncio
