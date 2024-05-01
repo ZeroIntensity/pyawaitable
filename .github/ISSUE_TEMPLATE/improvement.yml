@@ -1,5 +1,5 @@
 name: Improvement
-description: 
+description: Suggest an improvement to an existing feature.
 labels: ["improvement"]
 body:
   - type: markdown
