@@ -25,7 +25,7 @@ typedef struct _awaitable_abi {
     PyTypeObject *AwaitableType;
 } AwaitableABI;
 
-AwaitableABI* awaitable_abi = NULL;
+AwaitableABI *awaitable_abi = NULL;
 
 // PyObject *awaitable_new(void);
 #define awaitable_new awaitable_abi->awaitable_new
@@ -57,7 +57,7 @@ static int
 awaitable_init()
 {
     if (awaitable_abi != NULL)
-        return;
+        return 0;
 
     AwaitableABI *capsule = PyCapsule_Import("pyawaitable.abi.v1", 0);
     if (capsule == NULL)
