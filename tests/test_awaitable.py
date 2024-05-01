@@ -15,6 +15,10 @@ get_name = pythonapi.PyCapsule_GetName
 get_name.argtypes = (ctypes.py_object,)
 get_name.restype = ctypes.c_char_p
 
+set_err_str = pythonapi.PyErr_SetString
+set_err_str.argtypes = (ctypes.py_object, ctypes.c_char_p)
+set_err_str.restype = None
+
 class PyABI(ctypes.Structure):
     @classmethod
     def from_capsule(cls, capsule: Any) -> Self:
@@ -42,7 +46,7 @@ class PyABI(ctypes.Structure):
         attr = super().__getattribute__(name)
         return attr
 
-awaitcallback = ctypes.PYFUNCTYPE(ctypes.py_object, ctypes.py_object)
+awaitcallback = ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object, ctypes.py_object)
 awaitcallback_err = awaitcallback
 
 class AwaitableABI(PyABI):
@@ -116,3 +120,263 @@ async def test_await_cb():
         return 0
 
     abi.awaitable_await(awaitable, coro(21), cb, awaitcallback_err(0))
+    await awaitable
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_cb_err():
+    awaitable = abi.awaitable_new()
+
+    async def coro_raise() -> float:
+        return 0 / 0
+
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: float) -> int:
+        set_err_str(RuntimeError, b"no good!")
+
+    @awaitcallback_err
+    def cb_err(awaitable_inner: pyawaitable.Awaitable, err: Exception) -> int:
+        assert isinstance(err, ZeroDivisionError)
+        return 0
+    
+    abi.awaitable_await(awaitable, coro_raise(), cb, cb_err)
+    await awaitable
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_cb_err_cb():
+    awaitable = abi.awaitable_new()
+
+    async def coro() -> int:
+        return 42
+
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: float) -> int:
+        set_err_str(RuntimeError, b"test")
+        return -1
+
+    @awaitcallback_err
+    def cb_err(awaitable_inner: pyawaitable.Awaitable, err: Exception) -> int:
+        assert isinstance(err, RuntimeError)
+        assert str(err) == "test"
+        return 0
+
+    abi.awaitable_await(awaitable, coro(), cb, cb_err)
+    await awaitable
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_cb_noerr():
+    awaitable = abi.awaitable_new()
+
+    async def coro() -> int:
+        return 42
+    
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
+        return -1
+    
+    abi.awaitable_await(awaitable, coro(), cb, awaitcallback_err(0))
+
+    with pytest.raises(SystemError):
+        await awaitable
+
+"""
+TODO: figure out how to raise from ctypes callback
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_cb_err_restore():
+    awaitable = abi.awaitable_new()
+    event = asyncio.Event()
+
+    async def coro() -> int:
+        return 42
+    
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
+        set_err_str(RuntimeError, "test")
+
+    @awaitcallback_err
+    def cb_err(awaitable_inner: pyawaitable.Awaitable, err: Exception) -> int:
+        assert str(err) == "test"
+        event.set()
+        return -1
+
+    abi.awaitable_await(awaitable, coro(), cb, cb_err)
+
+    with pytest.raises(RuntimeError):
+        await awaitable
+
+    assert event.is_set()
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_cb_err_norestore():
+    awaitable = abi.awaitable_new()
+    event = asyncio.Event()
+
+    async def coro() -> int:
+        return 42
+    
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
+        set_err_str(RuntimeError, b"test")
+        return -1
+
+    @awaitcallback_err
+    def cb_err(awaitable_inner: pyawaitable.Awaitable, err: Exception) -> int:
+        assert str(err) == "test"
+        event.set()
+        set_err_str(ZeroDivisionError, b"42")
+        return -2
+
+    abi.awaitable_await(awaitable, coro(), cb, cb_err)
+
+    with pytest.raises(ZeroDivisionError):
+        await awaitable
+
+    assert event.is_set()
+    
+"""
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_order():
+    data = []
+
+    awaitable = abi.awaitable_new()
+
+    async def echo(value: int) -> int:
+        return value
+    
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
+        data.append(result)
+        return 0
+
+    for i in (1, 2, 3):
+        abi.awaitable_await(awaitable, echo(i), cb, awaitcallback_err(0))
+
+    await awaitable
+    assert data == [1, 2, 3]
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_cancel():
+    data = []
+
+    awaitable = abi.awaitable_new()
+
+    async def echo(value: int) -> int:
+        return value
+    
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
+        abi.awaitable_cancel(awaitable_inner)
+        data.append(result)
+        return 0
+
+    for i in (1, 2, 3):
+        abi.awaitable_await(awaitable, echo(i), cb, awaitcallback_err(0))
+
+    await awaitable
+    assert data == [1]
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_awaitable_chaining():
+    data = []
+
+    awaitable = abi.awaitable_new()
+
+    async def echo(value: int) -> int:
+        return value
+    
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
+        abi.awaitable_cancel(awaitable_inner)
+        data.append(result)
+        return 0
+
+    awaitable2 = abi.awaitable_new()
+    abi.awaitable_await(awaitable2, echo(1), cb, awaitcallback_err(0))
+    abi.awaitable_await(awaitable, awaitable2, awaitcallback(0), awaitcallback_err(0))
+    
+    await awaitable
+    assert data == [1]
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_no_cb_raise():
+    awaitable = abi.awaitable_new()
+
+    async def coro() -> None:
+        raise ZeroDivisionError("test")
+
+    abi.awaitable_await(awaitable, coro(), awaitcallback(0), awaitcallback_err(0))
+
+    with pytest.raises(ZeroDivisionError):
+        await awaitable
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_await_no_cb_raise():
+    awaitable = abi.awaitable_new()
+
+    abi.awaitable_await(awaitable, 42, awaitcallback(0), awaitcallback_err(0))
+
+    with pytest.raises(TypeError):
+        await awaitable
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_store_values():
+    awaitable = abi.awaitable_new()
+
+    async def echo(value: int) -> int:
+        return value
+
+    data = ctypes.py_object([1, 2, 3])
+    some_val = ctypes.py_object("test")
+
+    abi.awaitable_save(awaitable, 2, data, some_val)
+    
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
+        data_inner = ctypes.py_object()
+        some_val_inner = ctypes.py_object()        
+        abi.awaitable_unpack(awaitable_inner, ctypes.byref(data_inner), ctypes.byref(some_val_inner))
+        assert data.value == data_inner.value
+        assert some_val.value == some_val_inner.value
+        data.value.append(4)
+        return 0
+    
+    abi.awaitable_await(awaitable, echo(42), cb, awaitcallback_err(0))
+    await awaitable
+    assert data.value == [1, 2, 3, 4]
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_store_arb_values():
+    awaitable = abi.awaitable_new()
+
+    async def echo(value: int) -> int:
+        return value
+
+    data = ctypes.c_int(42)
+    buffer = ctypes.c_char_p(b"test")
+
+    abi.awaitable_save_arb(awaitable, 2, ctypes.byref(data), ctypes.byref(buffer))
+    
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
+        data_inner = ctypes.c_int()
+        buffer_inner = ctypes.c_char_p()        
+        abi.awaitable_unpack_arb(awaitable_inner, ctypes.byref(data_inner), ctypes.byref(buffer_inner))
+        assert buffer_inner.value == b"test"
+        assert data_inner.value == 42
+        return 0
+    
+    abi.awaitable_await(awaitable, echo(42), cb, awaitcallback_err(0))
+    await awaitable
