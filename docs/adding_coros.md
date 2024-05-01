@@ -94,9 +94,3 @@ spam(PyObject *self, PyObject *args)
 ```
 
 This would be equivalent to `await foo` from Python.
-
-## Cancelling
-
-The public interface for cancelling (*i.e.*, stop all loaded coroutines from being executed) is `awaitable_cancel` (`PyAwaitable_Cancel` with the Python prefixes). This function can never fail, and if no coroutines are stored on the awaitable object, this function does nothing.
-
-Note that if you're in a callback (which if you're reading this documentation for the first time, you don't how to use yet) it *is* possible to add coroutines again after cancelling, but only from that callback, since the future callbacks will be skipped (because the coroutines are removed!)
