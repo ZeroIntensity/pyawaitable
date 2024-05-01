@@ -12,7 +12,9 @@ After installing PyAwaitable, you need to initialize the ABI. This is done with 
     assert(awaitable_abi != NULL);
     ```
 
-Note that the ABI is initialized *per file*, so you need to call `awaitable_init` at least once per file. For example, this can be done in a module initialization function:
+Note that the ABI is initialized *per file*, so you need to call `awaitable_init` at least once per file. If you call `awaitable_init` after the ABI is initialized, it does nothing.
+
+For example, the ABI can be initialized in a `PyInit_*` function:
 
 ```c
 PyMODINIT_FUNC PyInit_yourextension() {
