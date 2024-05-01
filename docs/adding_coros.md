@@ -94,3 +94,27 @@ spam(PyObject *self, PyObject *args)
 ```
 
 This would be equivalent to `await foo` from Python.
+
+## Return Values
+
+You can set a return value (the thing that `await c_func()` will evaluate to) via `awaitable_set_result` (`PyAwaitable_SetResult` in the Python prefixes). By default, the return value is `None`.
+
+!!! warning
+
+    `awaitable_set_result` can *only* be called from a callback. Otherwise, a `TypeError` is raised.
+
+For example:
+
+```c
+static int
+callback(PyObject *awaitable, PyObject *result)
+{
+    if (awaitable_set_result(awaitable, result) < 0)
+        return -1;
+
+    // Do something with the result...
+    return 0;
+}
+```
+
+
