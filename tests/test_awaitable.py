@@ -328,3 +328,55 @@ async def test_await_no_cb_raise():
 
     with pytest.raises(TypeError):
         await awaitable
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_store_values():
+    awaitable = abi.awaitable_new()
+
+    async def echo(value: int) -> int:
+        return value
+
+    data = [1, 2, 3]
+    some_val = "test"
+
+    abi.awaitable_save(awaitable, 2, data, some_val)
+    
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
+        data_inner = ctypes.py_object()
+        some_val_inner = ctypes.py_object()        
+        abi.awaitable_unpack(awaitable_inner, ctypes.byref(data_inner), ctypes.byref(some_val_inner))
+        assert data is data_inner
+        assert some_val is some_val_inner
+        data.append(4)
+        return 0
+    
+    abi.awaitable_await(awaitable, echo(42), cb, awaitcallback_err(0))
+    await awaitable
+    assert data == [1, 2, 3, 4]
+
+@limit_leaks("5 KB")
+@pytest.mark.asyncio
+async def test_store_arb_values():
+    awaitable = abi.awaitable_new()
+
+    async def echo(value: int) -> int:
+        return value
+
+    data = ctypes.c_int(42)
+    buffer = ctypes.create_string_buffer(b"test")
+
+    abi.awaitable_save_arb(awaitable, 2, ctypes.byref(data), ctypes.byref(buffer))
+    
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
+        data_inner = ctypes.c_int()
+        buffer_inner = ctypes.create_string_buffer()        
+        abi.awaitable_unpack_arb(awaitable_inner, ctypes.byref(data_inner), ctypes.byref(buffer_inner))
+        assert buffer_inner.value == b"test"
+        assert data_inner.value == 42
+        return 0
+    
+    abi.awaitable_await(awaitable, echo(42), cb, awaitcallback_err(0))
+    await awaitable
