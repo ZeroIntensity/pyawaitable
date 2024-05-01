@@ -52,4 +52,4 @@ build-backend = "setuptools.build_meta"
 
 !!! question "Why don't I have to add include or library directories?"
 
-    PyAwaitable only ships you a header file (which is stored in `$dataroot/include`, which is included by `setuptools` automatically. The header file then uses [capsules](https://docs.python.org/3/extending/extending.html#using-capsules) to load PyAwaitable and all of it's API functions.
+    PyAwaitable only ships you a header file (which is stored in `$dataroot/include`, which is included by `setuptools` automatically). The header file then uses [capsules](https://docs.python.org/3/extending/extending.html#using-capsules) to load PyAwaitable and all of it's API functions.
