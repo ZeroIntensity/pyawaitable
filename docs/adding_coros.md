@@ -65,17 +65,17 @@ bar = foo()
     }
     ```
 
-## Example
+
+Here's an example of awaiting a coroutine from C:
 
 ```c
 static PyObject *
 spam(PyObject *self, PyObject *args)
 {
     PyObject *foo;
-    PyObject *bar;
-    // In this example, these are both coroutines, not asynchronous functions
+    // In this example, this is a coroutines, not an asynchronous function
     
-    if (!PyArg_ParseTuple(args, "OOO", &foo, &bar))
+    if (!PyArg_ParseTuple(args, "O", &foo))
         return NULL;
 
     PyObject *awaitable = awaitable_new();
@@ -89,26 +89,14 @@ spam(PyObject *self, PyObject *args)
         return NULL;
     }
     
-    if (awaitable_await(awaitable, bar, NULL, NULL) < 0)
-    {
-        Py_DECREF(awaitable);
-        return NULL;
-    }
-    
     return awaitable;
 }
 ```
 
-```py
-import asyncio
+This would be equivalent to `await foo` from Python.
 
-async def foo():
-    print("foo!")
+## Cancelling
 
-async def bar():
-    print("bar!")
+The public interface for cancelling (*i.e.*, stop all loaded coroutines from being executed) is `awaitable_cancel` (`PyAwaitable_Cancel` with the Python prefixes). This function can never fail, and if no coroutines are stored on the awaitable object, this function does nothing.
 
-asyncio.run(spam(foo(), bar()))
-# foo! is printed, then bar!
-```
-
+Note that if you're in a callback (which if you're reading this documentation for the first time, you don't how to use yet) it *is* possible to add coroutines again after cancelling, but only from that callback, since the future callbacks will be skipped (because the coroutines are removed!)
