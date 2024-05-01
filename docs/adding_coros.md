@@ -65,17 +65,17 @@ bar = foo()
     }
     ```
 
-## Example
+
+Here's an example of awaiting a coroutine from C:
 
 ```c
 static PyObject *
 spam(PyObject *self, PyObject *args)
 {
     PyObject *foo;
-    PyObject *bar;
-    // In this example, these are both coroutines, not asynchronous functions
+    // In this example, this is a coroutines, not an asynchronous function
     
-    if (!PyArg_ParseTuple(args, "OOO", &foo, &bar))
+    if (!PyArg_ParseTuple(args, "O", &foo))
         return NULL;
 
     PyObject *awaitable = awaitable_new();
@@ -89,26 +89,32 @@ spam(PyObject *self, PyObject *args)
         return NULL;
     }
     
-    if (awaitable_await(awaitable, bar, NULL, NULL) < 0)
-    {
-        Py_DECREF(awaitable);
-        return NULL;
-    }
-    
     return awaitable;
 }
 ```
 
-```py
-import asyncio
+This would be equivalent to `await foo` from Python.
 
-async def foo():
-    print("foo!")
+## Return Values
 
-async def bar():
-    print("bar!")
+You can set a return value (the thing that `await c_func()` will evaluate to) via `awaitable_set_result` (`PyAwaitable_SetResult` in the Python prefixes). By default, the return value is `None`.
 
-asyncio.run(spam(foo(), bar()))
-# foo! is printed, then bar!
+!!! warning
+
+    `awaitable_set_result` can *only* be called from a callback. Otherwise, a `TypeError` is raised.
+
+For example:
+
+```c
+static int
+callback(PyObject *awaitable, PyObject *result)
+{
+    if (awaitable_set_result(awaitable, result) < 0)
+        return -1;
+
+    // Do something with the result...
+    return 0;
+}
 ```
+
 
