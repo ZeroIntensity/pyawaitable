@@ -27,14 +27,7 @@ In an ``awaitcallback_err``, there are once again two arguments, both of which a
 
 !!! note
 
-    ``PyErr_GetRaisedException`` was added in 3.12, meaning you cannot use it on previous versions. PyAwaitable gets around this with an *internal* backport. However, use of this backport is not garunteed in API stability. You may write a declaration for it at your own risk:
-
-    ```c
-    // Backport PyErr_GetRaisedException
-    #if PY_VERSION_HEX < 0x030c0000
-    PyObject *PyErr_GetRaisedException(void);
-    #endif
-    ```
+    ``PyErr_GetRaisedException`` was added in 3.12, meaning you cannot use it on previous versions. PyAwaitable gets around this with an *internal* backport.
 
 Likewise, an error callback can also return an error, which is once again denoted by a value less than ``0``, but also has two ways to handle exceptions:
 
@@ -45,7 +38,7 @@ Likewise, an error callback can also return an error, which is once again denote
 
     If either a result callback or an error callback return an error value without an exception set, a ``SystemError`` is raised.
 
-## Example
+For example:
 
 ```c
 static int
@@ -77,3 +70,23 @@ spam(PyObject *self, PyObject *args)
     return awaitable;
 }
 ```
+
+## Cancelling
+
+The public interface for cancelling (*i.e.*, stop all loaded coroutines from being executed) is `awaitable_cancel` (`PyAwaitable_Cancel` with the Python prefixes). This function can never fail, and if no coroutines are stored on the awaitable object, this function does nothing.
+
+Note that if you're in a callback it *is* possible to add coroutines again after cancelling, but only from that callback, since the future callbacks will be skipped (because the coroutines are removed!)
+
+For example:
+
+```c
+static int
+callback(PyObject *awaitable, PyObject *result)
+{
+    awaitable_cancel(awaitable);
+    // Unless we explicitly add another coroutine via awaitable_await,
+    // then this is the last coroutine! We just cancelled the others.
+    return 0;
+}
+```
+
