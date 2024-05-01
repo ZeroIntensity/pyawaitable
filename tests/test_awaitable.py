@@ -349,7 +349,7 @@ async def test_store_values():
         abi.awaitable_unpack(awaitable_inner, ctypes.byref(data_inner), ctypes.byref(some_val_inner))
         assert data.value == data_inner.value
         assert some_val.value == some_val_inner.value
-        data.append(4)
+        data.value.append(4)
         return 0
     
     abi.awaitable_await(awaitable, echo(42), cb, awaitcallback_err(0))
@@ -365,14 +365,14 @@ async def test_store_arb_values():
         return value
 
     data = ctypes.c_int(42)
-    buffer = ctypes.create_string_buffer(b"test")
+    buffer = ctypes.c_char_p(b"test")
 
     abi.awaitable_save_arb(awaitable, 2, ctypes.byref(data), ctypes.byref(buffer))
     
     @awaitcallback
     def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
         data_inner = ctypes.c_int()
-        buffer_inner = ctypes.create_string_buffer()        
+        buffer_inner = ctypes.c_char_p()        
         abi.awaitable_unpack_arb(awaitable_inner, ctypes.byref(data_inner), ctypes.byref(buffer_inner))
         assert buffer_inner.value == b"test"
         assert data_inner.value == 42
