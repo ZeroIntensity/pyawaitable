@@ -340,7 +340,7 @@ async def test_store_values():
     data = [1, 2, 3]
     some_val = "test"
 
-    abi.awaitable_save(awaitable, 2, data, some_val)
+    abi.awaitable_save(awaitable, 2, ctypes.py_object(data), ctypes.py_object(some_val))
     
     @awaitcallback
     def cb(awaitable_inner: pyawaitable.Awaitable, result: int) -> int:
