@@ -17,7 +17,7 @@ awaitable_send_with_arg(PyObject *self, PyObject *value)
         Py_RETURN_NONE;
     }
 
-    return gen_next(aw->aw_gen);
+    return genwrapper_next(aw->aw_gen);
 }
 
 static PyObject *
