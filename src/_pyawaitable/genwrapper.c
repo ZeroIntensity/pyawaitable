@@ -2,13 +2,7 @@
 #include <Python.h>
 #include <pyawaitable/backport.h>
 #include <pyawaitable/awaitableobject.h>
-
-typedef struct {
-    PyObject_HEAD
-    PyObject *gw_result;
-    AwaitableObject *gw_aw;
-    PyObject *gw_current_await;
-} GenWrapperObject;
+#include <pyawaitable/genwrapper.h>
 
 static PyObject *
 gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
@@ -40,7 +34,7 @@ gen_dealloc(PyObject *self)
 }
 
 static PyObject *
-_awaitable_genwrapper_new(AwaitableObject *aw)
+genwrapper_new(AwaitableObject *aw)
 {
     assert(aw != NULL);
     GenWrapperObject *g = (GenWrapperObject *) gen_new(
@@ -54,8 +48,8 @@ _awaitable_genwrapper_new(AwaitableObject *aw)
     return (PyObject *) g;
 }
 
-static void
-_awaitable_genwrapper_set_result(PyObject *gen, PyObject *result)
+void
+awaitable_genwrapper_set_result(PyObject *gen, PyObject *result)
 {
     assert(gen != NULL);
     assert(result != NULL);
@@ -66,8 +60,8 @@ _awaitable_genwrapper_set_result(PyObject *gen, PyObject *result)
     Py_DECREF(gen);
 }
 
-static int
-fire_err_callback(PyObject *self, PyObject *await, awaitable_callback *cb)
+int
+genwrapper_fire_err_callback(PyObject *self, PyObject *await, awaitable_callback *cb)
 {
     assert(PyErr_Occurred() != NULL);
     if (!cb->err_callback) {
@@ -105,7 +99,7 @@ fire_err_callback(PyObject *self, PyObject *await, awaitable_callback *cb)
 }
 
 PyObject *
-gen_next(PyObject *self)
+genwrapper_next(PyObject *self)
 {
     GenWrapperObject *g = (GenWrapperObject *) self;
     AwaitableObject *aw = g->gw_aw;
