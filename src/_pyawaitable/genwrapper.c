@@ -125,7 +125,7 @@ genwrapper_next(PyObject *self)
         g->gw_current_await = Py_TYPE(cb->coro)->tp_as_async->am_await(
                                                             cb->coro);
         if (g->gw_current_await == NULL) {
-            if (genwrapper_genwrapper_fire_err_callback((PyObject *) aw, g->gw_current_await, cb) < 0) {
+            if (genwrapper_fire_err_callback((PyObject *) aw, g->gw_current_await, cb) < 0) {
                 return NULL;
             }
 
