@@ -1,17 +1,12 @@
 /* *INDENT-OFF* */
 // This code follows PEP 7 and CPython ABI conventions
-// Stdlib headers
-#include <stdarg.h>
-#include <stdbool.h>
 
-// Python headers
-#include <Python.h>
-#include "pyerrors.h"
-
-// PyAwaitable headers
 #include <awaitable.h>
+#include <pyawaitable/awaitableobject.h>
+#include <pyawaitable/coro.h>
+#include <pyawaitable/values.h>
+#include <pyawaitable/genwrapper.h>
 #include <pyawaitable/util.h>
-#include <pyawaitable/backport.h>
 
 static PyModuleDef awaitable_module = {
     PyModuleDef_HEAD_INIT,
