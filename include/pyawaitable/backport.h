@@ -3,6 +3,7 @@
 #include <Python.h>
 
 #ifndef _PyObject_Vectorcall
+#define PYAWAITABLE_NEEDS_VECTORCALL
 PyObject *_PyObject_VectorcallBackport(
     PyObject *obj,
     PyObject **args,
@@ -21,11 +22,13 @@ void PyErr_SetRaisedException(PyObject *err);
 #endif
 
 #ifndef Py_NewRef
+#define PYAWAITABLE_NEEDS_NEWREF
 PyObject *Py_NewRef_Backport(PyObject *o);
 #define Py_NewRef Py_NewRef_Backport
 #endif
 
 #ifndef Py_XNewRef
+#define PYAWAITABLE_NEEDS_XNEWREF
 PyObject *Py_XNewRef_Backport(PyObject *o);
 #define Py_XNewRef Py_XNewRef_Backport
 #endif
