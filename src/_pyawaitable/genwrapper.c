@@ -49,7 +49,7 @@ genwrapper_new(AwaitableObject *aw)
 }
 
 void
-awaitable_genwrapper_set_result(PyObject *gen, PyObject *result)
+genwrapper_set_result(PyObject *gen, PyObject *result)
 {
     assert(gen != NULL);
     assert(result != NULL);
