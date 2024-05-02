@@ -46,6 +46,6 @@ PyObject *
 awaitable_next(PyObject *self);
 
 PyObject *
-awaitable_new(void);
+awaitable_new_impl(void);
 
 #endif
