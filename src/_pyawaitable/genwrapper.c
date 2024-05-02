@@ -33,7 +33,7 @@ gen_dealloc(PyObject *self)
     Py_TYPE(self)->tp_free(self);
 }
 
-static PyObject *
+PyObject *
 genwrapper_new(AwaitableObject *aw)
 {
     assert(aw != NULL);
