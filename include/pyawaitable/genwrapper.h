@@ -12,6 +12,13 @@ typedef struct {
     PyObject *gw_current_await;
 } GenWrapperObject;
 
-PyObject *gen_next(PyObject *self);
+PyObject *
+genwrapper_next(PyObject *self);
+
+void
+awaitable_genwrapper_set_result(PyObject *gen, PyObject *result);
+
+int
+genwrapper_fire_err_callback(PyObject *self, PyObject *await, awaitable_callback *cb);
 
 #endif
