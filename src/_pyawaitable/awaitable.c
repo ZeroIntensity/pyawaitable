@@ -76,7 +76,7 @@ awaitable_dealloc(PyObject *self)
 }
 
 void
-_awaitable_cancel(PyObject *aw)
+awaitable_cancel_impl(PyObject *aw)
 {
     assert(aw != NULL);
     Py_INCREF(aw);
@@ -110,7 +110,7 @@ PyTypeObject _AwaitableType = {
 
 
 int
-_awaitable_await(
+awaitable_await_impl(
     PyObject *aw,
     PyObject *coro,
     awaitcallback cb,
@@ -160,7 +160,7 @@ _awaitable_await(
 }
 
 int
-_awaitable_set_result(PyObject *awaitable, PyObject *result)
+awaitable_set_result_impl(PyObject *awaitable, PyObject *result)
 {
     assert(awaitable != NULL);
     assert(result != NULL);
