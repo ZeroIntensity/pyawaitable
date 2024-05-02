@@ -9,6 +9,7 @@ nav:
     - Awaiting Coroutines: adding_coros.md
     - Callbacks: callbacks.md
     - Storing and Fetching Values: storing_and_fetching.md
+    - Version Rules: version_rules.md
 
 theme:
     name: material
