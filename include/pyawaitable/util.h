@@ -2,8 +2,9 @@
 #define PYAWAITABLE_UTIL_H
 #include <Python.h>
 #include <datetime.h>
-#include <stdbool.h>
 #include <structmember.h>
+#include <stdbool.h>
+#include <pyawaitable/backport.h>
 
 /* inline helpers. */
 static inline void _SetAllListItems(PyObject *all_list, int count, ...) {
