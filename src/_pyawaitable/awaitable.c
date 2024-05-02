@@ -161,7 +161,7 @@ awaitable_set_result_impl(PyObject *awaitable, PyObject *result)
         Py_DECREF(result);
         return -1;
     }
-    awaitable_genwrapper_set_result(aw->aw_gen, result);
+    genwrapper_set_result(aw->aw_gen, result);
     Py_DECREF(awaitable);
     Py_DECREF(result);
     return 0;
