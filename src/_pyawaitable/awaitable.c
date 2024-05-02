@@ -2,6 +2,7 @@
 #include <Python.h>
 #include <pyawaitable/backport.h>
 #include <pyawaitable/awaitableobject.h>
+#include <pyawaitable/genwrapper.h>
 
 PyDoc_STRVAR(awaitable_doc,
     "Awaitable transport utility for the C API.");
@@ -41,7 +42,7 @@ awaitable_next(PyObject *self)
         return NULL;
     }
 
-    PyObject* gen = _awaitable_genwrapper_new(aw);
+    PyObject* gen = genwrapper_new(aw);
 
     if (gen == NULL) {
         return NULL;
@@ -174,7 +175,7 @@ awaitable_set_result_impl(PyObject *awaitable, PyObject *result)
         Py_DECREF(result);
         return -1;
     }
-    _awaitable_genwrapper_set_result(aw->aw_gen, result);
+    awaitable_genwrapper_set_result(aw->aw_gen, result);
     Py_DECREF(awaitable);
     Py_DECREF(result);
     return 0;
