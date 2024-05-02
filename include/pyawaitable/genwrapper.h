@@ -21,4 +21,7 @@ awaitable_genwrapper_set_result(PyObject *gen, PyObject *result);
 int
 genwrapper_fire_err_callback(PyObject *self, PyObject *await, awaitable_callback *cb);
 
+PyObject *
+genwrapper_new(AwaitableObject *aw);
+
 #endif
