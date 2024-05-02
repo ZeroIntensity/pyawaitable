@@ -99,7 +99,7 @@ genwrapper_fire_err_callback(PyObject *self, PyObject *await, awaitable_callback
 }
 
 PyObject *
-gen_next(PyObject *self)
+genwrapper_next(PyObject *self)
 {
     GenWrapperObject *g = (GenWrapperObject *) self;
     AwaitableObject *aw = g->gw_aw;
@@ -129,7 +129,7 @@ gen_next(PyObject *self)
                 return NULL;
             }
 
-            return gen_next(self);
+            return genwrapper_next(self);
         }
     } else {
         cb = aw->aw_callbacks[aw->aw_state - 1];
@@ -143,7 +143,7 @@ gen_next(PyObject *self)
         if (!occurred) {
             // coro is done
             g->gw_current_await = NULL;
-            return gen_next(self);
+            return genwrapper_next(self);
         }
 
         if (!PyErr_GivenExceptionMatches(occurred, PyExc_StopIteration)) {
@@ -151,7 +151,7 @@ gen_next(PyObject *self)
                 return NULL;
             }
             g->gw_current_await = NULL;
-            return gen_next(self);
+            return genwrapper_next(self);
         }
 
         if (cb->callback == NULL) {
@@ -159,7 +159,7 @@ gen_next(PyObject *self)
             // we can disregard the result if theres no callback
             g->gw_current_await = NULL;
             PyErr_Clear();
-            return gen_next(self);
+            return genwrapper_next(self);
         }
 
         PyObject *type, *value, *traceback;
@@ -201,7 +201,7 @@ gen_next(PyObject *self)
 
         cb->done = true;
         g->gw_current_await = NULL;
-        return gen_next(self);
+        return genwrapper_next(self);
     }
 
     return result;
@@ -214,6 +214,6 @@ PyTypeObject _AwaitableGenWrapperType = {
     .tp_dealloc = gen_dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_iter = PyObject_SelfIter,
-    .tp_iternext = gen_next,
+    .tp_iternext = genwrapper_next,
     .tp_new = gen_new,
 };
