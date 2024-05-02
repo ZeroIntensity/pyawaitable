@@ -17,14 +17,14 @@ static PyModuleDef awaitable_module = {
 
 static AwaitableABI _abi_interface = {
     sizeof(AwaitableABI),
-    _awaitable_new,
-    _awaitable_await,
-    _awaitable_cancel,
-    _awaitable_set_result,
-    _awaitable_save,
-    _awaitable_save_arb,
-    _awaitable_unpack,
-    _awaitable_unpack_arb,
+    awaitable_new_impl,
+    awaitable_await_impl,
+    awaitable_cancel_impl,
+    awaitable_set_result_impl,
+    awaitable_save_impl,
+    awaitable_save_arb_impl,
+    awaitable_unpack_impl,
+    awaitable_unpack_arb_impl,
     &_AwaitableType
 };
 
