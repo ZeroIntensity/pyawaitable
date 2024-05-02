@@ -61,7 +61,7 @@ awaitable_genwrapper_set_result(PyObject *gen, PyObject *result)
 }
 
 int
-genwrapper_fire_err_callback(PyObject *self, PyObject *await, awaitable_callback *cb)
+genwrapper_genwrapper_fire_err_callback(PyObject *self, PyObject *await, awaitable_callback *cb)
 {
     assert(PyErr_Occurred() != NULL);
     if (!cb->err_callback) {
@@ -125,7 +125,7 @@ genwrapper_next(PyObject *self)
         g->gw_current_await = Py_TYPE(cb->coro)->tp_as_async->am_await(
                                                             cb->coro);
         if (g->gw_current_await == NULL) {
-            if (genwrapper_fire_err_callback((PyObject *) aw, g->gw_current_await, cb) < 0) {
+            if (genwrapper_genwrapper_fire_err_callback((PyObject *) aw, g->gw_current_await, cb) < 0) {
                 return NULL;
             }
 
@@ -147,7 +147,7 @@ genwrapper_next(PyObject *self)
         }
 
         if (!PyErr_GivenExceptionMatches(occurred, PyExc_StopIteration)) {
-            if (fire_err_callback((PyObject *) aw, g->gw_current_await, cb) < 0) {
+            if (genwrapper_fire_err_callback((PyObject *) aw, g->gw_current_await, cb) < 0) {
                 return NULL;
             }
             g->gw_current_await = NULL;
@@ -193,7 +193,7 @@ genwrapper_next(PyObject *self)
                 PyErr_SetString(PyExc_SystemError, "callback returned -1 without exception set");
                 return NULL;
             }
-            if (fire_err_callback((PyObject *) aw, g->gw_current_await, cb) < 0) {
+            if (genwrapper_fire_err_callback((PyObject *) aw, g->gw_current_await, cb) < 0) {
                 PyErr_Restore(type, value, traceback);
                 return NULL;
             }
