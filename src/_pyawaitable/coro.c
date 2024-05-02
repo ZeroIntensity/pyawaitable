@@ -3,6 +3,7 @@
 #include <pyawaitable/backport.h>
 #include <pyawaitable/awaitableobject.h>
 #include <pyawaitable/genwrapper.h>
+#include <pyawaitable/coro.h>
 
 static PyObject *
 awaitable_send_with_arg(PyObject *self, PyObject *value)
@@ -107,14 +108,14 @@ awaitable_am_send(PyObject *self, PyObject *arg, PyObject **presult) {
 }
 #endif
 
-static PyMethodDef awaitable_methods[] = {
+PyMethodDef awaitable_methods[] = {
     {"send", awaitable_send, METH_VARARGS, NULL},
     {"close", awaitable_close, METH_VARARGS, NULL},
     {"throw", awaitable_throw, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 
-static PyAsyncMethods async_methods = {
+PyAsyncMethods awaitable_async_methods = {
     #if PY_MINOR_VERSION > 9
     .am_await = awaitable_next,
     .am_send = awaitable_am_send
