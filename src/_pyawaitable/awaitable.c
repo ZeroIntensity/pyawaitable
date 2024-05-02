@@ -96,21 +96,6 @@ awaitable_cancel_impl(PyObject *aw)
     Py_DECREF(aw);
 }
 
-
-PyTypeObject _AwaitableType = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "_awaitable",
-    .tp_basicsize = sizeof(AwaitableObject),
-    .tp_dealloc = awaitable_dealloc,
-    .tp_as_async = &async_methods,
-    .tp_flags = Py_TPFLAGS_DEFAULT,
-    .tp_doc = awaitable_doc,
-    .tp_iternext = awaitable_next,
-    .tp_new = awaitable_new_func,
-    .tp_methods = awaitable_methods
-};
-
-
 int
 awaitable_await_impl(
     PyObject *aw,
