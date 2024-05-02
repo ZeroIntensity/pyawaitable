@@ -61,7 +61,7 @@ awaitable_genwrapper_set_result(PyObject *gen, PyObject *result)
 }
 
 int
-genwrapper_genwrapper_fire_err_callback(PyObject *self, PyObject *await, awaitable_callback *cb)
+genwrapper_fire_err_callback(PyObject *self, PyObject *await, awaitable_callback *cb)
 {
     assert(PyErr_Occurred() != NULL);
     if (!cb->err_callback) {
