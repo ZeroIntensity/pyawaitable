@@ -34,7 +34,7 @@ awaitable_send(PyObject *self, PyObject *args)
 static PyObject *
 awaitable_close(PyObject *self, PyObject *args)
 {
-    _awaitable_cancel(self);
+    awaitable_cancel_impl(self);
     AwaitableObject *aw = (AwaitableObject *) self;
     aw->aw_done = true;
     Py_RETURN_NONE;
@@ -74,7 +74,7 @@ awaitable_throw(PyObject *self, PyObject *args)
         if (cb == NULL)
             return NULL;
 
-        if (fire_err_callback(self, gw->gw_current_await, cb) < 0)
+        if (genwrapper_fire_err_callback(self, gw->gw_current_await, cb) < 0)
             return NULL;
     } else
         return NULL;
