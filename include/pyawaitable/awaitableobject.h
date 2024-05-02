@@ -42,4 +42,7 @@ awaitable_await_impl(
 void
 awaitable_cancel_impl(PyObject *aw);
 
+PyObject *
+awaitable_next(PyObject *self);
+
 #endif
