@@ -1,9 +1,7 @@
 #include <Python.h>
 #include <pyawaitable/backport.h>
 
-
-#ifndef _PyObject_Vectorcall
-#define PyObject_CallNoArgs(o) PyObject_CallObject(o, NULL)
+#ifdef PYAWAITABLE_NEEDS_VECTORCALL
 PyObject *_PyObject_VectorcallBackport(
     PyObject *obj,
     PyObject **args,
@@ -21,8 +19,6 @@ PyObject *_PyObject_VectorcallBackport(
     Py_DECREF(tuple);
     return o;
 }
-#define PyObject_Vectorcall _PyObject_VectorcallBackport
-#define PyObject_VectorcallDict _PyObject_FastCallDict
 #endif
 
 #if PY_VERSION_HEX < 0x030c0000
@@ -41,14 +37,14 @@ void PyErr_SetRaisedException(PyObject *err) {
 }
 #endif
 
-#ifndef Py_NewRef
+#ifdef PYAWAITABLE_NEEDS_NEWREF
 PyObject *Py_NewRef_Backport(PyObject *o) {
   Py_INCREF(o);
   return o;
 }
 #endif
 
-#ifndef Py_XNewRef
+#ifdef PYAWAITABLE_NEEDS_XNEWREF
 PyObject *Py_XNewRef_Backport(PyObject *o) {
   Py_XINCREF(o);
   return o;
