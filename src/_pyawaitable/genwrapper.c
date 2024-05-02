@@ -99,7 +99,7 @@ genwrapper_fire_err_callback(PyObject *self, PyObject *await, awaitable_callback
 }
 
 PyObject *
-genwrapper_next(PyObject *self)
+gen_next(PyObject *self)
 {
     GenWrapperObject *g = (GenWrapperObject *) self;
     AwaitableObject *aw = g->gw_aw;
