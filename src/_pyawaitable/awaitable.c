@@ -31,7 +31,7 @@ awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     return (PyObject *) aw;
 }
 
-static PyObject *
+PyObject *
 awaitable_next(PyObject *self)
 {
     AwaitableObject *aw = (AwaitableObject *) self;
