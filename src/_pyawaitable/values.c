@@ -138,10 +138,3 @@ awaitable_save_arb_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
     Py_DECREF(awaitable);
     return 0;
 }
-
-PyObject *
-awaitable_new_impl(void)
-{
-    PyObject *aw = awaitable_new_func(&_AwaitableType, NULL, NULL);
-    return aw;
-}
