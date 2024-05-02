@@ -167,6 +167,13 @@ awaitable_set_result_impl(PyObject *awaitable, PyObject *result)
     return 0;
 }
 
+PyObject *
+awaitable_new_impl(void)
+{
+    PyObject *aw = awaitable_new_func(&_AwaitableType, NULL, NULL);
+    return aw;
+}
+
 PyTypeObject _AwaitableType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "_awaitable",
