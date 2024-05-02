@@ -27,7 +27,7 @@ PyObject *Py_NewRef_Backport(PyObject *o);
 
 #ifndef Py_XNewRef
 PyObject *Py_XNewRef_Backport(PyObject *o)
-#define Py_NewRef Py_NewRef_Backport
+#define Py_XNewRef Py_XNewRef_Backport
 #endif
 
 #endif
