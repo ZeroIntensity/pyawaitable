@@ -3,6 +3,7 @@
 #include <pyawaitable/backport.h>
 #include <pyawaitable/awaitableobject.h>
 #include <pyawaitable/genwrapper.h>
+#include <pyawaitable/coro.h>
 
 PyDoc_STRVAR(awaitable_doc,
     "Awaitable transport utility for the C API.");
