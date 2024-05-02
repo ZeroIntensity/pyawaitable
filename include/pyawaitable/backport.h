@@ -22,7 +22,7 @@ static PyObject *_PyObject_VectorcallBackport(PyObject *obj, PyObject **args,
 #endif
 
 #if PY_VERSION_HEX < 0x030c0000
-PyObject *PyErr_GetRaisedException(void) {
+static PyObject *PyErr_GetRaisedException(void) {
   PyObject *type, *val, *tb;
   PyErr_Fetch(&type, &val, &tb);
   PyErr_NormalizeException(&type, &val, &tb);
@@ -32,7 +32,7 @@ PyObject *PyErr_GetRaisedException(void) {
   return val;
 }
 
-void PyErr_SetRaisedException(PyObject *err) { PyErr_Restore(err, NULL, NULL); }
+static void PyErr_SetRaisedException(PyObject *err) { PyErr_Restore(err, NULL, NULL); }
 #endif
 
 #ifndef Py_NewRef
