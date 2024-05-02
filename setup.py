@@ -1,11 +1,12 @@
 from setuptools import Extension, setup
+from glob import glob
 
 if __name__ == "__main__":
     setup(
         ext_modules=[
             Extension(
                 "_pyawaitable",
-                ["./src/awaitable.c"],
+                glob("./src/_pyawaitable/*.c"),
                 include_dirs=["./include/"],
                 define_macros=[("PYAWAITABLE_IS_COMPILING", None)],
             )

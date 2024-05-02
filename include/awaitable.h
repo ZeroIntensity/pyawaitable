@@ -13,24 +13,26 @@ typedef int (*awaitcallback_err)(PyObject *, PyObject *);
 typedef struct _AwaitableObject AwaitableObject;
 
 typedef struct _awaitable_abi {
-    Py_ssize_t size;
-    PyObject *(*awaitable_new)(void);
-    int (*awaitable_await)(PyObject *, PyObject *, awaitcallback, awaitcallback_err);
-    void (*awaitable_cancel)(PyObject *);
-    int (*awaitable_set_result)(PyObject *, PyObject *);
-    int (*awaitable_save)(PyObject *, Py_ssize_t, ...);
-    int (*awaitable_save_arb)(PyObject *, Py_ssize_t, ...);
-    int (*awaitable_unpack)(PyObject *, ...);
-    int (*awaitable_unpack_arb)(PyObject *, ...);
-    PyTypeObject *AwaitableType;
+  Py_ssize_t size;
+  PyObject *(*awaitable_new)(void);
+  int (*awaitable_await)(PyObject *, PyObject *, awaitcallback,
+                         awaitcallback_err);
+  void (*awaitable_cancel)(PyObject *);
+  int (*awaitable_set_result)(PyObject *, PyObject *);
+  int (*awaitable_save)(PyObject *, Py_ssize_t, ...);
+  int (*awaitable_save_arb)(PyObject *, Py_ssize_t, ...);
+  int (*awaitable_unpack)(PyObject *, ...);
+  int (*awaitable_unpack_arb)(PyObject *, ...);
+  PyTypeObject *AwaitableType;
 } AwaitableABI;
 
-AwaitableABI *awaitable_abi = NULL;
+static AwaitableABI *awaitable_abi = NULL;
 
 // PyObject *awaitable_new(void);
 #define awaitable_new awaitable_abi->awaitable_new
 
-// int awaitable_await(PyObject *aw, PyObject *coro, awaitcallback cb, awaitcallback_err err);
+// int awaitable_await(PyObject *aw, PyObject *coro, awaitcallback cb,
+// awaitcallback_err err);
 #define awaitable_await awaitable_abi->awaitable_await
 
 // void awaitable_cancel(PyObject *aw);
@@ -53,18 +55,16 @@ AwaitableABI *awaitable_abi = NULL;
 
 #define AwaitableType awaitable_abi->AwaitableType
 
-static int
-awaitable_init()
-{
-    if (awaitable_abi != NULL)
-        return 0;
-
-    AwaitableABI *capsule = PyCapsule_Import("pyawaitable.abi.v1", 0);
-    if (capsule == NULL)
-        return NULL;
-
-    awaitable_abi = capsule;
+static int awaitable_init() {
+  if (awaitable_abi != NULL)
     return 0;
+
+  AwaitableABI *capsule = PyCapsule_Import("pyawaitable.abi.v1", 0);
+  if (capsule == NULL)
+    return -1;
+
+  awaitable_abi = capsule;
+  return 0;
 }
 
 #ifdef PYAWAITABLE_PYAPI
