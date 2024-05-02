@@ -1,9 +1,11 @@
 /* *INDENT-OFF* */
 #include <Python.h>
 #include <pyawaitable/backport.h>
+#include <pyawaitable/values.h>
+#include <pyawaitable/awaitableobject.h>
 
 int
-_awaitable_unpack(PyObject *awaitable, ...)
+awaitable_unpack_impl(PyObject *awaitable, ...)
 {
     assert(awaitable != NULL);
     AwaitableObject *aw = (AwaitableObject *) awaitable;
@@ -32,7 +34,7 @@ _awaitable_unpack(PyObject *awaitable, ...)
 }
 
 int
-_awaitable_save(PyObject *awaitable, Py_ssize_t nargs, ...)
+awaitable_save_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
 {
     assert(awaitable != NULL);
     assert(nargs != 0);
@@ -71,7 +73,7 @@ _awaitable_save(PyObject *awaitable, Py_ssize_t nargs, ...)
 }
 
 int
-_awaitable_unpack_arb(PyObject *awaitable, ...)
+awaitable_unpack_arb_impl(PyObject *awaitable, ...)
 {
     assert(awaitable != NULL);
     AwaitableObject *aw = (AwaitableObject *) awaitable;
@@ -99,7 +101,7 @@ _awaitable_unpack_arb(PyObject *awaitable, ...)
 }
 
 int
-_awaitable_save_arb(PyObject *awaitable, Py_ssize_t nargs, ...)
+awaitable_save_arb_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
 {
     assert(awaitable != NULL);
     assert(nargs != 0);
@@ -138,7 +140,7 @@ _awaitable_save_arb(PyObject *awaitable, Py_ssize_t nargs, ...)
 }
 
 PyObject *
-_awaitable_new(void)
+awaitable_new_impl(void)
 {
     PyObject *aw = awaitable_new_func(&_AwaitableType, NULL, NULL);
     return aw;
