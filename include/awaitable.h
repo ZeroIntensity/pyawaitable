@@ -26,7 +26,11 @@ typedef struct _awaitable_abi {
   PyTypeObject *AwaitableType;
 } AwaitableABI;
 
+#ifndef AWAITABLE_ABI_EXTERN
 static AwaitableABI *awaitable_abi = NULL;
+#else
+extern AwaitableABI *awaitable_abi = NULL;
+#endif
 
 // PyObject *awaitable_new(void);
 #define awaitable_new awaitable_abi->awaitable_new
