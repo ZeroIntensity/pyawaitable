@@ -14,7 +14,7 @@ After installing PyAwaitable, you need to initialize the ABI. This is done with 
 
 Note that the ABI is initialized *per file* by default, so you need to call `awaitable_init` at least once per file. If you do not want to call `awaitable_init`
 outside of the module init function source file (say you separate the module init stuff from all the other module code like type objects, user defined module functions, etc.) then define
-`AWAITABLE_ABI_EXTERN` before the `#include <awaitable.h>` line in each source file. Also in any source file other than the one that holds the module init code define `AWAITABLE_API_DECLARE` as well.
+`AWAITABLE_ABI_EXTERN` before the `#include <awaitable.h>` line in each source file. Also in any source file other than the one that holds the module init code define `AWAITABLE_ABI_DECLARE` as well.
 
 For example, in the module init source file it would look like:
 
@@ -27,7 +27,7 @@ And in every other source file needing to use the ABI it would look like:
 
 ```c
 #define AWAITABLE_ABI_EXTERN
-#define AWAITABLE_API_DECLARE
+#define AWAITABLE_ABI_DECLARE
 #include <awaitable.h>
 ```
 

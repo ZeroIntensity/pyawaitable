@@ -32,7 +32,7 @@ typedef struct _awaitable_abi {
 #define AWAITABLE_ABI_EXTERN extern
 #endif
 
-#ifndef AWAITABLE_API_DECLARE
+#ifndef AWAITABLE_ABI_DECLARE
 AWAITABLE_ABI_EXTERN AwaitableABI *awaitable_abi = NULL;
 #else
 AWAITABLE_ABI_EXTERN AwaitableABI *awaitable_abi;
