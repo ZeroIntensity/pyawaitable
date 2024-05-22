@@ -27,10 +27,18 @@ typedef struct _awaitable_abi {
 } AwaitableABI;
 
 #ifndef AWAITABLE_ABI_EXTERN
-static AwaitableABI *awaitable_abi = NULL;
+#define AWAITABLE_ABI_EXTERN static
 #else
-extern AwaitableABI *awaitable_abi = NULL;
+#define AWAITABLE_ABI_EXTERN extern
 #endif
+
+#ifndef AWAITABLE_API_DECLARE
+AWAITABLE_ABI_EXTERN AwaitableABI *awaitable_abi = NULL;
+#else
+AWAITABLE_ABI_EXTERN AwaitableABI *awaitable_abi;
+#endif
+
+#undef AWAITABLE_ABI_EXTERN  // so users of this header file cannot use this macro.
 
 // PyObject *awaitable_new(void);
 #define awaitable_new awaitable_abi->awaitable_new
