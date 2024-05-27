@@ -6,6 +6,8 @@
 #define PYAWAITABLE_MAJOR_VERSION 1
 #define PYAWAITABLE_MINOR_VERSION 0
 #define PYAWAITABLE_MICRO_VERSION 0
+// Per CPython Conventions: 0xA for alpha, 0xB for beta, 0xC for release candidate or 0xF for final.
+#define PYAWAITABLE_RELEASE_LEVEL 0xB
 
 typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *);
