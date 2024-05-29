@@ -40,6 +40,18 @@ theme:
               name: Switch to system preference
     features:
         - content.tabs.link
+        - content.code.copy
+        - content.action.edit
+        - search.highlight
+        - search.share
+        - search.suggest
+        - navigation.footer
+        - navigation.indexes
+        - navigation.sections
+        - navigation.tabs
+        - navigation.tabs.sticky
+        - navigation.top
+        - toc.follow
 
     icon:
         repo: fontawesome/brands/github
