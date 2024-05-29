@@ -1,3 +1,8 @@
+---
+hide:
+  - navigation
+---
+
 # Version Rules
 
 ## Capsules
