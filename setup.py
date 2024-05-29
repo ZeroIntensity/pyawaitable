@@ -3,6 +3,8 @@ from glob import glob
 
 if __name__ == "__main__":
     setup(
+        name="pyawaitable",
+        license="MIT",
         ext_modules=[
             Extension(
                 "_pyawaitable",
