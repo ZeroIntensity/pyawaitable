@@ -19,7 +19,6 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = []
-version = "1.0.0-beta1"
 
 [project.urls]
 Documentation = "https://awaitable.zintensity.dev"
