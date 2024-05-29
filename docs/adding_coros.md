@@ -1,3 +1,8 @@
+---
+hide:
+  - toc
+---
+
 # Adding Coroutines
 
 ## Basics
