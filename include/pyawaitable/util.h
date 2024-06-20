@@ -3,8 +3,8 @@
 
 #include <Python.h>
 #include <datetime.h>
-#include <structmember.h>
 #include <stdbool.h>
+#include <structmember.h>
 
 #define PY_TYPE_IS_READY_OR_RETURN_NULL(type)                                  \
   if (PyType_Ready(&type) < 0)                                                 \

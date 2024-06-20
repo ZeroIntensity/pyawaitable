@@ -1,4 +1,3 @@
-/* *INDENT-OFF* */
 #include <Python.h>
 #include <pyawaitable/backport.h>
 #include <pyawaitable/awaitableobject.h>
