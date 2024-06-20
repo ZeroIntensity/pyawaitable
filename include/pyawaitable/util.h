@@ -1,5 +1,6 @@
 #ifndef PYAWAITABLE_UTIL_H
 #define PYAWAITABLE_UTIL_H
+
 #include <Python.h>
 #include <datetime.h>
 #include <structmember.h>
@@ -7,12 +8,12 @@
 #include <pyawaitable/backport.h>
 
 /* helpers. */
-void _SetAllListItems(PyObject *all_list, int count, ...);
-PyObject *_DecrefModuleAndReturnNULL(PyObject *m);
-PyObject *
-_PyType_CreateInstance(PyTypeObject *type, PyObject *args, PyObject *kwargs);
-PyObject *_PyObject_GetCallableMethod(PyObject *obj,
-                                      const char *name);
+void _SetAllListItems(PyObject* all_list, int count, ...);
+PyObject*_DecrefModuleAndReturnNULL(PyObject* m);
+PyObject*
+_PyType_CreateInstance(PyTypeObject* type, PyObject* args, PyObject* kwargs);
+PyObject*_PyObject_GetCallableMethod(PyObject* obj,
+                                     const char* name);
 
 /* defines needed in the module init function. If only they were in the Python.h
  * include file. */
@@ -44,14 +45,14 @@ PyObject *_PyObject_GetCallableMethod(PyObject *obj,
     return _DecrefModuleAndReturnNULL(m);                                      \
   }
 #define PY_ADD_ALL_ATTRIBUTE(count, ...)                                       \
-  /* Create and set __all__ list. */                                           \
+        /* Create and set __all__ list. */                                           \
   PyObject *all_list = PyList_New(count);                                      \
   if (all_list == NULL) {                                                      \
     Py_XDECREF(m);                                                             \
     return NULL;                                                               \
   }                                                                            \
   _SetAllListItems(all_list, count, __VA_ARGS__);                              \
-  /* Set __all__ in the module. */                                             \
+        /* Set __all__ in the module. */                                             \
   if (PyModule_AddObject(m, "__all__", all_list) < 0) {                        \
     Py_XDECREF(all_list);                                                      \
     return _DecrefModuleAndReturnNULL(m);                                      \
