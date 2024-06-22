@@ -32,7 +32,10 @@ jobs:
               shell: bash
 
             - name: Build PyAwaitable
-              run: pip install . tests/extension/
+              run: pip install .
+
+            - name: Build PyAwaitable Test Package
+              run: pip install setuptools && pip install tests/extension/ --no-build-isolation
 
             - name: Install Valgrind
               run: sudo apt-get -y install valgrind
