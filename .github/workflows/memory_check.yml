@@ -38,7 +38,7 @@ jobs:
               run: pip install setuptools wheel && pip install tests/extension/ --no-build-isolation
 
             - name: Install Valgrind
-              run: sudo apt-get update && apt-get -y install valgrind
+              run: sudo apt-get update && sudo apt-get -y install valgrind
 
             - name: Run tests with Valgrind
               run: valgrind --suppressions=valgrind-python.supp --error-exitcode=1 pytest -x
