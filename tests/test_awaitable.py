@@ -7,6 +7,7 @@ import platform
 from typing import Callable, Any
 from typing_extensions import Self
 import _pyawaitable_test
+from collections.abc import Coroutine
 
 get_pointer = pythonapi.PyCapsule_GetPointer
 get_pointer.argtypes = (ctypes.py_object, ctypes.c_void_p)
@@ -98,7 +99,10 @@ def limit_leaks(memstring: str):
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_new():
-    assert isinstance(abi.new(), pyawaitable.PyAwaitable)
+    awaitable = abi.new()
+    assert isinstance(awaitable, pyawaitable.PyAwaitable)
+    assert isinstance(awaitable, Coroutine)
+    await awaitable
     await asyncio.create_task(abi.new())
     await abi.new()
 
