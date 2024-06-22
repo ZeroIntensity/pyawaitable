@@ -1,6 +1,6 @@
 #include <Python.h>
 #include <pyawaitable/backport.h>
-#include <pyawaitable/awaitableobject.h>
+#include <pyawaitable/PyAwaitableObject.h>
 #include <pyawaitable/genwrapper.h>
 
 static PyObject *
@@ -32,7 +32,7 @@ gen_dealloc(PyObject *self)
 }
 
 PyObject *
-genwrapper_new(PyAwaitableObject *aw)
+genwrapper_new(PyPyAwaitableObject *aw)
 {
     assert(aw != NULL);
     GenWrapperObject *g = (GenWrapperObject *) gen_new(
@@ -42,7 +42,7 @@ genwrapper_new(PyAwaitableObject *aw)
     );
 
     if (g == NULL) return NULL;
-    g->gw_aw = (PyAwaitableObject *) Py_NewRef((PyObject *) aw);
+    g->gw_aw = (PyPyAwaitableObject *) Py_NewRef((PyObject *) aw);
     return (PyObject *) g;
 }
 
@@ -95,7 +95,7 @@ PyObject *
 genwrapper_next(PyObject *self)
 {
     GenWrapperObject *g = (GenWrapperObject *) self;
-    PyAwaitableObject *aw = g->gw_aw;
+    PyPyAwaitableObject *aw = g->gw_aw;
     pyawaitable_callback *cb;
     if (
         ((aw->aw_state + 1) > aw->aw_callback_size) &&

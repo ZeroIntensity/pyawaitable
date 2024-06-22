@@ -13,7 +13,7 @@ The type of a result callback is an `awaitcallback`:
 typedef int (*awaitcallback)(PyObject *, PyObject *);
 ```
 
-The first argument in an `awaitcallback` is the `AwaitableObject*` (casted to a `PyObject*`, once again), and the second argument is the result of the coroutine. Both of these are borrowed references, and should not be `Py_DECREF`'d by the user. The return value of a callback function must be an integer and per CPython conventions, any value below `0` denotes an error occurred, but there are two different ways for PyAwaitable to handle it:
+The first argument in an `awaitcallback` is the `PyAwaitableObject*` (casted to a `PyObject*`, once again), and the second argument is the result of the coroutine. Both of these are borrowed references, and should not be `Py_DECREF`'d by the user. The return value of a callback function must be an integer and per CPython conventions, any value below `0` denotes an error occurred, but there are two different ways for PyAwaitable to handle it:
 
 -   If the callback returned `-1`, it expects the error to be deferred to the error callback if it exists.
 -   If the callback returned anything less than `-1`, the error callback is ignored, and the error is deferred to the event loop.
@@ -28,7 +28,7 @@ typedef int (*awaitcallback_err)(PyObject *, PyObject *);
 
     Both `awaitcallback` and `awaitcallback_err` have the same signature, but for semantic purposes, are different types (as the underlying `PyObject*` they take are different Python objects).
 
-In an `awaitcallback_err`, there are once again two arguments, both of which are again, borrowed references. The first argument is a `AwaitableObject*`casted to a `PyObject*`, and the second argument is the current exception (via `PyErr_GetRaisedException`, meaning that the error indicator is cleared before the execution of the error callback).
+In an `awaitcallback_err`, there are once again two arguments, both of which are again, borrowed references. The first argument is a `PyAwaitableObject*` casted to a `PyObject*`, and the second argument is the current exception (via `PyErr_GetRaisedException`, meaning that the error indicator is cleared before the execution of the error callback).
 
 !!! note
 
@@ -78,7 +78,7 @@ spam(PyObject *self, PyObject *args)
 
 ## Cancelling
 
-The public interface for cancelling (_i.e._, stop all loaded coroutines from being executed) is `pyawaitable_cancel` (`Pypyawaitable_Cancel` with the Python prefixes). This function can never fail, and if no coroutines are stored on the awaitable object, this function does nothing.
+The public interface for cancelling (_i.e._, stop all loaded coroutines from being executed) is `pyawaitable_cancel` (`PyAwaitable_Cancel` with the Python prefixes). This function can never fail, and if no coroutines are stored on the awaitable object, this function does nothing.
 
 Note that if you're in a callback it _is_ possible to add coroutines again after cancelling, but only from that callback, since the future callbacks will be skipped (because the coroutines are removed!)
 

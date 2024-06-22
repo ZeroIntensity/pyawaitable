@@ -13,7 +13,7 @@ typedef struct _pyawaitable_callback
     bool done;
 } pyawaitable_callback;
 
-struct _PyAwaitableObject
+struct _PyPyAwaitableObject
 {
     PyObject_HEAD
     pyawaitable_callback **aw_callbacks;

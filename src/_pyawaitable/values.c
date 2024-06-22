@@ -1,13 +1,13 @@
 #include <Python.h>
 #include <pyawaitable/backport.h>
 #include <pyawaitable/values.h>
-#include <pyawaitable/awaitableobject.h>
+#include <pyawaitable/PyAwaitableObject.h>
 
 int
 pyawaitable_unpack_impl(PyObject *awaitable, ...)
 {
     assert(awaitable != NULL);
-    PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
+    PyPyAwaitableObject *aw = (PyPyAwaitableObject *) awaitable;
     Py_INCREF(awaitable);
 
     if (aw->aw_values == NULL)
@@ -42,7 +42,7 @@ pyawaitable_save_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
     assert(awaitable != NULL);
     assert(nargs != 0);
     Py_INCREF(awaitable);
-    PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
+    PyPyAwaitableObject *aw = (PyPyAwaitableObject *) awaitable;
 
     va_list vargs;
     va_start(vargs, nargs);
@@ -80,7 +80,7 @@ int
 pyawaitable_unpack_arb_impl(PyObject *awaitable, ...)
 {
     assert(awaitable != NULL);
-    PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
+    PyPyAwaitableObject *aw = (PyPyAwaitableObject *) awaitable;
     Py_INCREF(awaitable);
 
     if (aw->aw_arb_values == NULL)
@@ -114,7 +114,7 @@ pyawaitable_save_arb_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
     assert(awaitable != NULL);
     assert(nargs != 0);
     Py_INCREF(awaitable);
-    PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
+    PyPyAwaitableObject *aw = (PyPyAwaitableObject *) awaitable;
 
     va_list vargs;
     va_start(vargs, nargs);

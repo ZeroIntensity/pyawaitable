@@ -1,13 +1,13 @@
 #include <Python.h>
 #include <pyawaitable/backport.h>
-#include <pyawaitable/awaitableobject.h>
+#include <pyawaitable/PyAwaitableObject.h>
 #include <pyawaitable/genwrapper.h>
 #include <pyawaitable/coro.h>
 
 static PyObject *
 awaitable_send_with_arg(PyObject *self, PyObject *value)
 {
-    PyAwaitableObject *aw = (PyAwaitableObject *) self;
+    PyPyAwaitableObject *aw = (PyPyAwaitableObject *) self;
     if (aw->aw_gen == NULL)
     {
         PyObject *gen = awaitable_next(self);
@@ -35,7 +35,7 @@ static PyObject *
 awaitable_close(PyObject *self, PyObject *args)
 {
     pyawaitable_cancel_impl(self);
-    PyAwaitableObject *aw = (PyAwaitableObject *) self;
+    PyPyAwaitableObject *aw = (PyPyAwaitableObject *) self;
     aw->aw_done = true;
     Py_RETURN_NONE;
 }
@@ -78,7 +78,7 @@ awaitable_throw(PyObject *self, PyObject *args)
             Py_XNewRef(traceback)
         );
 
-    PyAwaitableObject *aw = (PyAwaitableObject *) self;
+    PyPyAwaitableObject *aw = (PyPyAwaitableObject *) self;
     if ((aw->aw_gen != NULL) && (aw->aw_state != 0))
     {
         GenWrapperObject *gw = (GenWrapperObject *) aw->aw_gen;
@@ -117,7 +117,7 @@ awaitable_am_send(PyObject *self, PyObject *arg, PyObject **presult)
         *presult = NULL;
         return PYGEN_ERROR;
     }
-    PyAwaitableObject *aw = (PyAwaitableObject *) self;
+    PyPyAwaitableObject *aw = (PyPyAwaitableObject *) self;
     *presult = send_res;
 
     return PYGEN_NEXT;

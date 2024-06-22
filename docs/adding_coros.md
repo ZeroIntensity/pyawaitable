@@ -22,9 +22,9 @@ pyawaitable_await(
 
 !!! warning
 
-    If you are using the `Pypyawaitable_` prefix, the function is ``Pypyawaitable_AddAwait`` instead of ``Pypyawaitable_Await``, per previous implementations of PyAwaitable.
+    If you are using the Python API names, the function is ``PyAwaitable_AddAwait`` instead of ``PyAwaitable_Await``, per previous implementations of PyAwaitable.
 
--   `aw` is the `AwaitableObject*`.
+-   `aw` is the `PyAwaitableObject*`.
 -   `coro` is the coroutine (or again, any object supporting `__await__`).
 -   `cb` is the callback that will be run with the result of `coro`. This may be `NULL`, in which case the result will be discarded.
 -   `err` is a callback in the event that an exception occurs during the execution of `coro`. This may be `NULL`, in which case the error is simply raised.
@@ -44,7 +44,11 @@ async def foo():
 bar = foo()
 ```
 
-`pyawaitable_await` does _not_ check that the object supports the await protocol, but instead stores the object, and then checks it once the `AwaitableObject*` begins yielding it. This behavior prevents an additional lookup, and also allows you to pass another `AwaitableObject*` to `pyawaitable_await`, making it possible to chain `AwaitableObject*`'s. Note that even after the object is finished awaiting, the `AwaitableObject*` will still hold a reference to it (_i.e._, it will not be deallocated until the `AwaitableObject*` gets deallocated).
+`pyawaitable_await` does _not_ check that the object supports the await protocol, but instead stores the object, and then checks it once the `PyAwaitableObject*` begins yielding it.
+
+This behavior prevents an additional lookup, and also allows you to pass another `PyAwaitableObject*` to `pyawaitable_await`, making it possible to chain `PyAwaitableObject*`'s.
+
+Note that even after the object is finished awaiting, the `PyAwaitableObject*` will still hold a reference to it (_i.e._, it will not be deallocated until the `PyAwaitableObject*` gets deallocated).
 
 !!! danger
 
@@ -100,7 +104,7 @@ This would be equivalent to `await foo` from Python.
 
 ## Return Values
 
-You can set a return value (the thing that `await c_func()` will evaluate to) via `pyawaitable_set_result` (`Pypyawaitable_SetResult` in the Python prefixes). By default, the return value is `None`.
+You can set a return value (the thing that `await c_func()` will evaluate to) via `pyawaitable_set_result` (`PyAwaitable_SetResult` in the Python prefixes). By default, the return value is `None`.
 
 !!! warning
 

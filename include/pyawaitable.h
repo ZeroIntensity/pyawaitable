@@ -11,7 +11,7 @@
 typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *);
 
-typedef struct _PyAwaitableObject PyAwaitableObject;
+typedef struct _PyPyAwaitableObject PyPyAwaitableObject;
 
 typedef struct _pyawaitable_abi
 {

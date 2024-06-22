@@ -7,7 +7,9 @@ hide:
 
 ## Basics
 
-Every `AwaitableObject*` will contain an array of strong references to `PyObject*`'s, as well as an array of `void*`. Both of these arrays are separate, and deallocated or `Py_DECREF`'d at the end of the object's lifetime. The two public interfaces for saving values are `pyawaitable_save` and `pyawaitable_save_arb`. These functions are variadic, and are supplied a `nargs` parameter specifying the number of values.
+Every `PyAwaitableObject*` will contain an array of strong references to `PyObject*`'s, as well as an array of `void*` pointers. Both of these arrays are separate, and deallocated or `Py_DECREF`'d at the end of the object's lifetime.
+
+The two public interfaces for saving values are `pyawaitable_save` and `pyawaitable_save_arb`. These functions are variadic, and are supplied a `nargs` parameter specifying the number of values.
 
 ## Arbitrary vs Normal Values
 

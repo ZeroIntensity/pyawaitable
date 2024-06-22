@@ -9,11 +9,11 @@ hide:
 
 As stated earlier, PyAwaitable loads into extensions via [capsules](https://docs.python.org/3/extending/extending.html#using-capsules). The location of the ABI capsule is `pyawaitable.abi.v<major version>`. As of now, the only ABI is `pyawaitable.abi.v1`.
 
-PyAwaitable's `awaitable.h` provides an `AwaitableABI` structure. This structure is guaranteed to always have the first member be `Py_ssize_t size`. This is the size of the entire structure. Between versions, your header file might have ABI members defined that do not exist on the runtime version. To check this, you
+PyAwaitable's `pyawaitable.h` provides a `PyAwaitableABI` structure. This structure is guaranteed to always have the first member be `Py_ssize_t size`. This is the size of the entire structure. Between versions, your header file might have ABI members defined that do not exist on the runtime version. To check this, you
 can use `offsetof`:
 
 ```c
-if (pyawaitable_abi->size <= offsetof(pyawaitable_abi, some_member)
+if (pyawaitable_abi->size <= offsetof(pyawaitable_abi, some_member))
 {
     // Use deprecated version of some_member
 }

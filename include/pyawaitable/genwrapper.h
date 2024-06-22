@@ -2,14 +2,14 @@
 #define PYAWAITABLE_GENWRAPPER_H
 
 #include <Python.h>
-#include <pyawaitable/awaitableobject.h>
+#include <pyawaitable/PyAwaitableObject.h>
 
 extern PyTypeObject _PyAwaitableGenWrapperType;
 
 typedef struct _GenWrapperObject
 {
     PyObject_HEAD
-    PyAwaitableObject *gw_aw;
+    PyPyAwaitableObject *gw_aw;
     PyObject *gw_current_await;
 } GenWrapperObject;
 
@@ -24,6 +24,6 @@ genwrapper_fire_err_callback(
 );
 
 PyObject *
-genwrapper_new(PyAwaitableObject *aw);
+genwrapper_new(PyPyAwaitableObject *aw);
 
 #endif
