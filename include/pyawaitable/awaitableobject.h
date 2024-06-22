@@ -2,8 +2,10 @@
 #define PYAWAITABLE_AWAITABLE_H
 
 #include <Python.h>
-#include <pyawaitable.h>
 #include <stdbool.h>
+
+typedef int (*awaitcallback)(PyObject *, PyObject *);
+typedef int (*awaitcallback_err)(PyObject *, PyObject *);
 
 typedef struct _pyawaitable_callback
 {
@@ -15,7 +17,8 @@ typedef struct _pyawaitable_callback
 
 struct _PyAwaitableObject
 {
-    PyObject_HEAD pyawaitable_callback **aw_callbacks;
+    PyObject_HEAD
+    pyawaitable_callback **aw_callbacks;
     Py_ssize_t aw_callback_size;
     PyObject *aw_result;
     PyObject *aw_gen;
@@ -28,6 +31,7 @@ struct _PyAwaitableObject
     bool aw_awaited;
 };
 
+typedef struct _PyAwaitableObject PyAwaitableObject;
 extern PyTypeObject _PyAwaitableType;
 
 int pyawaitable_set_result_impl(PyObject *awaitable, PyObject *result);

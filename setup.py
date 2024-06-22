@@ -10,13 +10,12 @@ if __name__ == "__main__":
             Extension(
                 "_pyawaitable",
                 glob("./src/_pyawaitable/*.c"),
-                include_dirs=["./include/"],
+                include_dirs=["./include/", "./src/pyawaitable/"],
                 extra_compile_args=["-g3"]
             )
         ],
         package_dir={"": "src"},
         packages=["pyawaitable"],
-        data_files=[
-            ("include", ["./include/pyawaitable.h"]),
-        ],
+        package_data={'pyawaitable': ['./src/pyawaitable/pyawaitable.h']},
+        include_package_data=True,
     )

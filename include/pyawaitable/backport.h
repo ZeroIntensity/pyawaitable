@@ -1,5 +1,6 @@
 #ifndef PYAWAITABLE_BACKPORT_H
 #define PYAWAITABLE_BACKPORT_H
+
 #include <Python.h>
 
 #ifndef _PyObject_Vectorcall
@@ -8,8 +9,7 @@ PyObject *_PyObject_VectorcallBackport(
     PyObject *obj,
     PyObject **args,
     size_t nargsf,
-    PyObject *kwargs
-);
+    PyObject *kwargs);
 
 #define PyObject_CallNoArgs(o) PyObject_CallObject(o, NULL)
 #define PyObject_Vectorcall _PyObject_VectorcallBackport

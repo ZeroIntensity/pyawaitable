@@ -3,19 +3,20 @@
 #include <pyawaitable/coro.h>
 #include <pyawaitable/values.h>
 #include <pyawaitable/genwrapper.h>
-#define ADD_TYPE(tp)                                                \
-        do {                                                        \
-            Py_INCREF(&tp);                                         \
-            if (PyType_Ready(&tp) < 0) {                            \
-                Py_DECREF(&tp);                                     \
-                Py_DECREF(m);                                       \
-                return NULL;                                        \
-            }                                                       \
-            if (PyModule_AddObject(m, #tp, (PyObject *) &tp) < 0) { \
-                Py_DECREF(&tp);                                     \
-                Py_DECREF(m);                                       \
-                return NULL;                                        \
-            }                                                       \
+#define ADD_TYPE(tp)                                               \
+        do                                                         \
+        {                                                          \
+            Py_INCREF(&tp);                                        \
+            if (PyType_Ready(&tp) < 0) {                           \
+                Py_DECREF(&tp);                                    \
+                Py_DECREF(m);                                      \
+                return NULL;                                       \
+            }                                                      \
+            if (PyModule_AddObject(m, #tp, (PyObject *)&tp) < 0) { \
+                Py_DECREF(&tp);                                    \
+                Py_DECREF(m);                                      \
+                return NULL;                                       \
+            }                                                      \
         } while (0)
 
 static PyModuleDef awaitable_module =

@@ -155,7 +155,6 @@ genwrapper_next(PyObject *self)
     if (result == NULL)
     {
         PyObject *occurred = PyErr_Occurred();
-        PyObject_Print(occurred, stdout, Py_PRINT_RAW);
         if (!occurred)
         {
             // coro is done
