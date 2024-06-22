@@ -107,7 +107,7 @@ async def test_new():
     await abi.new()
 
 
-@pytest.mark.limit_leaks(LEAK_LIMIT)
+@limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_object_cleanup():
     for i in range(100):
