@@ -213,7 +213,8 @@ pyawaitable_await_function_impl(
 )
 {
     size_t len = strlen(fmt);
-    char *tup_format = PyMem_Malloc(len + 3);
+    size_t size = len + 3;
+    char *tup_format = PyMem_Malloc(size);
     if (!tup_format)
     {
         PyErr_NoMemory();
@@ -221,9 +222,13 @@ pyawaitable_await_function_impl(
     }
 
     tup_format[0] = '(';
-    strcpy(tup_format + 1, fmt);
-    tup_format[len - 2] = ')';
-    tup_format[len - 1] = '\0';
+    for (size_t i = 0; i < len; ++i)
+    {
+        tup_format[i + 1] = fmt[i];
+    }
+
+    tup_format[size - 2] = ')';
+    tup_format[size - 1] = '\0';
 
     va_list vargs;
     va_start(vargs, err);
@@ -233,8 +238,8 @@ pyawaitable_await_function_impl(
 
     if (!args)
         return -1;
-
     PyObject *coro = PyObject_Call(func, args, NULL);
+    Py_DECREF(args);
 
     if (!coro)
         return -1;

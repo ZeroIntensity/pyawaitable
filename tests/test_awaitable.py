@@ -76,6 +76,7 @@ class AwaitableABI(PyABI):
         ),
         ("unpack", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object)),
         ("unpack_arb", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object)),
+        ("PyAwaitableType", ctypes.py_object),
         ("await_function", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object, ctypes.py_object, ctypes.c_char_p, awaitcallback, awaitcallback_err,)),
     ]
 
@@ -440,6 +441,7 @@ async def test_set_results():
 @limit_leaks(LEAK_LIMIT)
 async def test_await_function():
     awaitable = abi.new()
+    called: bool = False
 
     async def coro(value: int, suffix: str) -> str:
         await asyncio.sleep(0)
@@ -447,7 +449,11 @@ async def test_await_function():
 
     @awaitcallback
     def cb(awaitable_inner: pyawaitable.PyAwaitable, result: str):
+        nonlocal called
+        called = True
         assert result == "42hello"
         return 0
 
-    abi.await_function(awaitable, coro, b"is", cb, None, 21, b"hello")
+    abi.await_function(awaitable, coro, b"is", cb, awaitcallback_err(0), 21, b"hello")
+    await awaitable
+    assert called is True
