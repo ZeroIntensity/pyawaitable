@@ -102,6 +102,38 @@ spam(PyObject *self, PyObject *args)
 
 This would be equivalent to `await foo` from Python.
 
+Alternatively, you can use `pyawaitable_await_function` (`PyAwaitable_AwaitFunction` with the Python API prefixes), which behaves similarly to `PyObject_CallFunction`, in the sense that arguments are generated from a format string.
+
+Note that unlike, `pyawaitable_await`, `pyawaitable_await_function` takes a *callable* object, instead of a coroutine. For example:
+
+```c
+static PyObject *
+spam(PyObject *self, PyObject *func) // METH_O
+{
+    PyObject *awaitable = pyawaitable_new();
+
+    if (awaitable == NULL)
+        return NULL;
+
+    if (pyawaitable_await_function(awaitable, func, "s", NULL, NULL, "hello, world!") < 0)
+    {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+
+    return awaitable;
+}
+```
+
+This would be equivalent to the following Python code:
+
+```py
+async def func(data: str) -> Any:
+    ...
+
+await func("hello, world!")
+```
+
 ## Return Values
 
 You can set a return value (the thing that `await c_func()` will evaluate to) via `pyawaitable_set_result` (`PyAwaitable_SetResult` in the Python prefixes). By default, the return value is `None`.
