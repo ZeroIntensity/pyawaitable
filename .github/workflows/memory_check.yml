@@ -28,7 +28,7 @@ jobs:
 
             - name: Install Pytest
               run: |
-                  pip install pytest pytest-asyncio
+                  pip install pytest pytest-asyncio typing_extensions
               shell: bash
 
             - name: Build PyAwaitable
