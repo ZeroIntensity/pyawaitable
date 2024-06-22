@@ -450,4 +450,4 @@ async def test_await_function():
         assert result == "42hello"
         return 0
 
-    abi.await_function(awaitable, coro, "is", cb, None, 21, b"hello")
+    abi.await_function(awaitable, coro, b"is", cb, None, 21, b"hello")

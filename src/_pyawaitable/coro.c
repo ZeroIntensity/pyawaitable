@@ -71,7 +71,7 @@ awaitable_throw(PyObject *self, PyObject *args)
             }
 
         PyErr_Restore(err, NULL, NULL);
-    }else
+    } else
         PyErr_Restore(
             Py_NewRef(type),
             Py_XNewRef(value),
@@ -88,7 +88,7 @@ awaitable_throw(PyObject *self, PyObject *args)
 
         if (genwrapper_fire_err_callback(self, gw->gw_current_await, cb) < 0)
             return NULL;
-    }else
+    } else
         return NULL;
 
     assert(NULL);

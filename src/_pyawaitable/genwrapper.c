@@ -142,7 +142,7 @@ genwrapper_next(PyObject *self)
 
             return genwrapper_next(self);
         }
-    }else
+    } else
     {
         cb = aw->aw_callbacks[aw->aw_state - 1];
     }
@@ -205,7 +205,7 @@ genwrapper_next(PyObject *self)
             if (value == NULL)
             {
                 value = Py_NewRef(Py_None);
-            }else
+            } else
             {
                 assert(PyObject_IsInstance(value, PyExc_StopIteration));
                 PyObject *tmp = PyObject_GetAttrString(value, "value");
@@ -216,7 +216,7 @@ genwrapper_next(PyObject *self)
                 }
                 value = tmp;
             }
-        }else
+        } else
         {
             value = Py_NewRef(Py_None);
         }

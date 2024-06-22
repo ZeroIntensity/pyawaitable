@@ -152,7 +152,7 @@ pyawaitable_await_impl(
             a->aw_callback_size,
             sizeof(pyawaitable_callback *)
         );
-    }else
+    } else
     {
         a->aw_callbacks = PyMem_Realloc(
             a->aw_callbacks,
@@ -245,6 +245,7 @@ pyawaitable_await_function_impl(
         return -1;
     }
 
+    Py_DECREF(coro);
     return 0;
 }
 
