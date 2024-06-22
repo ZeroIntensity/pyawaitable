@@ -106,17 +106,13 @@ This would be equivalent to `await foo` from Python.
 
 You can set a return value (the thing that `await c_func()` will evaluate to) via `pyawaitable_set_result` (`PyAwaitable_SetResult` in the Python prefixes). By default, the return value is `None`.
 
-!!! warning
-
-    `pyawaitable_set_result` can *only* be called from a callback. Otherwise, a `TypeError` is raised.
-
 For example:
 
 ```c
 static int
 callback(PyObject *awaitable, PyObject *result)
 {
-    if (pyawaitable_set_result(awaitable, result) < 0)
+    if (pyawaitable_set_result(awaitable, Py_True) < 0)
         return -1;
 
     // Do something with the result...
