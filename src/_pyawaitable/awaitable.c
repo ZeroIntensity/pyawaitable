@@ -1,6 +1,6 @@
 #include <Python.h>
 #include <pyawaitable/backport.h>
-#include <pyawaitable/PyAwaitableObject.h>
+#include <pyawaitable/awaitableobject.h>
 #include <pyawaitable/genwrapper.h>
 #include <pyawaitable/coro.h>
 #include <stdlib.h>
@@ -22,7 +22,7 @@ awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    PyPyAwaitableObject *aw = (PyPyAwaitableObject *) self;
+    PyAwaitableObject *aw = (PyAwaitableObject *)self;
     aw->aw_callbacks = NULL;
     aw->aw_callback_size = 0;
     aw->aw_result = Py_NewRef(Py_None);
@@ -33,13 +33,13 @@ awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     aw->aw_done = false;
     aw->aw_awaited = false;
 
-    return (PyObject *) aw;
+    return (PyObject *)aw;
 }
 
 PyObject *
 awaitable_next(PyObject *self)
 {
-    PyPyAwaitableObject *aw = (PyPyAwaitableObject *) self;
+    PyAwaitableObject *aw = (PyAwaitableObject *)self;
     aw->aw_awaited = true;
 
     if (aw->aw_done)
@@ -63,7 +63,7 @@ awaitable_next(PyObject *self)
 static void
 awaitable_dealloc(PyObject *self)
 {
-    PyPyAwaitableObject *aw = (PyPyAwaitableObject *) self;
+    PyAwaitableObject *aw = (PyAwaitableObject *)self;
     if (aw->aw_values)
     {
         for (int i = 0; i < aw->aw_values_size; i++)
@@ -108,7 +108,7 @@ pyawaitable_cancel_impl(PyObject *aw)
     assert(aw != NULL);
     Py_INCREF(aw);
 
-    PyPyAwaitableObject *a = (PyPyAwaitableObject *)aw;
+    PyAwaitableObject *a = (PyAwaitableObject *)aw;
 
     for (int i = 0; i < a->aw_callback_size; i++)
     {
@@ -134,7 +134,7 @@ pyawaitable_await_impl(
     assert(coro != NULL);
     Py_INCREF(coro);
     Py_INCREF(aw);
-    PyPyAwaitableObject *a = (PyPyAwaitableObject *)aw;
+    PyAwaitableObject *a = (PyAwaitableObject *)aw;
 
     pyawaitable_callback *aw_c = PyMem_Malloc(sizeof(pyawaitable_callback));
     if (aw_c == NULL)
@@ -152,7 +152,7 @@ pyawaitable_await_impl(
             a->aw_callback_size,
             sizeof(pyawaitable_callback *)
         );
-    } else
+    }else
     {
         a->aw_callbacks = PyMem_Realloc(
             a->aw_callbacks,
@@ -188,7 +188,7 @@ pyawaitable_set_result_impl(PyObject *awaitable, PyObject *result)
     Py_INCREF(result);
     Py_INCREF(awaitable);
 
-    PyPyAwaitableObject *aw = (PyPyAwaitableObject *) awaitable;
+    PyAwaitableObject *aw = (PyAwaitableObject *)awaitable;
     aw->aw_result = Py_NewRef(result);
     Py_DECREF(awaitable);
     Py_DECREF(result);
@@ -206,7 +206,7 @@ PyTypeObject _PyAwaitableType =
 {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "_PyAwaitableType",
-    .tp_basicsize = sizeof(PyPyAwaitableObject),
+    .tp_basicsize = sizeof(PyAwaitableObject),
     .tp_dealloc = awaitable_dealloc,
     .tp_as_async = &pyawaitable_async_methods,
     .tp_flags = Py_TPFLAGS_DEFAULT,

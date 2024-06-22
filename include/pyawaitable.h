@@ -11,7 +11,7 @@
 typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *);
 
-typedef struct _PyPyAwaitableObject PyPyAwaitableObject;
+typedef struct _PyAwaitableObject PyAwaitableObject;
 
 typedef struct _pyawaitable_abi
 {
@@ -21,7 +21,8 @@ typedef struct _pyawaitable_abi
         PyObject *,
         PyObject *,
         awaitcallback,
-        awaitcallback_err);
+        awaitcallback_err
+    );
     void (*cancel)(PyObject *);
     int (*set_result)(PyObject *, PyObject *);
     int (*save)(PyObject *, Py_ssize_t, ...);
@@ -76,7 +77,8 @@ pyawaitable_init()
 {
     PyErr_SetString(
         PyExc_RuntimeError,
-        "pyawaitable_init() can only be called in a file with a PYAWAITABLE_THIS_FILE_INIT #define");
+        "pyawaitable_init() can only be called in a file with a PYAWAITABLE_THIS_FILE_INIT #define"
+    );
     return -1;
 }
 

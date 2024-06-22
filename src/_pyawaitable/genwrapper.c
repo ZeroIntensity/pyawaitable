@@ -1,7 +1,8 @@
 #include <Python.h>
 #include <pyawaitable/backport.h>
-#include <pyawaitable/PyAwaitableObject.h>
+#include <pyawaitable/awaitableobject.h>
 #include <pyawaitable/genwrapper.h>
+#include <stdlib.h>
 
 static PyObject *
 gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
@@ -15,35 +16,36 @@ gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    GenWrapperObject *g = (GenWrapperObject *) self;
+    GenWrapperObject *g = (GenWrapperObject *)self;
     g->gw_aw = NULL;
     g->gw_current_await = NULL;
 
-    return (PyObject *) g;
+    return (PyObject *)g;
 }
 
 static void
 gen_dealloc(PyObject *self)
 {
-    GenWrapperObject *g = (GenWrapperObject *) self;
+    GenWrapperObject *g = (GenWrapperObject *)self;
     Py_XDECREF(g->gw_current_await);
     Py_XDECREF(g->gw_aw);
     Py_TYPE(self)->tp_free(self);
 }
 
 PyObject *
-genwrapper_new(PyPyAwaitableObject *aw)
+genwrapper_new(PyAwaitableObject *aw)
 {
     assert(aw != NULL);
-    GenWrapperObject *g = (GenWrapperObject *) gen_new(
+    GenWrapperObject *g = (GenWrapperObject *)gen_new(
         &_PyAwaitableGenWrapperType,
         NULL,
         NULL
     );
 
-    if (g == NULL) return NULL;
-    g->gw_aw = (PyPyAwaitableObject *) Py_NewRef((PyObject *) aw);
-    return (PyObject *) g;
+    if (g == NULL)
+        return NULL;
+    g->gw_aw = (PyAwaitableObject *)Py_NewRef((PyObject *)aw);
+    return (PyObject *)g;
 }
 
 int
@@ -94,8 +96,8 @@ genwrapper_fire_err_callback(
 PyObject *
 genwrapper_next(PyObject *self)
 {
-    GenWrapperObject *g = (GenWrapperObject *) self;
-    PyPyAwaitableObject *aw = g->gw_aw;
+    GenWrapperObject *g = (GenWrapperObject *)self;
+    PyAwaitableObject *aw = g->gw_aw;
     pyawaitable_callback *cb;
     if (
         ((aw->aw_state + 1) > aw->aw_callback_size) &&
@@ -104,9 +106,7 @@ genwrapper_next(PyObject *self)
     {
         PyErr_SetObject(
             PyExc_StopIteration,
-            aw->aw_result ?
-            aw->aw_result :
-            Py_None
+            aw->aw_result ? aw->aw_result : Py_None
         );
         return NULL;
     }
@@ -131,7 +131,7 @@ genwrapper_next(PyObject *self)
         {
             if (
                 genwrapper_fire_err_callback(
-                    (PyObject *) aw,
+                    (PyObject *)aw,
                     g->gw_current_await,
                     cb
                 ) < 0
@@ -142,14 +142,15 @@ genwrapper_next(PyObject *self)
 
             return genwrapper_next(self);
         }
-    } else
+    }else
     {
         cb = aw->aw_callbacks[aw->aw_state - 1];
     }
 
     PyObject *result = Py_TYPE(
         g->gw_current_await
-    )->tp_iternext(g->gw_current_await);
+    )
+                       ->tp_iternext(g->gw_current_await);
 
     if (result == NULL)
     {
@@ -174,7 +175,7 @@ genwrapper_next(PyObject *self)
         {
             if (
                 genwrapper_fire_err_callback(
-                    (PyObject *) aw,
+                    (PyObject *)aw,
                     g->gw_current_await,
                     cb
                 ) < 0
@@ -195,7 +196,6 @@ genwrapper_next(PyObject *self)
             return genwrapper_next(self);
         }
 
-
         PyObject *value;
         if (occurred)
         {
@@ -206,7 +206,7 @@ genwrapper_next(PyObject *self)
             if (value == NULL)
             {
                 value = Py_NewRef(Py_None);
-            } else
+            }else
             {
                 assert(PyObject_IsInstance(value, PyExc_StopIteration));
                 PyObject *tmp = PyObject_GetAttrString(value, "value");
@@ -217,13 +217,13 @@ genwrapper_next(PyObject *self)
                 }
                 value = tmp;
             }
-        } else
+        }else
         {
             value = Py_NewRef(Py_None);
         }
 
         Py_INCREF(aw);
-        int result = cb->callback((PyObject *) aw, value);
+        int result = cb->callback((PyObject *)aw, value);
         Py_DECREF(aw);
         Py_DECREF(value);
 
@@ -246,7 +246,7 @@ genwrapper_next(PyObject *self)
             }
             if (
                 genwrapper_fire_err_callback(
-                    (PyObject *) aw,
+                    (PyObject *)aw,
                     g->gw_current_await,
                     cb
                 ) < 0

@@ -13,10 +13,9 @@ typedef struct _pyawaitable_callback
     bool done;
 } pyawaitable_callback;
 
-struct _PyPyAwaitableObject
+struct _PyAwaitableObject
 {
-    PyObject_HEAD
-    pyawaitable_callback **aw_callbacks;
+    PyObject_HEAD pyawaitable_callback **aw_callbacks;
     Py_ssize_t aw_callback_size;
     PyObject *aw_result;
     PyObject *aw_gen;
@@ -31,19 +30,16 @@ struct _PyPyAwaitableObject
 
 extern PyTypeObject _PyAwaitableType;
 
-int
-pyawaitable_set_result_impl(PyObject *awaitable, PyObject *result);
+int pyawaitable_set_result_impl(PyObject *awaitable, PyObject *result);
 
-int
-pyawaitable_await_impl(
+int pyawaitable_await_impl(
     PyObject *aw,
     PyObject *coro,
     awaitcallback cb,
     awaitcallback_err err
 );
 
-void
-pyawaitable_cancel_impl(PyObject *aw);
+void pyawaitable_cancel_impl(PyObject *aw);
 
 PyObject *
 awaitable_next(PyObject *self);

@@ -1,13 +1,13 @@
 #include <Python.h>
 #include <pyawaitable/backport.h>
 #include <pyawaitable/values.h>
-#include <pyawaitable/PyAwaitableObject.h>
+#include <pyawaitable/awaitableobject.h>
 
 int
 pyawaitable_unpack_impl(PyObject *awaitable, ...)
 {
     assert(awaitable != NULL);
-    PyPyAwaitableObject *aw = (PyPyAwaitableObject *) awaitable;
+    PyAwaitableObject *aw = (PyAwaitableObject *)awaitable;
     Py_INCREF(awaitable);
 
     if (aw->aw_values == NULL)
@@ -26,7 +26,8 @@ pyawaitable_unpack_impl(PyObject *awaitable, ...)
     for (int i = 0; i < aw->aw_values_size; i++)
     {
         PyObject **ptr = va_arg(args, PyObject * *);
-        if (ptr == NULL) continue;
+        if (ptr == NULL)
+            continue;
         *ptr = aw->aw_values[i];
         // borrowed reference
     }
@@ -42,7 +43,7 @@ pyawaitable_save_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
     assert(awaitable != NULL);
     assert(nargs != 0);
     Py_INCREF(awaitable);
-    PyPyAwaitableObject *aw = (PyPyAwaitableObject *) awaitable;
+    PyAwaitableObject *aw = (PyAwaitableObject *)awaitable;
 
     va_list vargs;
     va_start(vargs, nargs);
@@ -80,7 +81,7 @@ int
 pyawaitable_unpack_arb_impl(PyObject *awaitable, ...)
 {
     assert(awaitable != NULL);
-    PyPyAwaitableObject *aw = (PyPyAwaitableObject *) awaitable;
+    PyAwaitableObject *aw = (PyAwaitableObject *)awaitable;
     Py_INCREF(awaitable);
 
     if (aw->aw_arb_values == NULL)
@@ -99,7 +100,8 @@ pyawaitable_unpack_arb_impl(PyObject *awaitable, ...)
     for (int i = 0; i < aw->aw_arb_values_size; i++)
     {
         void **ptr = va_arg(args, void **);
-        if (ptr == NULL) continue;
+        if (ptr == NULL)
+            continue;
         *ptr = aw->aw_arb_values[i];
     }
 
@@ -114,7 +116,7 @@ pyawaitable_save_arb_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
     assert(awaitable != NULL);
     assert(nargs != 0);
     Py_INCREF(awaitable);
-    PyPyAwaitableObject *aw = (PyPyAwaitableObject *) awaitable;
+    PyAwaitableObject *aw = (PyAwaitableObject *)awaitable;
 
     va_list vargs;
     va_start(vargs, nargs);

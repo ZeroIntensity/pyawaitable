@@ -1,5 +1,5 @@
 #include <pyawaitable.h>
-#include <pyawaitable/PyAwaitableObject.h>
+#include <pyawaitable/awaitableobject.h>
 #include <pyawaitable/coro.h>
 #include <pyawaitable/values.h>
 #include <pyawaitable/genwrapper.h>
