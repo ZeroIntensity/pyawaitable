@@ -202,6 +202,52 @@ pyawaitable_new_impl(void)
     return aw;
 }
 
+int
+pyawaitable_await_function_impl(
+    PyObject *awaitable,
+    PyObject *func,
+    const char *fmt,
+    awaitcallback cb,
+    awaitcallback_err err,
+    ...
+)
+{
+    size_t len = strlen(fmt);
+    char *tup_format = PyMem_Malloc(len + 3);
+    if (!tup_format)
+    {
+        PyErr_NoMemory();
+        return -1;
+    }
+
+    tup_format[0] = '(';
+    strcpy(tup_format + 1, fmt);
+    tup_format[len - 2] = ')';
+    tup_format[len - 1] = '\0';
+
+    va_list vargs;
+    va_start(vargs, err);
+    PyObject *args = Py_VaBuildValue(tup_format, vargs);
+    va_end(vargs);
+    PyMem_Free(tup_format);
+
+    if (!args)
+        return -1;
+
+    PyObject *coro = PyObject_Call(func, args, NULL);
+
+    if (!coro)
+        return -1;
+
+    if (pyawaitable_await_impl(awaitable, coro, cb, err) < 0)
+    {
+        Py_DECREF(coro);
+        return -1;
+    }
+
+    return 0;
+}
+
 PyTypeObject _PyAwaitableType =
 {
     PyVarObject_HEAD_INIT(NULL, 0)

@@ -51,4 +51,14 @@ awaitable_next(PyObject *self);
 PyObject *
 pyawaitable_new_impl(void);
 
+int
+pyawaitable_await_function_impl(
+    PyObject *awaitable,
+    PyObject *func,
+    const char *fmt,
+    awaitcallback cb,
+    awaitcallback_err err,
+    ...
+);
+
 #endif

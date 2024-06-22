@@ -6,7 +6,7 @@
 #define PYAWAITABLE_MINOR_VERSION 0
 #define PYAWAITABLE_MICRO_VERSION 0
 /* Per CPython Conventions: 0xA for alpha, 0xB for beta, 0xC for release candidate or 0xF for final. */
-#define PYAWAITABLE_RELEASE_LEVEL 0xF
+#define PYAWAITABLE_RELEASE_LEVEL 0xC
 
 typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *);
@@ -30,6 +30,14 @@ typedef struct _pyawaitable_abi
     int (*unpack)(PyObject *, ...);
     int (*unpack_arb)(PyObject *, ...);
     PyTypeObject *PyAwaitableType;
+    int (*await_function)(
+        PyObject *,
+        PyObject *,
+        const char *fmt,
+        awaitcallback,
+        awaitcallback_err,
+        ...
+    );
 } PyAwaitableABI;
 
 #ifdef PYAWAITABLE_THIS_FILE_INIT
@@ -55,6 +63,8 @@ extern PyAwaitableABI *pyawaitable_abi;
 #define pyawaitable_unpack_arb pyawaitable_abi->unpack_arb
 
 #define PyAwaitableType pyawaitable_abi->PyAwaitableType
+
+#define pyawaitable_await_function pyawaitable_abi->await_function
 
 #ifdef PYAWAITABLE_THIS_FILE_INIT
 static int
@@ -96,6 +106,7 @@ pyawaitable_init()
 #define PyAwaitable_Init pyawaitable_init
 #define PyAwaitable_ABI pyawaitable_abi
 #define PyAwaitable_Type PyAwaitableType
+#define PyAwaitable_AwaitFunction pyawaitable_await_function
 #endif
 
 #endif
