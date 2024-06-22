@@ -16,6 +16,4 @@ if __name__ == "__main__":
         ],
         package_dir={"": "src"},
         packages=["pyawaitable"],
-        package_data={'pyawaitable': ['./src/pyawaitable/pyawaitable.h']},
-        include_package_data=True,
     )
