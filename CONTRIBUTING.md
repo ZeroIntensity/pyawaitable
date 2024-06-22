@@ -63,5 +63,5 @@ $ pip install pytest pytest-asyncio pytest-memray
 Tests generally access the PyAwaitable API functions using [ctypes](https://docs.python.org/3/library/ctypes.html), but there's also an extension module solely built for tests called `_pyawaitable_test`. You can install this with the following command:
 
 ```
-$ pip install setuptools && pip install ./test/extension/ --no-build-isolation
+$ pip install setuptools wheel && pip install ./test/extension/ --no-build-isolation
 ```
