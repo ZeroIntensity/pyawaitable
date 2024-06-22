@@ -1,41 +1,78 @@
-/* *INDENT-OFF* */
-// This code follows PEP 7 and CPython ABI conventions
-
-#include <awaitable.h>
+#include <pyawaitable.h>
 #include <pyawaitable/awaitableobject.h>
 #include <pyawaitable/coro.h>
 #include <pyawaitable/values.h>
 #include <pyawaitable/genwrapper.h>
-#include <pyawaitable/util.h>
+#define ADD_TYPE(tp)                                               \
+        do                                                         \
+        {                                                          \
+            Py_INCREF(&tp);                                        \
+            if (PyType_Ready(&tp) < 0) {                           \
+                Py_DECREF(&tp);                                    \
+                Py_DECREF(m);                                      \
+                return NULL;                                       \
+            }                                                      \
+            if (PyModule_AddObject(m, #tp, (PyObject *)&tp) < 0) { \
+                Py_DECREF(&tp);                                    \
+                Py_DECREF(m);                                      \
+                return NULL;                                       \
+            }                                                      \
+        } while (0)
 
-static PyModuleDef awaitable_module = {
+static PyModuleDef awaitable_module =
+{
     PyModuleDef_HEAD_INIT,
     "_pyawaitable",
     NULL,
     -1
 };
 
-static AwaitableABI _abi_interface = {
-    sizeof(AwaitableABI),
-    awaitable_new_impl,
-    awaitable_await_impl,
-    awaitable_cancel_impl,
-    awaitable_set_result_impl,
-    awaitable_save_impl,
-    awaitable_save_arb_impl,
-    awaitable_unpack_impl,
-    awaitable_unpack_arb_impl,
-    &_AwaitableType
+/*
+ * This is the ABI definition.
+ *
+ * You can only append to this structure.
+ * Never ever remove, move, or change the size of an existing field.
+ */
+static PyAwaitableABI _abi_interface =
+{
+    sizeof(PyAwaitableABI),
+    pyawaitable_new_impl,
+    pyawaitable_await_impl,
+    pyawaitable_cancel_impl,
+    pyawaitable_set_result_impl,
+    pyawaitable_save_impl,
+    pyawaitable_save_arb_impl,
+    pyawaitable_unpack_impl,
+    pyawaitable_unpack_arb_impl,
+    &_PyAwaitableType,
+    pyawaitable_await_function_impl
 };
 
-PyMODINIT_FUNC PyInit__pyawaitable()
+PyMODINIT_FUNC
+PyInit__pyawaitable(void)
 {
-    PY_TYPE_IS_READY_OR_RETURN_NULL(_AwaitableType);
-    PY_TYPE_IS_READY_OR_RETURN_NULL(_AwaitableGenWrapperType);
-    PY_CREATE_MODULE(awaitable_module);
-    PY_TYPE_ADD_TO_MODULE_OR_RETURN_NULL(_awaitable, _AwaitableType);
-    PY_TYPE_ADD_TO_MODULE_OR_RETURN_NULL(_genwrapper, _AwaitableGenWrapperType);
+    PyObject *m = PyModule_Create(&awaitable_module);
+    ADD_TYPE(_PyAwaitableType);
+    ADD_TYPE(_PyAwaitableGenWrapperType);
 
-    PY_ADD_CAPSULE_TO_MODULE_OR_RETURN_NULL(abiv1, &_abi_interface, "pyawaitable.abi.v1");
+    PyObject *capsule = PyCapsule_New(
+        &_abi_interface,
+        "_pyawaitable.abi_v1",
+        NULL
+    );
+
+    if (!capsule)
+    {
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    if (PyModule_AddObject(m, "abi_v1", capsule) < 0)
+    {
+        Py_DECREF(m);
+        Py_DECREF(capsule);
+        return NULL;
+    }
+
     return m;
 }

@@ -3,14 +3,21 @@ PyAwaitable - CPython API for asynchronous functions.
 
 Docs: https://awaitable.zintensity.dev/
 Source: https://github.com/ZeroIntensity/pyawaitable
-
-You probably don't need this module from Python! This module is for use from the C API.
 """
 
 from . import abi
-from _pyawaitable import _awaitable
+from _pyawaitable import _PyAwaitableType  # type: ignore
 from typing import Type
 
-__all__ = "abi", "Awaitable"
+__all__ = "PyAwaitable", "include", "abi"
 
-Awaitable: Type = _awaitable
+PyAwaitable: Type = _PyAwaitableType
+
+def include() -> str:
+    """
+    Get the directory containing the `pyawaitable.h` file.
+    """
+    import os
+
+    return os.path.dirname(__file__)
+    

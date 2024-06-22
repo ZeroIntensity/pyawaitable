@@ -27,19 +27,19 @@ build-backend = "setuptools.build_meta"
 ## Example
 
 ```c
-#include <awaitable.h>
+#include <pyawaitable.h>
 
 // Assuming that this is using METH_O
 static PyObject *
 hello(PyObject *self, PyObject *coro) {
     // Make our awaitable object
-    PyObject *awaitable = awaitable_new();
+    PyObject *awaitable = pyawaitable_new();
 
     if (!awaitable)
         return NULL;
 
     // Mark the coroutine for being awaited
-    if (awaitable_await(awaitable, coro, NULL, NULL) < 0) {
+    if (pyawaitable_await(awaitable, coro, NULL, NULL) < 0) {
         Py_DECREF(awaitable);
         return NULL;
     }
@@ -55,7 +55,7 @@ async def coro():
     await asyncio.sleep(1)
     print("awaited from C!")
 
-# Use our C function to await coro
+# Use our C function to await it
 await hello(coro())
 ```
 

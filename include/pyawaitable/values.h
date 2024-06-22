@@ -1,19 +1,16 @@
 #ifndef PYAWAITABLE_VALUES_H
 #define PYAWAITABLE_VALUES_H
 
-PyObject *
-awaitable_new_impl(void);
+#include <Python.h> // PyObject
 
-int
-awaitable_save_arb_impl(PyObject *awaitable, Py_ssize_t nargs, ...);
+PyObject *pyawaitable_new_impl(void);
 
-int
-awaitable_unpack_arb_impl(PyObject *awaitable, ...);
+int pyawaitable_save_arb_impl(PyObject *awaitable, Py_ssize_t nargs, ...);
 
-int
-awaitable_save_impl(PyObject *awaitable, Py_ssize_t nargs, ...);
+int pyawaitable_unpack_arb_impl(PyObject *awaitable, ...);
 
-int
-awaitable_unpack_impl(PyObject *awaitable, ...);
+int pyawaitable_save_impl(PyObject *awaitable, Py_ssize_t nargs, ...);
+
+int pyawaitable_unpack_impl(PyObject *awaitable, ...);
 
 #endif

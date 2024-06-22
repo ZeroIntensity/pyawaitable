@@ -5,16 +5,15 @@ if __name__ == "__main__":
     setup(
         name="pyawaitable",
         license="MIT",
-        version = "1.0.0-beta1",
+        version = "1.0.0-rc1",
         ext_modules=[
             Extension(
                 "_pyawaitable",
                 glob("./src/_pyawaitable/*.c"),
-                include_dirs=["./include/"],
-                define_macros=[("PYAWAITABLE_IS_COMPILING", None)],
+                include_dirs=["./include/", "./src/pyawaitable/"],
+                extra_compile_args=["-g3"]
             )
         ],
         package_dir={"": "src"},
         packages=["pyawaitable"],
-        data_files=[("include", ["./include/awaitable.h"])],
     )

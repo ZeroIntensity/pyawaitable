@@ -1,21 +1,22 @@
 ---
 hide:
-  - navigation
+    - navigation
 ---
 
 # Storing and Fetching Values
 
 ## Basics
 
-Every ``AwaitableObject*`` will contain an array of strong references to ``PyObject*``'s, as well as an array of ``void*``. Both of these arrays are separate, and deallocated or `Py_DECREF`'d at the end of the object's lifetime. The two public interfaces for saving values are `awaitable_save` and `awaitable_save_arb`. These functions are variadic, and are supplied a ``nargs`` parameter specifying the number of values. 
+Every `PyAwaitableObject*` will contain an array of strong references to `PyObject*`'s, as well as an array of `void*` pointers. Both of these arrays are separate, and deallocated or `Py_DECREF`'d at the end of the object's lifetime.
 
+The two public interfaces for saving values are `pyawaitable_save` and `pyawaitable_save_arb`. These functions are variadic, and are supplied a `nargs` parameter specifying the number of values.
 
 ## Arbitrary vs Normal Values
 
 "Normal value" refers to a `PyObject*`, while "arbitrary value" refers to a `void*`. The main difference when using them is that the awaitable will increment the reference count of a normal value, while an arbitrary value has all memory management deferred to the user.
 
-- `awaitable_save` and `awaitable_unpack` are both about normal values, so they will increment and decrement reference counts accordingly.
-- `awaitable_save_arb` and `awaitable_unpack_arb` are both about *arbitrary* values, so they will not try to `Py_DECREF` nor `free` the pointer.
+-   `pyawaitable_save` and `pyawaitable_unpack` are both about normal values, so they will increment and decrement reference counts accordingly.
+-   `pyawaitable_save_arb` and `pyawaitable_unpack_arb` are both about _arbitrary_ values, so they will not try to `Py_DECREF` nor `free` the pointer.
 
 ## Example
 
@@ -24,7 +25,7 @@ static int
 spam_callback(PyObject *awaitable, PyObject *result)
 {
     PyObject *value;
-    if (awaitable_unpack(awaitable, &value) < 0)
+    if (pyawaitable_unpack(awaitable, &value) < 0)
         return -1;
 
     long a = PyLong_AsLong(result);
@@ -36,7 +37,7 @@ spam_callback(PyObject *awaitable, PyObject *result)
     if (ret == NULL)
         return -1;
 
-    if (awaitable_set_result(awaitable, ret) < 0)
+    if (pyawaitable_set_result(awaitable, ret) < 0)
     {
         Py_DECREF(ret);
         return -1;
@@ -55,17 +56,17 @@ spam(PyObject *awaitable, PyObject *args)
     if (!PyArg_ParseTuple(args, "OO", &value, &coro))
         return NULL;
 
-    PyObject *awaitable = awaitable_new();
+    PyObject *awaitable = pyawaitable_new();
     if (awaitable == NULL)
         return NULL;
 
-    if (awaitable_save(awaitable, 1, value) < 0)
+    if (pyawaitable_save(awaitable, 1, value) < 0)
     {
         Py_DECREF(awaitable);
         return NULL;
     }
 
-    if (awaitable_await(awaitable, coro, spam_callback, NULL) < 0)
+    if (pyawaitable_await(awaitable, coro, spam_callback, NULL) < 0)
     {
         Py_DECREF(awaitable);
         return NULL;

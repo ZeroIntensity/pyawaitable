@@ -1,0 +1,44 @@
+name: Memory Check
+
+on:
+    push:
+        branches:
+            - master
+    pull_request:
+        branches:
+            - master
+
+env:
+    PYTHONUNBUFFERED: "1"
+    FORCE_COLOR: "1"
+    PYTHONIOENCODING: "utf8"
+
+jobs:
+    run:
+        name: Valgrind on Ubuntu
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v2
+
+            - name: Set up Python 3.12
+              uses: actions/setup-python@v2
+              with:
+                  python-version: 3.12
+
+            - name: Install Pytest
+              run: |
+                  pip install pytest pytest-asyncio typing_extensions
+              shell: bash
+
+            - name: Build PyAwaitable
+              run: pip install .
+
+            - name: Build PyAwaitable Test Package
+              run: pip install setuptools wheel && pip install tests/extension/ --no-build-isolation
+
+            - name: Install Valgrind
+              run: sudo apt-get update && sudo apt-get -y install valgrind
+
+            - name: Run tests with Valgrind
+              run: valgrind --suppressions=valgrind-python.supp --error-exitcode=1 pytest -x

@@ -1,13 +1,20 @@
+# Python
 __pycache__/
 .venv/
-compile_flags.txt
+
 *.egg-info
-build/
-test.py
 test/
 dist/
+
+# LSP
+compile_flags.txt
+build/
 .vscode/
 .vs/
-*.user
 *.sln
+*.user
 *.vcxproj*
+
+# Misc
+test.py
+vgcore*
