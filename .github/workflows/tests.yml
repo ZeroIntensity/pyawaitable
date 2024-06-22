@@ -35,23 +35,23 @@ jobs:
               with:
                   python-version: ${{ matrix.python-version }}
 
-            - name:  Install PyTest
-              run:   |
-                     if [ "$RUNNER_OS" == "Windows" ]; then
-                          pip install pytest pytest-asyncio typing_extensions
-                     else
-                          pip install pytest pytest-asyncio pytest-memray typing_extensions
-                     fi
+            - name: Install Pytest
+              run: |
+                  if [ "$RUNNER_OS" == "Windows" ]; then
+                       pip install pytest pytest-asyncio typing_extensions
+                  else
+                       pip install pytest pytest-asyncio pytest-memray typing_extensions
+                  fi
               shell: bash
-    
-            - name: Build PyAwaitable
-              run: pip install .
 
-            - name:  Run tests
-              run:   |
-                     if [ "$RUNNER_OS" == "Windows" ]; then
-                          pytest
-                     else
-                          pytest --memray
-                     fi
+            - name: Build PyAwaitable
+              run: pip install . ./tests/build/
+
+            - name: Run tests
+              run: |
+                  if [ "$RUNNER_OS" == "Windows" ]; then
+                       pytest -W error
+                  else
+                       python3 -m pytest -W error --memray 
+                  fi
               shell: bash

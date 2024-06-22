@@ -3,7 +3,7 @@
 
 #include <Python.h>
 
-extern PyMethodDef awaitable_methods[];
-extern PyAsyncMethods awaitable_async_methods;
+extern PyMethodDef pyawaitable_methods[];
+extern PyAsyncMethods pyawaitable_async_methods;
 
 #endif

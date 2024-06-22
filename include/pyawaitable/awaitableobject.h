@@ -2,18 +2,21 @@
 #define PYAWAITABLE_AWAITABLE_H
 
 #include <Python.h>
-#include <awaitable.h>
+#include <pyawaitable.h>
 #include <stdbool.h>
 
-typedef struct {
+typedef struct _pyawaitable_callback
+{
     PyObject *coro;
     awaitcallback callback;
     awaitcallback_err err_callback;
     bool done;
-} awaitable_callback;
+} pyawaitable_callback;
 
-struct _AwaitableObject {
-    PyObject_HEAD awaitable_callback **aw_callbacks;
+struct _PyAwaitableObject
+{
+    PyObject_HEAD
+    pyawaitable_callback **aw_callbacks;
     Py_ssize_t aw_callback_size;
     PyObject *aw_result;
     PyObject *aw_gen;
@@ -23,15 +26,16 @@ struct _AwaitableObject {
     Py_ssize_t aw_arb_values_size;
     Py_ssize_t aw_state;
     bool aw_done;
+    bool aw_awaited;
 };
 
-extern PyTypeObject _AwaitableType;
+extern PyTypeObject _PyAwaitableType;
 
 int
-awaitable_set_result_impl(PyObject *awaitable, PyObject *result);
+pyawaitable_set_result_impl(PyObject *awaitable, PyObject *result);
 
 int
-awaitable_await_impl(
+pyawaitable_await_impl(
     PyObject *aw,
     PyObject *coro,
     awaitcallback cb,
@@ -39,12 +43,12 @@ awaitable_await_impl(
 );
 
 void
-awaitable_cancel_impl(PyObject *aw);
+pyawaitable_cancel_impl(PyObject *aw);
 
 PyObject *
 awaitable_next(PyObject *self);
 
 PyObject *
-awaitable_new_impl(void);
+pyawaitable_new_impl(void);
 
 #endif
