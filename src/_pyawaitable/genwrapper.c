@@ -109,18 +109,18 @@ genwrapper_next(PyObject *self)
         return NULL;
     }
 
-    if (aw->aw_callbacks[aw->aw_state] == NULL)
-    {
-        aw->aw_done = true;
-        PyErr_SetObject(
-            PyExc_StopIteration,
-            aw->aw_result ? aw->aw_result : Py_None
-        );
-        return NULL;
-    }
-
     if (g->gw_current_await == NULL)
     {
+        if (aw->aw_callbacks[aw->aw_state] == NULL)
+        {
+            aw->aw_done = true;
+            PyErr_SetObject(
+                PyExc_StopIteration,
+                aw->aw_result ? aw->aw_result : Py_None
+            );
+            return NULL;
+        }
+
         cb = aw->aw_callbacks[aw->aw_state++];
 
         if (
@@ -164,7 +164,7 @@ genwrapper_next(PyObject *self)
         PyObject *occurred = PyErr_Occurred();
         if (!occurred)
         {
-            // coro is done
+            // Coro is done
             if (!cb->callback)
             {
                 g->gw_current_await = NULL;
@@ -181,7 +181,7 @@ genwrapper_next(PyObject *self)
         {
             if (
                 genwrapper_fire_err_callback(
-                    (PyObject *)aw,
+                    (PyObject *) aw,
                     g->gw_current_await,
                     cb
                 ) < 0
@@ -195,8 +195,8 @@ genwrapper_next(PyObject *self)
 
         if (cb->callback == NULL)
         {
-            // coro is done, but with a result
-            // we can disregard the result if theres no callback
+            // Coroutine is done, but with a result.
+            // We can disregard the result if theres no callback.
             g->gw_current_await = NULL;
             PyErr_Clear();
             return genwrapper_next(self);
@@ -208,6 +208,8 @@ genwrapper_next(PyObject *self)
             PyObject *type, *traceback;
             PyErr_Fetch(&type, &value, &traceback);
             PyErr_NormalizeException(&type, &value, &traceback);
+            Py_XDECREF(type);
+            Py_XDECREF(traceback);
 
             if (value == NULL)
             {
@@ -235,8 +237,8 @@ genwrapper_next(PyObject *self)
 
         if (result < -1)
         {
-            // -2 or lower denotes that the error should be deferred
-            // regardless of whether a handler is present
+            // -2 or lower denotes that the error should be deferred,
+            // regardless of whether a handler is present.
             return NULL;
         }
 
