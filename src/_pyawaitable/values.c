@@ -32,7 +32,7 @@
         "pyawaitable: " err " array has a capacity of 32" \
         ", so storing %ld more would overflow it"         \
 
-#define SAVE(arr, index, tp, err)                                \
+#define SAVE(arr, index, tp, err, wrap)                          \
         assert(awaitable != NULL);                               \
         assert(nargs != 0);                                      \
         Py_INCREF(awaitable);                                    \
@@ -49,12 +49,14 @@
         va_list vargs;                                           \
         va_start(vargs, nargs);                                  \
         for (Py_ssize_t i = index; i < final_size; ++i) {        \
-            arr[i] = Py_NewRef(va_arg(vargs, tp));               \
+            arr[i] = wrap(va_arg(vargs, tp));                    \
         }                                                        \
         index += nargs;                                          \
         va_end(vargs);                                           \
         Py_DECREF(awaitable);                                    \
         return 0
+
+#define NOTHING
 
 /* Normal Values */
 
@@ -67,7 +69,7 @@ pyawaitable_unpack_impl(PyObject *awaitable, ...)
 int
 pyawaitable_save_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
 {
-    SAVE(aw->aw_values, aw->aw_values_index, PyObject *, "values");
+    SAVE(aw->aw_values, aw->aw_values_index, PyObject *, "values", Py_NewRef);
 }
 
 /* Arbitrary Values */
@@ -85,6 +87,7 @@ pyawaitable_save_arb_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
         aw->aw_arb_values,
         aw->aw_arb_values_index,
         void *,
-        "arbitrary values"
+        "arbitrary values",
+        NOTHING
     );
 }

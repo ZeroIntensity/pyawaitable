@@ -309,7 +309,6 @@ async def test_store_values():
     await awaitable
     assert data.value == [1, 2, 3, 4]
 
-
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_store_arb_values():

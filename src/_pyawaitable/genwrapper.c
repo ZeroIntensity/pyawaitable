@@ -97,7 +97,6 @@ genwrapper_fire_err_callback(
 PyObject *
 genwrapper_next(PyObject *self)
 {
-    puts("genwrapper");
     GenWrapperObject *g = (GenWrapperObject *)self;
     PyAwaitableObject *aw = g->gw_aw;
     pyawaitable_callback *cb;
@@ -230,7 +229,7 @@ genwrapper_next(PyObject *self)
         }
 
         Py_INCREF(aw);
-        int result = cb->callback((PyObject *)aw, value);
+        int result = cb->callback((PyObject *) aw, value);
         Py_DECREF(aw);
         Py_DECREF(value);
 
