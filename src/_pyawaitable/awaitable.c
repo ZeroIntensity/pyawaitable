@@ -27,7 +27,9 @@ awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     }
 
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
-    aw->aw_result = Py_NewRef(Py_None);
+    aw->aw_awaited = false;
+    aw->aw_done = false;
+
     return (PyObject *) aw;
 }
 
@@ -115,6 +117,8 @@ pyawaitable_cancel_impl(PyObject *aw)
 
         if (!cb->done)
             Py_DECREF(cb->coro);
+
+        a->aw_callbacks[i] = NULL;
     }
 
     Py_DECREF(aw);
@@ -166,13 +170,9 @@ pyawaitable_set_result_impl(PyObject *awaitable, PyObject *result)
 {
     assert(awaitable != NULL);
     assert(result != NULL);
-    Py_INCREF(result);
-    Py_INCREF(awaitable);
 
-    PyAwaitableObject *aw = (PyAwaitableObject *)awaitable;
+    PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
     aw->aw_result = Py_NewRef(result);
-    Py_DECREF(awaitable);
-    Py_DECREF(result);
     return 0;
 }
 
