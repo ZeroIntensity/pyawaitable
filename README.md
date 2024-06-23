@@ -2,6 +2,9 @@
 
 ## CPython API for asynchronous functions
 
+![Tests](https://github.com/ZeroIntensity/pyawaitable/actions/workflows/tests.yml/badge.svg)
+![Memory Check](https://github.com/ZeroIntensity/pyawaitable/actions/workflows/memory_check.yml/badge.svg)
+
 -   [Docs](https://awaitable.zintensity.dev)
 -   [Source](https://github.com/ZeroIntensity/pyawaitable)
 -   [PyPI](https://pypi.org/project/pyawaitable)
