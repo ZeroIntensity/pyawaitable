@@ -32,6 +32,13 @@ raising_callback(PyObject *awaitable, PyObject *result)
     return -1;
 }
 
+int
+raising_err_callback(PyObject *awaitable, PyObject *result)
+{
+    PyErr_SetString(PyExc_ZeroDivisionError, "test");
+    return -2;
+}
+
 static PyMethodDef methods[] =
 {
     {"test", test, METH_O, NULL},
@@ -63,6 +70,18 @@ PyInit__pyawaitable_test()
             m,
             "raising_callback",
             (long) raising_callback
+        ) < 0
+    )
+    {
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    if (
+        PyModule_AddIntConstant(
+            m,
+            "raising_err_callback",
+            (long) raising_err_callback
         ) < 0
     )
     {
