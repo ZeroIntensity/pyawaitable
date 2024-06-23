@@ -3,9 +3,16 @@
 ## CPython API for asynchronous functions
 
 -   [Docs](https://awaitable.zintensity.dev)
--   [Scrapped PEP](https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926)
+-   [Source](https://github.com/ZeroIntensity/pyawaitable)
+-   [PyPI](https://pypi.org/project/pyawaitable)
 
 This project originates from a scrapped PEP. For the original text, see [here](https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926).
+
+## What is it?
+
+PyAwaitable is the *only* library to support writing and calling asynchronous Python functions from pure C code (with the exception of manually implementing an awaitable class from scratch, which is essentially what PyAwaitable does).
+
+It was originally designed to be directly part of CPython - you can read the [scrapped PEP](https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926) about it. Since this library only uses the public ABI, it's better fit outside of CPython, as a library.
 
 ## Installation
 
