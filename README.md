@@ -6,8 +6,6 @@
 -   [Source](https://github.com/ZeroIntensity/pyawaitable)
 -   [PyPI](https://pypi.org/project/pyawaitable)
 
-This project originates from a scrapped PEP. For the original text, see [here](https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926).
-
 ## What is it?
 
 PyAwaitable is the *only* library to support writing and calling asynchronous Python functions from pure C code (with the exception of manually implementing an awaitable class from scratch, which is essentially what PyAwaitable does).
