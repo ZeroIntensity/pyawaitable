@@ -24,6 +24,10 @@ Add it to your project's build process:
 [build-system]
 requires = ["setuptools", "pyawaitable"]
 build-backend = "setuptools.build_meta"
+
+[project]
+# ...
+dependencies = ["pyawaitable"]
 ```
 
 Include it in your extension:
