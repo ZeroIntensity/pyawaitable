@@ -45,6 +45,7 @@ async def test_await():
     event = asyncio.Event()
 
     async def coro():
+        await asyncio.sleep(0)
         event.set()
 
     awaitable = abi.new()
@@ -59,6 +60,7 @@ async def test_await_cb():
     awaitable = abi.new()
 
     async def coro(value: int):
+        await asyncio.sleep(0)
         return value * 2
 
     @awaitcallback
@@ -77,6 +79,7 @@ async def test_await_cb_err():
     awaitable = abi.new()
 
     async def coro_raise() -> float:
+        await asyncio.sleep(0)
         return 0 / 0
 
     @awaitcallback
@@ -125,6 +128,7 @@ async def test_await_cb_noerr():
     awaitable = abi.new()
 
     async def coro() -> int:
+        await asyncio.sleep(0)
         return 42
 
     @awaitcallback
@@ -194,6 +198,7 @@ async def test_await_order():
     awaitable = abi.new()
 
     async def echo(value: int) -> int:
+        await asyncio.sleep(0)
         return value
 
     @awaitcallback
@@ -216,6 +221,7 @@ async def test_await_cancel():
     awaitable = abi.new()
 
     async def echo(value: int) -> int:
+        await asyncio.sleep(0)
         return value
 
     @awaitcallback
@@ -239,6 +245,7 @@ async def test_awaitable_chaining():
     awaitable = abi.new()
 
     async def echo(value: int) -> int:
+        await asyncio.sleep(0)
         return value
 
     @awaitcallback
@@ -261,6 +268,7 @@ async def test_coro_raise():
     awaitable = abi.new()
 
     async def coro() -> None:
+        await asyncio.sleep(0)
         raise ZeroDivisionError("test")
 
     add_await(awaitable, coro(), awaitcallback(0), awaitcallback_err(0))
@@ -286,6 +294,7 @@ async def test_store_values():
     awaitable = abi.new()
 
     async def echo(value: int) -> int:
+        await asyncio.sleep(0)
         return value
 
     data = ctypes.py_object([1, 2, 3])
@@ -315,6 +324,7 @@ async def test_store_arb_values():
     awaitable = abi.new()
 
     async def echo(value: int) -> int:
+        await asyncio.sleep(0)
         return value
 
     buffer = ctypes.create_string_buffer(b"test")
@@ -348,6 +358,7 @@ async def test_set_results():
     awaitable = abi.new()
 
     async def coro():
+        await asyncio.sleep(0)
         return "abc"
 
     @awaitcallback
