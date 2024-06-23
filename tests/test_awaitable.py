@@ -221,7 +221,6 @@ async def test_await_cancel():
     awaitable = abi.new()
 
     async def echo(value: int) -> int:
-        await asyncio.sleep(0)
         return value
 
     @awaitcallback
