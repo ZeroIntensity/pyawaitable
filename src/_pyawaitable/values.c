@@ -2,150 +2,89 @@
 #include <pyawaitable/backport.h>
 #include <pyawaitable/values.h>
 #include <pyawaitable/awaitableobject.h>
+#define UNPACK(arr, tp, err)                                     \
+        assert(awaitable != NULL);                               \
+        PyAwaitableObject *aw = (PyAwaitableObject *) awaitable; \
+        Py_INCREF(awaitable);                                    \
+        if (arr[0] == NULL) {                                    \
+            PyErr_SetString(                                     \
+    PyExc_ValueError,                                            \
+    "pyawaitable: awaitable object has no stored " err           \
+            );                                                   \
+            Py_DECREF(awaitable);                                \
+            return -1;                                           \
+        }                                                        \
+        va_list args;                                            \
+        va_start(args, awaitable);                               \
+        for (int i = 0; i < VALUE_ARRAY_SIZE; ++i) {             \
+            if (!arr[i])                                         \
+            break;                                               \
+            tp ptr = va_arg(args, tp);                           \
+            if (ptr == NULL)                                     \
+            continue;                                            \
+            *ptr = arr[i];                                       \
+        }                                                        \
+        va_end(args);                                            \
+        Py_DECREF(awaitable);                                    \
+        return 0
+
+#define SAVE_ERR(err)                                     \
+        "pyawaitable: " err " array has a capacity of 16" \
+        ", so storing %ld more would overflow it"         \
+
+#define SAVE(arr, index, tp, err)                                \
+        assert(awaitable != NULL);                               \
+        assert(nargs != 0);                                      \
+        Py_INCREF(awaitable);                                    \
+        PyAwaitableObject *aw = (PyAwaitableObject *) awaitable; \
+        Py_ssize_t final_size = index + nargs;                   \
+        if (final_size >= VALUE_ARRAY_SIZE) {                    \
+            PyErr_Format(                                        \
+    PyExc_SystemError,                                           \
+    SAVE_ERR(err),                                               \
+    final_size                                                   \
+            );                                                   \
+            return -1;                                           \
+        }                                                        \
+        va_list vargs;                                           \
+        va_start(vargs, nargs);                                  \
+        for (Py_ssize_t i = index; i < final_size; ++i) {        \
+            arr[i] = Py_NewRef(va_arg(vargs, tp));               \
+        }                                                        \
+        index += nargs;                                          \
+        va_end(vargs);                                           \
+        Py_DECREF(awaitable);                                    \
+        return 0
+
+/* Normal Values */
 
 int
 pyawaitable_unpack_impl(PyObject *awaitable, ...)
 {
-    assert(awaitable != NULL);
-    PyAwaitableObject *aw = (PyAwaitableObject *)awaitable;
-    Py_INCREF(awaitable);
-
-    if (aw->aw_values == NULL)
-    {
-        PyErr_SetString(
-            PyExc_ValueError,
-            "pyawaitable: awaitable object has no stored values"
-        );
-        Py_DECREF(awaitable);
-        return -1;
-    }
-
-    va_list args;
-    va_start(args, awaitable);
-
-    for (int i = 0; i < aw->aw_values_size; i++)
-    {
-        PyObject **ptr = va_arg(args, PyObject * *);
-        if (ptr == NULL)
-            continue;
-        *ptr = aw->aw_values[i];
-        // borrowed reference
-    }
-
-    va_end(args);
-    Py_DECREF(awaitable);
-    return 0;
+    UNPACK(aw->aw_values, PyObject * *, "values");
 }
 
 int
 pyawaitable_save_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
 {
-    assert(awaitable != NULL);
-    assert(nargs != 0);
-    Py_INCREF(awaitable);
-    PyAwaitableObject *aw = (PyAwaitableObject *)awaitable;
-
-    va_list vargs;
-    va_start(vargs, nargs);
-    Py_ssize_t offset = aw->aw_values_size;
-
-    if (aw->aw_values == NULL)
-        aw->aw_values = PyMem_Calloc(
-            nargs,
-            sizeof(PyObject *)
-        );
-    else
-        aw->aw_values = PyMem_Realloc(
-            aw->aw_values,
-            sizeof(PyObject *) * (aw->aw_values_size + nargs)
-        );
-
-    if (aw->aw_values == NULL)
-    {
-        PyErr_NoMemory();
-        Py_DECREF(awaitable);
-        return -1;
-    }
-
-    aw->aw_values_size += nargs;
-
-    for (Py_ssize_t i = offset; i < aw->aw_values_size; i++)
-        aw->aw_values[i] = Py_NewRef(va_arg(vargs, PyObject *));
-
-    va_end(vargs);
-    Py_DECREF(awaitable);
-    return 0;
+    SAVE(aw->aw_values, aw->aw_values_index, PyObject *, "values");
 }
+
+/* Arbitrary Values */
 
 int
 pyawaitable_unpack_arb_impl(PyObject *awaitable, ...)
 {
-    assert(awaitable != NULL);
-    PyAwaitableObject *aw = (PyAwaitableObject *)awaitable;
-    Py_INCREF(awaitable);
-
-    if (aw->aw_arb_values == NULL)
-    {
-        PyErr_SetString(
-            PyExc_ValueError,
-            "pyawaitable: awaitable object has no stored arbitrary values"
-        );
-        Py_DECREF(awaitable);
-        return -1;
-    }
-
-    va_list args;
-    va_start(args, awaitable);
-
-    for (int i = 0; i < aw->aw_arb_values_size; i++)
-    {
-        void **ptr = va_arg(args, void **);
-        if (ptr == NULL)
-            continue;
-        *ptr = aw->aw_arb_values[i];
-    }
-
-    va_end(args);
-    Py_DECREF(awaitable);
-    return 0;
+    UNPACK(aw->aw_arb_values, void **, "arbitrary values");
 }
 
 int
 pyawaitable_save_arb_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
 {
-    assert(awaitable != NULL);
-    assert(nargs != 0);
-    Py_INCREF(awaitable);
-    PyAwaitableObject *aw = (PyAwaitableObject *)awaitable;
-
-    va_list vargs;
-    va_start(vargs, nargs);
-    Py_ssize_t offset = aw->aw_arb_values_size;
-
-    if (aw->aw_arb_values == NULL)
-        aw->aw_arb_values = PyMem_Calloc(
-            nargs,
-            sizeof(void *)
-        );
-    else
-        aw->aw_arb_values = PyMem_Realloc(
-            aw->aw_arb_values,
-            sizeof(void *) * (aw->aw_arb_values_size + nargs)
-        );
-
-    if (aw->aw_arb_values == NULL)
-    {
-        PyErr_NoMemory();
-        Py_DECREF(awaitable);
-        return -1;
-    }
-
-    aw->aw_arb_values_size += nargs;
-
-    for (Py_ssize_t i = offset; i < aw->aw_arb_values_size; i++)
-        aw->aw_arb_values[i] = va_arg(vargs, void *);
-
-    va_end(vargs);
-    Py_DECREF(awaitable);
-    return 0;
+    SAVE(
+        aw->aw_arb_values,
+        aw->aw_arb_values_index,
+        void *,
+        "arbitrary values"
+    );
 }

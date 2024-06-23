@@ -4,6 +4,7 @@
 #include <pyawaitable/genwrapper.h>
 #include <stdlib.h>
 
+
 static PyObject *
 gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
 {
@@ -16,17 +17,17 @@ gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    GenWrapperObject *g = (GenWrapperObject *)self;
+    GenWrapperObject *g = (GenWrapperObject *) self;
     g->gw_aw = NULL;
     g->gw_current_await = NULL;
 
-    return (PyObject *)g;
+    return (PyObject *) g;
 }
 
 static void
 gen_dealloc(PyObject *self)
 {
-    GenWrapperObject *g = (GenWrapperObject *)self;
+    GenWrapperObject *g = (GenWrapperObject *) self;
     Py_XDECREF(g->gw_current_await);
     Py_XDECREF(g->gw_aw);
     Py_TYPE(self)->tp_free(self);
@@ -36,16 +37,17 @@ PyObject *
 genwrapper_new(PyAwaitableObject *aw)
 {
     assert(aw != NULL);
-    GenWrapperObject *g = (GenWrapperObject *)gen_new(
+    GenWrapperObject *g = (GenWrapperObject *) gen_new(
         &_PyAwaitableGenWrapperType,
         NULL,
         NULL
     );
 
-    if (g == NULL)
+    if (!g)
         return NULL;
-    g->gw_aw = (PyAwaitableObject *)Py_NewRef((PyObject *)aw);
-    return (PyObject *)g;
+
+    g->gw_aw = (PyAwaitableObject *) Py_NewRef((PyObject *) aw);
+    return (PyObject *) g;
 }
 
 int
@@ -99,11 +101,9 @@ genwrapper_next(PyObject *self)
     GenWrapperObject *g = (GenWrapperObject *)self;
     PyAwaitableObject *aw = g->gw_aw;
     pyawaitable_callback *cb;
-    if (
-        ((aw->aw_state + 1) > aw->aw_callback_size) &&
-        g->gw_current_await == NULL
-    )
+    if (aw->aw_callbacks[aw->aw_state] == NULL)
     {
+        aw->aw_done = true;
         PyErr_SetObject(
             PyExc_StopIteration,
             aw->aw_result ? aw->aw_result : Py_None
@@ -149,8 +149,7 @@ genwrapper_next(PyObject *self)
 
     PyObject *result = Py_TYPE(
         g->gw_current_await
-    )
-                       ->tp_iternext(g->gw_current_await);
+    )->tp_iternext(g->gw_current_await);
 
     if (result == NULL)
     {

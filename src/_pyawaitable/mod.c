@@ -48,6 +48,12 @@ static PyAwaitableABI _abi_interface =
     pyawaitable_await_function_impl
 };
 
+static void
+close_pool(PyObject *Py_UNUSED(capsule))
+{
+    dealloc_awaitable_pool();
+}
+
 PyMODINIT_FUNC
 PyInit__pyawaitable(void)
 {
@@ -58,7 +64,7 @@ PyInit__pyawaitable(void)
     PyObject *capsule = PyCapsule_New(
         &_abi_interface,
         "_pyawaitable.abi_v1",
-        NULL
+        close_pool
     );
 
     if (!capsule)
@@ -71,6 +77,12 @@ PyInit__pyawaitable(void)
     {
         Py_DECREF(m);
         Py_DECREF(capsule);
+        return NULL;
+    }
+
+    if (alloc_awaitable_pool() < 0)
+    {
+        Py_DECREF(m);
         return NULL;
     }
 
