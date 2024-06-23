@@ -76,15 +76,13 @@ genwrapper_fire_err_callback(
 
     if (e_res < 0)
     {
-        if (PyErr_Occurred())
-            PyErr_Print();
-
         // If the res is -1, the error is restored.
         // Otherwise, it is not.
         if (e_res == -1)
             PyErr_SetRaisedException(err);
+        else
+            Py_DECREF(err);
 
-        Py_DECREF(err);
         Py_DECREF(cb->coro);
         Py_XDECREF(await);
         return -1;

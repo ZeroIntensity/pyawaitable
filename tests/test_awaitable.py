@@ -42,16 +42,17 @@ async def test_object_cleanup():
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_await():
-    event = asyncio.Event()
+    called = False
 
     async def coro():
         await asyncio.sleep(0)
-        event.set()
+        nonlocal called
+        called = True
 
     awaitable = abi.new()
     add_await(awaitable, coro(), awaitcallback(0), awaitcallback_err(0))
     await awaitable
-    assert event.is_set()
+    assert called is True
 
 
 @limit_leaks(LEAK_LIMIT)
@@ -97,13 +98,13 @@ async def test_await_cb_err():
 
 raising_callback = ctypes.cast(_pyawaitable_test.raising_callback, awaitcallback)
 
-"""
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_await_cb_err_cb():
     awaitable = abi.new()
 
     async def coro() -> int:
+        await asyncio.sleep(0)
         return 42
 
     @awaitcallback_err
@@ -119,7 +120,6 @@ async def test_await_cb_err_cb():
         cb_err,
     )
     await awaitable
-"""
 
 
 @limit_leaks(LEAK_LIMIT)
@@ -141,13 +141,11 @@ async def test_await_cb_noerr():
         await awaitable
 
 
-"""
-
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_await_cb_err_restore():
     awaitable = abi.new()
-    event = asyncio.Event()
+    called = False
 
     async def coro() -> int:
         return 42
@@ -155,7 +153,8 @@ async def test_await_cb_err_restore():
     @awaitcallback_err
     def cb_err(awaitable_inner: pyawaitable.PyAwaitable, err: Exception) -> int:
         assert str(err) == "test"
-        event.set()
+        nonlocal called
+        called = True
         return -1
 
     add_await(awaitable, coro(), raising_callback, cb_err)
@@ -163,8 +162,9 @@ async def test_await_cb_err_restore():
     with pytest.raises(RuntimeError):
         await awaitable
 
-    assert event.is_set()
+    assert called is True
 
+"""
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_await_cb_err_norestore():
