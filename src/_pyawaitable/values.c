@@ -29,7 +29,7 @@
         return 0
 
 #define SAVE_ERR(err)                                     \
-        "pyawaitable: " err " array has a capacity of 16" \
+        "pyawaitable: " err " array has a capacity of 32" \
         ", so storing %ld more would overflow it"         \
 
 #define SAVE(arr, index, tp, err)                                \

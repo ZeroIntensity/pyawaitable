@@ -60,7 +60,6 @@ PyInit__pyawaitable(void)
     PyObject *m = PyModule_Create(&awaitable_module);
     ADD_TYPE(_PyAwaitableType);
     ADD_TYPE(_PyAwaitableGenWrapperType);
-
     PyObject *capsule = PyCapsule_New(
         &_abi_interface,
         "_pyawaitable.abi_v1",

@@ -79,28 +79,37 @@ genwrapper_fire_err_callback(
         if (PyErr_Occurred())
             PyErr_Print();
 
+        // If the res is -1, the error is restored.
+        // Otherwise, it is not.
         if (e_res == -1)
             PyErr_SetRaisedException(err);
 
-        // if the res is -1, the error is restored. otherwise, it is not
         Py_DECREF(err);
         Py_DECREF(cb->coro);
         Py_XDECREF(await);
         return -1;
     }
-    ;
 
     Py_DECREF(err);
-
     return 0;
 }
 
 PyObject *
 genwrapper_next(PyObject *self)
 {
+    puts("genwrapper");
     GenWrapperObject *g = (GenWrapperObject *)self;
     PyAwaitableObject *aw = g->gw_aw;
     pyawaitable_callback *cb;
+    if (aw->aw_state == CALLBACK_ARRAY_SIZE)
+    {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "pyawaitable cannot handle more than 255 coroutines"
+        );
+        return NULL;
+    }
+
     if (aw->aw_callbacks[aw->aw_state] == NULL)
     {
         aw->aw_done = true;

@@ -7,7 +7,7 @@
 typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *);
 #define CALLBACK_ARRAY_SIZE 128
-#define VALUE_ARRAY_SIZE 16
+#define VALUE_ARRAY_SIZE 32
 
 typedef struct _pyawaitable_callback
 {

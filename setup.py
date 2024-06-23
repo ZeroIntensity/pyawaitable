@@ -11,7 +11,7 @@ if __name__ == "__main__":
                 "_pyawaitable",
                 glob("./src/_pyawaitable/*.c"),
                 include_dirs=["./include/", "./src/pyawaitable/"],
-                extra_compile_args=["-g3"]
+                extra_compile_args=["-g", "-O3"]
             )
         ],
         package_dir={"": "src"},

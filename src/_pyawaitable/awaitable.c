@@ -54,7 +54,7 @@ awaitable_next(PyObject *self)
     }
 
     aw->aw_gen = gen;
-    return gen;
+    return Py_NewRef(gen);
 }
 
 static void
