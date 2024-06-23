@@ -54,6 +54,10 @@ requires = ["setuptools", "pyawaitable"]
 build-backend = "setuptools.build_meta"
 ```
 
+!!! note
+
+    PyAwaitable needs to be installed as both a runtime dependency and build time dependency.
+
 ## Acknowledgements
 
 Special thanks to:
