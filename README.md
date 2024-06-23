@@ -17,19 +17,26 @@ It was originally designed to be directly part of CPython - you can read the [sc
 
 ## Installation
 
-### Console
-
-```console
-$ pip install pyawaitable
-```
-
-### Add it to your project
+Add it to your project's build process:
 
 ```toml
 # pyproject.toml example with setuptools
 [build-system]
 requires = ["setuptools", "pyawaitable"]
 build-backend = "setuptools.build_meta"
+```
+
+Include it in your extension:
+
+```py
+from setuptools import setup, Extension
+import pyawaitable
+
+if __name__ == "__main__":
+    setup(
+        ...,
+        ext_modules=[Extension(..., include_dirs=[pyawaitable.include()])]
+    )
 ```
 
 ## Example
