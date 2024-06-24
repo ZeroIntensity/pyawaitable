@@ -215,6 +215,7 @@ async def test_await_order():
 
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")  # Second and third iteration of echo() are skipped, resulting in a RuntimeWarning
 async def test_await_cancel():
     data = []
 
