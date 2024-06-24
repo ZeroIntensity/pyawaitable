@@ -146,7 +146,6 @@ pyawaitable_await_impl(
         return -1;
     }
 
-
     pyawaitable_callback *aw_c = PyMem_Malloc(sizeof(pyawaitable_callback));
     if (aw_c == NULL)
     {
@@ -192,7 +191,18 @@ void
 dealloc_awaitable_pool(void)
 {
     for (Py_ssize_t i = pool_index; i < AWAITABLE_POOL_SIZE; ++i)
+    {
+        if (Py_REFCNT(pool[i]) != 1)
+        {
+            PyErr_Format(
+                PyExc_SystemError,
+                "expected %R to have a reference count of 1",
+                pool[i]
+            );
+            PyErr_WriteUnraisable(NULL);
+        }
         Py_DECREF(pool[i]);
+    }
 }
 
 int

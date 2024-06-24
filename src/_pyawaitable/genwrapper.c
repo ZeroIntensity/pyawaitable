@@ -97,12 +97,22 @@ genwrapper_next(PyObject *self)
 {
     GenWrapperObject *g = (GenWrapperObject *)self;
     PyAwaitableObject *aw = g->gw_aw;
+
+    if (!aw)
+    {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "pyawaitable: genwrapper used after return"
+        );
+        return NULL;
+    }
+
     pyawaitable_callback *cb;
     if (aw->aw_state == CALLBACK_ARRAY_SIZE)
     {
         PyErr_SetString(
             PyExc_SystemError,
-            "pyawaitable cannot handle more than 255 coroutines"
+            "pyawaitable: object cannot handle more than 255 coroutines"
         );
         return NULL;
     }
@@ -116,6 +126,8 @@ genwrapper_next(PyObject *self)
                 PyExc_StopIteration,
                 aw->aw_result ? aw->aw_result : Py_None
             );
+            Py_DECREF(g->gw_aw);
+            g->gw_aw = NULL;
             return NULL;
         }
 
