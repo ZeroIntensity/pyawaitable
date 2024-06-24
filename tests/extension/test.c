@@ -2,6 +2,18 @@
 #include <Python.h>
 #include <pyawaitable.h>
 #include <stdio.h>
+#define ADD_ADDRESS(ptr)                                          \
+        do { PyObject *py_int = PyLong_FromVoidPtr((void *) ptr); \
+             if (!py_int) {                                       \
+                 Py_DECREF(m);                                    \
+                 return NULL;                                     \
+             }                                                    \
+             if (PyModule_AddObject(m, #ptr, py_int) < 0) {       \
+                 Py_DECREF(m);                                    \
+                 Py_DECREF(py_int);                               \
+                 return NULL;                                     \
+             }                                                    \
+        } while (0);
 
 PyObject *
 test2(PyObject *self, PyObject *args);
@@ -65,28 +77,7 @@ PyInit__pyawaitable_test()
     if (!m)
         return NULL;
 
-    if (
-        PyModule_AddIntConstant(
-            m,
-            "raising_callback",
-            (long) raising_callback
-        ) < 0
-    )
-    {
-        Py_DECREF(m);
-        return NULL;
-    }
-
-    if (
-        PyModule_AddIntConstant(
-            m,
-            "raising_err_callback",
-            (long) raising_err_callback
-        ) < 0
-    )
-    {
-        Py_DECREF(m);
-        return NULL;
-    }
+    ADD_ADDRESS(raising_callback);
+    ADD_ADDRESS(raising_err_callback);
     return m;
 }
