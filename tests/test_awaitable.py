@@ -1,90 +1,19 @@
 import pyawaitable
 import ctypes
-from ctypes import pythonapi
 import pytest
 import asyncio
 import platform
-from typing import Callable, Any
-from typing_extensions import Self
 import _pyawaitable_test
 from collections.abc import Coroutine
-
-get_pointer = pythonapi.PyCapsule_GetPointer
-get_pointer.argtypes = (ctypes.py_object, ctypes.c_void_p)
-get_pointer.restype = ctypes.c_void_p
-
-get_name = pythonapi.PyCapsule_GetName
-get_name.argtypes = (ctypes.py_object,)
-get_name.restype = ctypes.c_char_p
-
-set_err_str = pythonapi.PyErr_SetString
-set_err_str.argtypes = (ctypes.py_object, ctypes.c_char_p)
-set_err_str.restype = None
-
-
-class PyABI(ctypes.Structure):
-    @classmethod
-    def from_capsule(cls, capsule: Any) -> Self:
-        # Assume that argtypes and restype have been properly set
-        capsule_name = get_name(capsule)
-        abi = ctypes.cast(get_pointer(capsule, capsule_name), ctypes.POINTER(cls))
-
-        return abi.contents
-
-    def __init_subclass__(cls, **kwargs) -> None:
-        super().__init_subclass__(**kwargs)
-        # Assume that _fields_ is a list
-        cls._fields_.insert(0, ("size", ctypes.c_ssize_t))  # type: ignore
-
-    def __getattribute__(self, name: str) -> Any:
-        size = super().__getattribute__("size")
-        offset = getattr(type(self), name).offset
-
-        if size <= offset:
-            raise ValueError(f"{name!r} is not available on this ABI version")
-
-        attr = super().__getattribute__(name)
-        return attr
-
-
-awaitcallback = ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object, ctypes.py_object)
-awaitcallback_err = awaitcallback
-
-
-class AwaitableABI(PyABI):
-    _fields_ = [
-        ("new", ctypes.PYFUNCTYPE(ctypes.py_object)),
-        (
-            "await",
-            ctypes.PYFUNCTYPE(
-                ctypes.c_int,
-                ctypes.py_object,
-                ctypes.py_object,
-                awaitcallback,
-                awaitcallback_err,
-            ),
-        ),
-        ("cancel", ctypes.PYFUNCTYPE(None, ctypes.py_object)),
-        (
-            "set_result",
-            ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object, ctypes.py_object),
-        ),
-        ("save", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object, ctypes.c_ssize_t)),
-        (
-            "save_arb",
-            ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object, ctypes.c_ssize_t),
-        ),
-        ("unpack", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object)),
-        ("unpack_arb", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object)),
-        ("PyAwaitableType", ctypes.py_object),
-        ("await_function", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object, ctypes.py_object, ctypes.c_char_p, awaitcallback, awaitcallback_err,)),
-    ]
-
-
-abi = AwaitableABI.from_capsule(pyawaitable.abi.v1)
-add_await = getattr(abi, "await")
+from typing import Callable
+from pyawaitable.bindings import abi, add_await, awaitcallback, awaitcallback_err
 
 LEAK_LIMIT: str = "10 KB"
+
+raising_callback = ctypes.cast(_pyawaitable_test.raising_callback, awaitcallback)
+raising_err_callback = ctypes.cast(
+    _pyawaitable_test.raising_err_callback, awaitcallback_err
+)
 
 
 def limit_leaks(memstring: str):
@@ -112,22 +41,24 @@ async def test_new():
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_object_cleanup():
-    for i in range(100):
+    for i in range(100000):
         await abi.new()
 
 
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_await():
-    event = asyncio.Event()
+    called = False
 
     async def coro():
-        event.set()
+        await asyncio.sleep(0)
+        nonlocal called
+        called = True
 
     awaitable = abi.new()
     add_await(awaitable, coro(), awaitcallback(0), awaitcallback_err(0))
     await awaitable
-    assert event.is_set()
+    assert called is True
 
 
 @limit_leaks(LEAK_LIMIT)
@@ -136,6 +67,7 @@ async def test_await_cb():
     awaitable = abi.new()
 
     async def coro(value: int):
+        await asyncio.sleep(0)
         return value * 2
 
     @awaitcallback
@@ -154,12 +86,12 @@ async def test_await_cb_err():
     awaitable = abi.new()
 
     async def coro_raise() -> float:
+        await asyncio.sleep(0)
         return 0 / 0
 
     @awaitcallback
     def cb(awaitable_inner: pyawaitable.PyAwaitable, result: float) -> int:
-        set_err_str(RuntimeError, b"no good!")
-        return -1
+        raise RuntimeError(b"no good!")
 
     @awaitcallback_err
     def cb_err(awaitable_inner: pyawaitable.PyAwaitable, err: Exception) -> int:
@@ -169,16 +101,13 @@ async def test_await_cb_err():
     add_await(awaitable, coro_raise(), cb, cb_err)
     await awaitable
 
-
-raising_callback = ctypes.cast(_pyawaitable_test.raising_callback, awaitcallback)
-
-"""
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_await_cb_err_cb():
     awaitable = abi.new()
 
     async def coro() -> int:
+        await asyncio.sleep(0)
         return 42
 
     @awaitcallback_err
@@ -194,7 +123,6 @@ async def test_await_cb_err_cb():
         cb_err,
     )
     await awaitable
-"""
 
 
 @limit_leaks(LEAK_LIMIT)
@@ -203,6 +131,7 @@ async def test_await_cb_noerr():
     awaitable = abi.new()
 
     async def coro() -> int:
+        await asyncio.sleep(0)
         return 42
 
     @awaitcallback
@@ -215,21 +144,21 @@ async def test_await_cb_noerr():
         await awaitable
 
 
-"""
-
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_await_cb_err_restore():
     awaitable = abi.new()
-    event = asyncio.Event()
+    called = False
 
     async def coro() -> int:
+        await asyncio.sleep(0)
         return 42
-    
+
     @awaitcallback_err
     def cb_err(awaitable_inner: pyawaitable.PyAwaitable, err: Exception) -> int:
         assert str(err) == "test"
-        event.set()
+        nonlocal called
+        called = True
         return -1
 
     add_await(awaitable, coro(), raising_callback, cb_err)
@@ -237,31 +166,27 @@ async def test_await_cb_err_restore():
     with pytest.raises(RuntimeError):
         await awaitable
 
-    assert event.is_set()
+    assert called is True
+
 
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_await_cb_err_norestore():
     awaitable = abi.new()
-    event = asyncio.Event()
+    called = False
 
     async def coro() -> int:
+        nonlocal called
+        called = True
+        await asyncio.sleep(0)
         return 42
 
-    @awaitcallback_err
-    def cb_err(awaitable_inner: pyawaitable.PyAwaitable, err: Exception) -> int:
-        assert str(err) == "test"
-        event.set()
-        set_err_str(ZeroDivisionError, b"42")
-        return -2
-
-    add_await(awaitable, coro(), raising_callback, cb_err)
+    add_await(awaitable, coro(), raising_callback, raising_err_callback)
 
     with pytest.raises(ZeroDivisionError):
         await awaitable
 
-    assert event.is_set()
-"""
+    assert called is True
 
 
 @limit_leaks(LEAK_LIMIT)
@@ -272,6 +197,7 @@ async def test_await_order():
     awaitable = abi.new()
 
     async def echo(value: int) -> int:
+        await asyncio.sleep(0)
         return value
 
     @awaitcallback
@@ -288,16 +214,19 @@ async def test_await_order():
 
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")  # Second and third iteration of echo() are skipped, resulting in a RuntimeWarning
 async def test_await_cancel():
     data = []
 
     awaitable = abi.new()
 
     async def echo(value: int) -> int:
+        await asyncio.sleep(0)
         return value
 
     @awaitcallback
     def cb(awaitable_inner: pyawaitable.PyAwaitable, result: int) -> int:
+        assert result == 1
         abi.cancel(awaitable_inner)
         data.append(result)
         return 0
@@ -317,6 +246,7 @@ async def test_awaitable_chaining():
     awaitable = abi.new()
 
     async def echo(value: int) -> int:
+        await asyncio.sleep(0)
         return value
 
     @awaitcallback
@@ -339,6 +269,7 @@ async def test_coro_raise():
     awaitable = abi.new()
 
     async def coro() -> None:
+        await asyncio.sleep(0)
         raise ZeroDivisionError("test")
 
     add_await(awaitable, coro(), awaitcallback(0), awaitcallback_err(0))
@@ -364,6 +295,7 @@ async def test_store_values():
     awaitable = abi.new()
 
     async def echo(value: int) -> int:
+        await asyncio.sleep(0)
         return value
 
     data = ctypes.py_object([1, 2, 3])
@@ -394,6 +326,7 @@ async def test_store_arb_values():
     awaitable = abi.new()
 
     async def echo(value: int) -> int:
+        await asyncio.sleep(0)
         return value
 
     buffer = ctypes.create_string_buffer(b"test")
@@ -427,6 +360,7 @@ async def test_set_results():
     awaitable = abi.new()
 
     async def coro():
+        await asyncio.sleep(0)
         return "abc"
 
     @awaitcallback
@@ -436,6 +370,7 @@ async def test_set_results():
 
     add_await(awaitable, coro(), cb, awaitcallback(0))
     assert (await awaitable) == 42
+
 
 @pytest.mark.asyncio
 @limit_leaks(LEAK_LIMIT)

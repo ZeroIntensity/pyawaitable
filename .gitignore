@@ -17,4 +17,5 @@ build/
 
 # Misc
 test.py
+a.py
 vgcore*
