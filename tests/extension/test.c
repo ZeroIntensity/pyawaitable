@@ -25,14 +25,14 @@ test(PyObject *self, PyObject *coro)
     return awaitable;
 }
 
-int
+Py_EXPORTED_SYMBOL int
 raising_callback(PyObject *awaitable, PyObject *result)
 {
     PyErr_SetString(PyExc_RuntimeError, "test");
     return -1;
 }
 
-int
+Py_EXPORTED_SYMBOL int
 raising_err_callback(PyObject *awaitable, PyObject *result)
 {
     PyErr_SetString(PyExc_ZeroDivisionError, "test");
