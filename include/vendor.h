@@ -67,7 +67,7 @@ pyawaitable_vendor_init(PyObject *mod)
     PYAWAITABLE_ADD_TYPE(mod, _PyAwaitableGenWrapperType);
 
     PyObject *capsule = PyCapsule_New(
-        NULL,
+        pyawaitable_vendor_init, // Any pointer, except NULL
         "_pyawaitable.__do_not_touch",
         close_pool
     );
