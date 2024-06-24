@@ -10,6 +10,7 @@ from _pyawaitable import _PyAwaitableType  # type: ignore
 from typing import Type
 
 __all__ = "PyAwaitable", "include", "abi"
+__version__ = "1.0.0"
 
 PyAwaitable: Type = _PyAwaitableType
 

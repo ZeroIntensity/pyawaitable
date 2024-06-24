@@ -2,9 +2,11 @@
 __pycache__/
 .venv/
 
+# Builds
 *.egg-info
 test/
 dist/
+pyawaitable-vendor/
 
 # LSP
 compile_flags.txt
