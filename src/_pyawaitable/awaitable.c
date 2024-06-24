@@ -76,7 +76,7 @@ awaitable_dealloc(PyObject *self)
     for (int i = 0; i < CALLBACK_ARRAY_SIZE; ++i)
     {
         pyawaitable_callback *cb = aw->aw_callbacks[i];
-        if (!cb)
+        if (cb == NULL)
             break;
 
         if (!cb->done)
@@ -158,6 +158,7 @@ pyawaitable_await_impl(
     aw_c->coro = coro; // Steal our own reference
     aw_c->callback = cb;
     aw_c->err_callback = err;
+    aw_c->done = false;
     a->aw_callbacks[a->aw_callback_index++] = aw_c;
     Py_DECREF(aw);
 

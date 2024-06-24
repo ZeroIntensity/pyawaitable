@@ -79,8 +79,9 @@ genwrapper_fire_err_callback(
         // If the res is -1, the error is restored.
         // Otherwise, it is not.
         if (e_res == -1)
+        {
             PyErr_SetRaisedException(err);
-        else
+        } else
             Py_DECREF(err);
 
         Py_DECREF(cb->coro);
@@ -264,7 +265,7 @@ genwrapper_next(PyObject *self)
             }
             if (
                 genwrapper_fire_err_callback(
-                    (PyObject *)aw,
+                    (PyObject *) aw,
                     g->gw_current_await,
                     cb
                 ) < 0
