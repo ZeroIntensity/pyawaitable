@@ -139,7 +139,11 @@ genwrapper_next(PyObject *self)
             Py_TYPE(cb->coro)->tp_as_async->am_await == NULL
         )
         {
-            PyErr_Format(PyExc_TypeError, "%R has no __await__", cb->coro);
+            PyErr_Format(
+                PyExc_TypeError,
+                "pyawaitable: %R has no __await__",
+                cb->coro
+            );
             return NULL;
         }
 

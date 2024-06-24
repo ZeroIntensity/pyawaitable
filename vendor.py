@@ -57,6 +57,8 @@ def main():
  */
 
 #include "pyawaitable.h"
+
+PyTypeObject _PyAwaitableGenWrapperType; // Forward declaration
 """)
         for source_file in Path("./src/_pyawaitable/").iterdir():
             if source_file.name == "mod.c":

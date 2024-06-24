@@ -37,6 +37,7 @@ struct _PyAwaitableObject
     Py_ssize_t aw_state;
     bool aw_done;
     bool aw_awaited;
+    bool aw_used;
 
     // Misc
     PyObject *aw_result;

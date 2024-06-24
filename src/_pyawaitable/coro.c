@@ -7,7 +7,7 @@
 static PyObject *
 awaitable_send_with_arg(PyObject *self, PyObject *value)
 {
-    PyAwaitableObject *aw = (PyAwaitableObject *)self;
+    PyAwaitableObject *aw = (PyAwaitableObject *) self;
     if (aw->aw_gen == NULL)
     {
         PyObject *gen = awaitable_next(self);
@@ -35,7 +35,7 @@ static PyObject *
 awaitable_close(PyObject *self, PyObject *args)
 {
     pyawaitable_cancel_impl(self);
-    PyAwaitableObject *aw = (PyAwaitableObject *)self;
+    PyAwaitableObject *aw = (PyAwaitableObject *) self;
     aw->aw_done = true;
     Py_RETURN_NONE;
 }

@@ -29,6 +29,7 @@ awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
     aw->aw_awaited = false;
     aw->aw_done = false;
+    aw->aw_used = false;
 
     return (PyObject *) aw;
 }
@@ -84,7 +85,7 @@ awaitable_dealloc(PyObject *self)
         PyMem_Free(cb);
     }
 
-    if (!aw->aw_done)
+    if (!aw->aw_done && aw->aw_used)
     {
         if (
             PyErr_WarnEx(
@@ -182,10 +183,13 @@ pyawaitable_new_impl(void)
     if (pool_index == AWAITABLE_POOL_SIZE)
     {
         PyObject *aw = awaitable_new_func(&_PyAwaitableType, NULL, NULL);
+        ((PyAwaitableObject *) aw)->aw_used = true;
         return aw;
     }
 
-    return pool[pool_index++];
+    PyObject *pool_obj = pool[pool_index++];
+    ((PyAwaitableObject *) pool_obj)->aw_used = true;
+    return pool_obj;
 }
 
 void
