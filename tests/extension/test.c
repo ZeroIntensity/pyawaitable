@@ -55,7 +55,7 @@ static PyModuleDef module =
     .m_methods = methods
 };
 
-PyObject *
+PyMODINIT_FUNC
 PyInit__pyawaitable_test()
 {
     if (pyawaitable_init() < 0)
