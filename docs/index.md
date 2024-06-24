@@ -58,6 +58,33 @@ build-backend = "setuptools.build_meta"
 
     PyAwaitable needs to be installed as both a runtime dependency and build time dependency.
 
+## Vendored Copies
+
+PyAwaitable ships a vendorable version of each release, containing both a `pyawaitable.c` and `pyawaitable.h` file. For many user, it's much easier to vendor PyAwaitable than use it off PyPI.
+
+Initialization is slightly different on a vendored version - instead of using `pyawaitable_init`, you are to use `pyawaitable_vendor_init`, which takes a module object. For example:
+
+```c
+#include "pyawaitable.h"
+/* ... */
+
+PyMODINIT_FUNC
+PyInit_foo(void)
+{
+    PyObject *m = PyModule_Create(/* ... */);
+    if (!m)
+        return NULL;
+
+    if (pyawaitable_init_vendor(m) < 0)
+    {
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    return m;
+}
+```
+
 ## Acknowledgements
 
 Special thanks to:

@@ -10,18 +10,18 @@
  * (If you're seeing this message from a vendored copy, you're fine)
  */
 
-#define PYAWAITABLE_ADD_TYPE(m, tp)                                \
-        do                                                         \
-        {                                                          \
-            Py_INCREF(&tp);                                        \
-            if (PyType_Ready(&tp) < 0) {                           \
-                Py_DECREF(&tp);                                    \
-                return -1;                                         \
-            }                                                      \
-            if (PyModule_AddObject(m, #tp, (PyObject *)&tp) < 0) { \
-                Py_DECREF(&tp);                                    \
-                return -1;                                         \
-            }                                                      \
+#define PYAWAITABLE_ADD_TYPE(m, tp)                                 \
+        do                                                          \
+        {                                                           \
+            Py_INCREF(&tp);                                         \
+            if (PyType_Ready(&tp) < 0) {                            \
+                Py_DECREF(&tp);                                     \
+                return -1;                                          \
+            }                                                       \
+            if (PyModule_AddObject(m, #tp, (PyObject *) &tp) < 0) { \
+                Py_DECREF(&tp);                                     \
+                return -1;                                          \
+            }                                                       \
         } while (0)
 
 #define PYAWAITABLE_MAJOR_VERSION 1
@@ -42,6 +42,7 @@
 #define PyAwaitable_ABI pyawaitable_abi
 #define PyAwaitable_Type PyAwaitableType
 #define PyAwaitable_AwaitFunction pyawaitable_await_function
+#define PyAwaitable_VendorInit pyawaitable_vendor_init
 #endif
 
 static int
