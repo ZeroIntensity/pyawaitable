@@ -38,7 +38,6 @@ async def test_new():
     await abi.new()
 
 
-"""
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_object_cleanup():
@@ -102,6 +101,7 @@ async def test_await_cb_err():
     add_await(awaitable, coro_raise(), cb, cb_err)
     await awaitable
 
+"""
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_await_cb_err_cb():
@@ -188,6 +188,7 @@ async def test_await_cb_err_norestore():
         await awaitable
 
     assert called is True
+"""
 
 
 @limit_leaks(LEAK_LIMIT)
@@ -393,4 +394,3 @@ async def test_await_function():
     abi.await_function(awaitable, coro, b"is", cb, awaitcallback_err(0), 21, b"hello")
     await awaitable
     assert called is True
-"""
