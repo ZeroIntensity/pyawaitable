@@ -392,3 +392,31 @@ async def test_await_function():
     abi.await_function(awaitable, coro, b"is", cb, awaitcallback_err(0), 21, b"hello")
     await awaitable
     assert called is True
+
+@limit_leaks(LEAK_LIMIT)
+@pytest.mark.asyncio
+async def test_null_save_arb():
+    awaitable = abi.new()
+
+    async def echo(value: int) -> int:
+        await asyncio.sleep(0)
+        return value
+
+    buffer = ctypes.create_string_buffer(b"test")
+    buffer2 = ctypes.create_string_buffer(b"hello")
+    abi.save_arb(awaitable, 3, ctypes.byref(buffer), None, buffer2)
+
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.PyAwaitable, result: int) -> int:
+        buffer_inner = ctypes.c_char_p()
+        null = ctypes.c_void_p()
+        buffer2_inner = ctypes.c_char_p()
+        abi.unpack_arb(awaitable_inner, ctypes.byref(buffer_inner), ctypes.byref(null), ctypes.byref(buffer2_inner))
+        assert buffer_inner.value == b"test"
+        assert buffer2_inner.value == b"hello"
+        return 0
+
+    add_await(awaitable, echo(42), cb, awaitcallback_err(0))
+    await awaitable
+
+
