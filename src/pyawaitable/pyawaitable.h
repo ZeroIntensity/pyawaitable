@@ -4,7 +4,7 @@
 
 #define PYAWAITABLE_MAJOR_VERSION 1
 #define PYAWAITABLE_MINOR_VERSION 0
-#define PYAWAITABLE_MICRO_VERSION 0
+#define PYAWAITABLE_MICRO_VERSION 1
 /* Per CPython Conventions: 0xA for alpha, 0xB for beta, 0xC for release candidate or 0xF for final. */
 #define PYAWAITABLE_RELEASE_LEVEL 0xF
 
@@ -21,7 +21,8 @@ typedef struct _pyawaitable_abi
         PyObject *,
         PyObject *,
         awaitcallback,
-        awaitcallback_err);
+        awaitcallback_err
+    );
     void (*cancel)(PyObject *);
     int (*set_result)(PyObject *, PyObject *);
     int (*save)(PyObject *, Py_ssize_t, ...);
@@ -35,7 +36,8 @@ typedef struct _pyawaitable_abi
         const char *fmt,
         awaitcallback,
         awaitcallback_err,
-        ...);
+        ...
+    );
 } PyAwaitableABI;
 
 #ifdef PYAWAITABLE_THIS_FILE_INIT
@@ -85,7 +87,8 @@ pyawaitable_init()
 {
     PyErr_SetString(
         PyExc_RuntimeError,
-        "pyawaitable_init() can only be called in a file with a PYAWAITABLE_THIS_FILE_INIT #define");
+        "pyawaitable_init() can only be called in a file with a PYAWAITABLE_THIS_FILE_INIT #define"
+    );
     return -1;
 }
 
@@ -106,9 +109,13 @@ pyawaitable_init()
 #define PyAwaitable_AwaitFunction pyawaitable_await_function
 #endif
 
-static int pyawaitable_vendor_init(PyObject *mod)
+static int
+pyawaitable_vendor_init(PyObject *mod)
 {
-    PyErr_SetString(PyExc_SystemError, "cannot use pyawaitable_vendor_init from an installed version, use pyawaitable_init instead!");
+    PyErr_SetString(
+        PyExc_SystemError,
+        "cannot use pyawaitable_vendor_init from an installed version, use pyawaitable_init instead!"
+    );
     return -1;
 }
 
