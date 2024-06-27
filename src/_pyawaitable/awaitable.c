@@ -64,7 +64,7 @@ static void
 awaitable_dealloc(PyObject *self)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *)self;
-    for (int i = 0; i < VALUE_ARRAY_SIZE; ++i)
+    for (Py_ssize_t i = 0; i < aw->aw_values_index; ++i)
     {
         if (!aw->aw_values[i])
             break;

@@ -2,12 +2,12 @@
 #include <pyawaitable/backport.h>
 #include <pyawaitable/values.h>
 #include <pyawaitable/awaitableobject.h>
-#define UNPACK(arr, tp, err)                                         \
+#define UNPACK(arr, tp, err, index)                                  \
         do {                                                         \
             assert(awaitable != NULL);                               \
             PyAwaitableObject *aw = (PyAwaitableObject *) awaitable; \
             Py_INCREF(awaitable);                                    \
-            if (arr[0] == NULL) {                                    \
+            if (index == 0) {                                        \
                 PyErr_SetString(                                     \
     PyExc_ValueError,                                                \
     "pyawaitable: awaitable object has no stored " err               \
@@ -17,9 +17,7 @@
             }                                                        \
             va_list args;                                            \
             va_start(args, awaitable);                               \
-            for (int i = 0; i < VALUE_ARRAY_SIZE; ++i) {             \
-                if (!arr[i])                                         \
-                break;                                               \
+            for (Py_ssize_t i = 0; i < index; ++i) {                 \
                 tp ptr = va_arg(args, tp);                           \
                 if (ptr == NULL)                                     \
                 continue;                                            \
@@ -67,7 +65,7 @@
 int
 pyawaitable_unpack_impl(PyObject *awaitable, ...)
 {
-    UNPACK(aw->aw_values, PyObject * *, "values");
+    UNPACK(aw->aw_values, PyObject * *, "values", aw->aw_values_index);
 }
 
 int
@@ -81,7 +79,12 @@ pyawaitable_save_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
 int
 pyawaitable_unpack_arb_impl(PyObject *awaitable, ...)
 {
-    UNPACK(aw->aw_arb_values, void **, "arbitrary values");
+    UNPACK(
+        aw->aw_arb_values,
+        void **,
+        "arbitrary values",
+        aw->aw_arb_values_index
+    );
 }
 
 int
