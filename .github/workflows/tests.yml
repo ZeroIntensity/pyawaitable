@@ -51,4 +51,4 @@ jobs:
               run: pip install setuptools wheel && pip install ./tests/extension/ --no-build-isolation
 
             - name: Run tests
-              run: pytest -x -W error
+              run: pytest -W error
