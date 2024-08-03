@@ -106,7 +106,7 @@ pyawaitable_unpack_int_impl(PyObject *awaitable, ...)
 {
     UNPACK(
         aw->aw_int_values,
-        int *,
+        Py_ssize_t *,
         "integer values",
         aw->aw_int_values_index
     );
@@ -118,7 +118,7 @@ pyawaitable_save_int_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
     SAVE(
         aw->aw_int_values,
         aw->aw_int_values_index,
-        int,
+        Py_ssize_t,
         "integer values",
         NOTHING
     );

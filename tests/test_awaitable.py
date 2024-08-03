@@ -426,9 +426,9 @@ async def test_int_values():
 
     @awaitcallback
     def cb(awaitable_inner: pyawaitable.PyAwaitable, result: int) -> int:
-        first = ctypes.c_int()
-        second = ctypes.c_int()
-        third = ctypes.c_int()
+        first = ctypes.c_ssize_t()
+        second = ctypes.c_ssize_t()
+        third = ctypes.c_ssize_t()
         abi.unpack_int(
             awaitable_inner,
             ctypes.byref(first),
