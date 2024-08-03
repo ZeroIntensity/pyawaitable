@@ -173,118 +173,117 @@ genwrapper_next(PyObject *self)
         g->gw_current_await
     )->tp_iternext(g->gw_current_await);
 
-    if (result == NULL)
+    if (result != NULL)
     {
-        PyObject *occurred = PyErr_Occurred();
-        if (!occurred)
+        return result;
+    }
+    PyObject *occurred = PyErr_Occurred();
+    if (!occurred)
+    {
+        // Coro is done
+        if (!cb->callback)
         {
-            // Coro is done
-            if (!cb->callback)
-            {
-                Py_CLEAR(g->gw_current_await);
-                return genwrapper_next(self);
-            }
+            Py_CLEAR(g->gw_current_await);
+            return genwrapper_next(self);
         }
+    }
 
+    if (
+        occurred && !PyErr_GivenExceptionMatches(
+            occurred,
+            PyExc_StopIteration
+        )
+    )
+    {
         if (
-            occurred && !PyErr_GivenExceptionMatches(
-                occurred,
-                PyExc_StopIteration
-            )
+            genwrapper_fire_err_callback(
+                (PyObject *) aw,
+                g->gw_current_await,
+                cb
+            ) < 0
         )
         {
-            if (
-                genwrapper_fire_err_callback(
-                    (PyObject *) aw,
-                    g->gw_current_await,
-                    cb
-                ) < 0
-            )
-            {
-                return NULL;
-            }
-
-            Py_CLEAR(g->gw_current_await);
-            return genwrapper_next(self);
-        }
-
-        if (cb->callback == NULL)
-        {
-            // Coroutine is done, but with a result.
-            // We can disregard the result if theres no callback.
-            Py_CLEAR(g->gw_current_await);
-            PyErr_Clear();
-            return genwrapper_next(self);
-        }
-
-        PyObject *value;
-        if (occurred)
-        {
-            PyObject *type, *traceback;
-            PyErr_Fetch(&type, &value, &traceback);
-            PyErr_NormalizeException(&type, &value, &traceback);
-            Py_XDECREF(type);
-            Py_XDECREF(traceback);
-
-            if (value == NULL)
-            {
-                value = Py_NewRef(Py_None);
-            } else
-            {
-                assert(PyObject_IsInstance(value, PyExc_StopIteration));
-                PyObject *tmp = PyObject_GetAttrString(value, "value");
-                if (tmp == NULL)
-                {
-                    Py_DECREF(value);
-                    return NULL;
-                }
-                value = tmp;
-            }
-        } else
-        {
-            value = Py_NewRef(Py_None);
-        }
-
-        Py_INCREF(aw);
-        int result = cb->callback((PyObject *) aw, value);
-        Py_DECREF(aw);
-        Py_DECREF(value);
-
-        if (result < -1)
-        {
-            // -2 or lower denotes that the error should be deferred,
-            // regardless of whether a handler is present.
             return NULL;
         }
 
-        if (result < 0)
-        {
-            if (!PyErr_Occurred())
-            {
-                PyErr_SetString(
-                    PyExc_SystemError,
-                    "pyawaitable: callback returned -1 without exception set"
-                );
-                return NULL;
-            }
-            if (
-                genwrapper_fire_err_callback(
-                    (PyObject *) aw,
-                    g->gw_current_await,
-                    cb
-                ) < 0
-            )
-            {
-                return NULL;
-            }
-        }
-
-        cb->done = true;
         Py_CLEAR(g->gw_current_await);
         return genwrapper_next(self);
     }
 
-    return result;
+    if (cb->callback == NULL)
+    {
+        // Coroutine is done, but with a result.
+        // We can disregard the result if theres no callback.
+        Py_CLEAR(g->gw_current_await);
+        PyErr_Clear();
+        return genwrapper_next(self);
+    }
+
+    PyObject *value;
+    if (occurred)
+    {
+        PyObject *type, *traceback;
+        PyErr_Fetch(&type, &value, &traceback);
+        PyErr_NormalizeException(&type, &value, &traceback);
+        Py_XDECREF(type);
+        Py_XDECREF(traceback);
+
+        if (value == NULL)
+        {
+            value = Py_NewRef(Py_None);
+        } else
+        {
+            assert(PyObject_IsInstance(value, PyExc_StopIteration));
+            PyObject *tmp = PyObject_GetAttrString(value, "value");
+            if (tmp == NULL)
+            {
+                Py_DECREF(value);
+                return NULL;
+            }
+            value = tmp;
+        }
+    } else
+    {
+        value = Py_NewRef(Py_None);
+    }
+
+    Py_INCREF(aw);
+    int res = cb->callback((PyObject *) aw, value);
+    Py_DECREF(aw);
+    Py_DECREF(value);
+
+    if (res < -1)
+    {
+        // -2 or lower denotes that the error should be deferred,
+        // regardless of whether a handler is present.
+        return NULL;
+    }
+
+    if (result < 0)
+    {
+        if (!PyErr_Occurred())
+        {
+            PyErr_SetString(
+                PyExc_SystemError,
+                "pyawaitable: callback returned -1 without exception set"
+            );
+            return NULL;
+        }
+        if (
+            genwrapper_fire_err_callback(
+                (PyObject *) aw,
+                g->gw_current_await,
+                cb
+            ) < 0
+        )
+        {
+            return NULL;
+        }
+    }
+
+    cb->done = true;
+    Py_CLEAR(g->gw_current_await);
+    return genwrapper_next(self);
 }
 
 PyTypeObject _PyAwaitableGenWrapperType =
