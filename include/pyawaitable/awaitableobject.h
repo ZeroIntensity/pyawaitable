@@ -34,7 +34,7 @@ struct _PyAwaitableObject
     Py_ssize_t aw_arb_values_index;
 
     // Integer Values
-    Py_ssize_t aw_int_values[VALUE_ARRAY_SIZE];
+    long aw_int_values[VALUE_ARRAY_SIZE];
     Py_ssize_t aw_int_values_index;
 
     // Awaitable State
