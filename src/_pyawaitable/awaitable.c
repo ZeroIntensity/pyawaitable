@@ -50,6 +50,7 @@ awaitable_next(PyObject *self)
     }
 
     PyObject *gen = genwrapper_new(aw);
+    aw->aw_gen = Py_XNewRef(gen);
     return gen;
 }
 
