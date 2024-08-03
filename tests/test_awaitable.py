@@ -2,11 +2,10 @@ import pyawaitable
 import ctypes
 import pytest
 import asyncio
-import platform
 import _pyawaitable_test
 from collections.abc import Coroutine
-from typing import Callable
 from pyawaitable.bindings import abi, add_await, awaitcallback, awaitcallback_err
+from conftest import limit_leaks
 
 LEAK_LIMIT: str = "10 KB"
 
@@ -14,17 +13,6 @@ raising_callback = ctypes.cast(_pyawaitable_test.raising_callback, awaitcallback
 raising_err_callback = ctypes.cast(
     _pyawaitable_test.raising_err_callback, awaitcallback_err
 )
-
-
-def limit_leaks(memstring: str):
-    def decorator(func: Callable):
-        if platform.system() != "Windows":
-            func = pytest.mark.limit_leaks(memstring)(func)
-            return func
-        else:
-            return func
-
-    return decorator
 
 
 @limit_leaks(LEAK_LIMIT)

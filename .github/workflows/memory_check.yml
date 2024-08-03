@@ -15,7 +15,7 @@ env:
 
 jobs:
     run:
-        name: Valgrind on Ubuntu
+        name: Check for memory leaks and errors
         runs-on: ubuntu-latest
 
         steps:
@@ -28,7 +28,7 @@ jobs:
 
             - name: Install Pytest
               run: |
-                  pip install pytest pytest-asyncio typing_extensions
+                  pip install pytest pytest-asyncio pytest-memray typing_extensions
               shell: bash
 
             - name: Build PyAwaitable
@@ -39,6 +39,9 @@ jobs:
 
             - name: Install Valgrind
               run: sudo apt-get update && sudo apt-get -y install valgrind
+            
+            - name: Run tests with Memray tracking
+              run: pytest --enable-leak-tracking
 
             - name: Run tests with Valgrind
               run: valgrind --suppressions=valgrind-python.supp --error-exitcode=1 pytest -x
