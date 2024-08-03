@@ -50,14 +50,7 @@ awaitable_next(PyObject *self)
     }
 
     PyObject *gen = genwrapper_new(aw);
-
-    if (gen == NULL)
-    {
-        return NULL;
-    }
-
-    aw->aw_gen = gen;
-    return Py_NewRef(gen);
+    return gen;
 }
 
 static void
