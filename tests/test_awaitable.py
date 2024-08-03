@@ -408,3 +408,26 @@ async def test_null_save_arb():
     await awaitable
 
 
+@limit_leaks(LEAK_LIMIT)
+@pytest.mark.asyncio
+async def test_int_values():
+    awaitable = abi.new()
+    
+    abi.save_int(awaitable, 3, 42, 3000, -10)
+
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.PyAwaitable, result: int) -> int:
+        first = ctypes.c_int()
+        second = ctypes.c_int()
+        third = ctypes.c_int()
+        abi.unpack_int(awaitable_inner, first, second, third)
+        assert first.value == 42
+        assert second.value == 3000
+        assert third.value == -10
+        return 0
+    
+    async def coro():
+        ...
+
+    add_await(awaitable, coro(), cb, awaitcallback_err(0))
+    await awaitable

@@ -38,7 +38,7 @@ typedef struct _pyawaitable_abi
         awaitcallback_err,
         ...
     );
-    int (*save_int)(PyObject *, ...);
+    int (*save_int)(PyObject *, Py_ssize_t nargs, ...);
     int (*unpack_int)(PyObject *, ...);
 } PyAwaitableABI;
 

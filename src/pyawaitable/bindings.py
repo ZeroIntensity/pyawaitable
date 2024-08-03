@@ -72,6 +72,8 @@ class AwaitableABI(PyABI):
         ("unpack_arb", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object)),
         ("PyAwaitableType", ctypes.py_object),
         ("await_function", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object, ctypes.py_object, ctypes.c_char_p, awaitcallback, awaitcallback_err,)),
+        ("unpack", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object)),
+        ("unpack_arb", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object)),
     ]
 
 
