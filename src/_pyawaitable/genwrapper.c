@@ -127,8 +127,7 @@ genwrapper_next(PyObject *self)
                 PyExc_StopIteration,
                 aw->aw_result ? aw->aw_result : Py_None
             );
-            Py_DECREF(g->gw_aw);
-            g->gw_aw = NULL;
+            Py_CLEAR(g->gw_aw);
             return NULL;
         }
 
@@ -182,8 +181,7 @@ genwrapper_next(PyObject *self)
             // Coro is done
             if (!cb->callback)
             {
-                Py_DECREF(g->gw_current_await);
-                g->gw_current_await = NULL;
+                Py_CLEAR(g->gw_current_await);
                 return genwrapper_next(self);
             }
         }
@@ -206,8 +204,7 @@ genwrapper_next(PyObject *self)
                 return NULL;
             }
 
-            Py_DECREF(g->gw_current_await);
-            g->gw_current_await = NULL;
+            Py_CLEAR(g->gw_current_await);
             return genwrapper_next(self);
         }
 
@@ -215,8 +212,7 @@ genwrapper_next(PyObject *self)
         {
             // Coroutine is done, but with a result.
             // We can disregard the result if theres no callback.
-            Py_DECREF(g->gw_current_await);
-            g->gw_current_await = NULL;
+            Py_CLEAR(g->gw_current_await);
             PyErr_Clear();
             return genwrapper_next(self);
         }
@@ -284,8 +280,7 @@ genwrapper_next(PyObject *self)
         }
 
         cb->done = true;
-        Py_DECREF(g->gw_current_await);
-        g->gw_current_await = NULL;
+        Py_CLEAR(g->gw_current_await);
         return genwrapper_next(self);
     }
 
