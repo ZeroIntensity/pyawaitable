@@ -422,7 +422,13 @@ async def test_null_save_arb():
 async def test_int_values():
     awaitable = abi.new()
 
-    abi.save_int(awaitable, 3, 42, 3000, -10)
+    abi.save_int(
+        awaitable,
+        3,
+        ctypes.c_long(42),
+        ctypes.c_long(3000),
+        ctypes.c_long(-10),
+    )
 
     @awaitcallback
     def cb(awaitable_inner: pyawaitable.PyAwaitable, result: int) -> int:
