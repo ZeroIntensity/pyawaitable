@@ -50,6 +50,7 @@ genwrapper_new(PyAwaitableObject *aw)
     return (PyObject *) g;
 }
 
+// Steals references to `cb->coro` and `await`
 int
 genwrapper_fire_err_callback(
     PyObject *self,
@@ -89,6 +90,8 @@ genwrapper_fire_err_callback(
         return -1;
     }
 
+    Py_DECREF(cb->coro);
+    Py_XDECREF(await);
     Py_DECREF(err);
     return 0;
 }
