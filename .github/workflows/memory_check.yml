@@ -41,7 +41,7 @@ jobs:
               run: sudo apt-get update && sudo apt-get -y install valgrind
             
             - name: Run tests with Memray tracking
-              run: pytest --enable-leak-tracking
+              run: pytest --enable-leak-tracking -W error
 
             - name: Run tests with Valgrind
               run: valgrind --suppressions=valgrind-python.supp --error-exitcode=1 pytest -x
