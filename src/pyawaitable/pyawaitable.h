@@ -3,8 +3,8 @@
 #include <Python.h>
 
 #define PYAWAITABLE_MAJOR_VERSION 1
-#define PYAWAITABLE_MINOR_VERSION 0
-#define PYAWAITABLE_MICRO_VERSION 1
+#define PYAWAITABLE_MINOR_VERSION 1
+#define PYAWAITABLE_MICRO_VERSION 0
 /* Per CPython Conventions: 0xA for alpha, 0xB for beta, 0xC for release candidate or 0xF for final. */
 #define PYAWAITABLE_RELEASE_LEVEL 0xF
 
@@ -38,6 +38,8 @@ typedef struct _pyawaitable_abi
         awaitcallback_err,
         ...
     );
+    int (*save_int)(PyObject *, ...);
+    int (*unpack_int)(PyObject *, ...);
 } PyAwaitableABI;
 
 #ifdef PYAWAITABLE_THIS_FILE_INIT
@@ -65,6 +67,10 @@ extern PyAwaitableABI *pyawaitable_abi;
 #define PyAwaitableType pyawaitable_abi->PyAwaitableType
 
 #define pyawaitable_await_function pyawaitable_abi->await_function
+
+#define pyawaitable_unpack_int pyawaitable_abi->unpack_int
+
+#define pyawaitable_save_int pyawaitable_abi->save_int
 
 #ifdef PYAWAITABLE_THIS_FILE_INIT
 static int
@@ -107,6 +113,8 @@ pyawaitable_init()
 #define PyAwaitable_ABI pyawaitable_abi
 #define PyAwaitable_Type PyAwaitableType
 #define PyAwaitable_AwaitFunction pyawaitable_await_function
+#define PyAwaitable_SaveIntValues pyawaitable_save_int
+#define PyAwaitable_UnpackIntValues pyawaitable_unpack_int
 #endif
 
 static int

@@ -33,6 +33,10 @@ struct _PyAwaitableObject
     void *aw_arb_values[VALUE_ARRAY_SIZE];
     Py_ssize_t aw_arb_values_index;
 
+    // Integer Values
+    int aw_int_values[VALUE_ARRAY_SIZE];
+    Py_ssize_t aw_int_values_index;
+
     // Awaitable State
     Py_ssize_t aw_state;
     bool aw_done;

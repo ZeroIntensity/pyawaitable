@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix coroutine iterator reference leak.
 - Fix early exit of `pyawaitable_unpack_arb` if a `NULL` value was saved.
+- Added integer value saving and unpacking (`pyawaitable_save_int` and `pyawaitable_unpack_int`).
 
 ## [1.0.0] - 2024-06-24
 

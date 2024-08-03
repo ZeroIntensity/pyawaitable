@@ -98,3 +98,28 @@ pyawaitable_save_arb_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
         NOTHING
     );
 }
+
+/* Integer Values */
+
+int
+pyawaitable_unpack_int_impl(PyObject *awaitable, ...)
+{
+    UNPACK(
+        aw->aw_int_values,
+        int *,
+        "integer values",
+        aw->aw_int_values_index
+    );
+}
+
+int
+pyawaitable_save_int_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
+{
+    SAVE(
+        aw->aw_int_values,
+        aw->aw_int_values_index,
+        int,
+        "integer values",
+        NOTHING
+    );
+}
