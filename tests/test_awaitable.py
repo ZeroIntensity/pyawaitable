@@ -89,6 +89,7 @@ async def test_await_cb_err():
     add_await(awaitable, coro_raise(), cb, cb_err)
     await awaitable
 
+
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_await_cb_err_cb():
@@ -202,7 +203,9 @@ async def test_await_order():
 
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
-@pytest.mark.filterwarnings("ignore::RuntimeWarning")  # Second and third iteration of echo() are skipped, resulting in a RuntimeWarning
+@pytest.mark.filterwarnings(
+    "ignore::RuntimeWarning"
+)  # Second and third iteration of echo() are skipped, resulting in a RuntimeWarning
 async def test_await_cancel():
     data = []
 
@@ -381,6 +384,7 @@ async def test_await_function():
     await awaitable
     assert called is True
 
+
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_null_save_arb():
@@ -399,7 +403,12 @@ async def test_null_save_arb():
         buffer_inner = ctypes.c_char_p()
         null = ctypes.c_void_p()
         buffer2_inner = ctypes.c_char_p()
-        abi.unpack_arb(awaitable_inner, ctypes.byref(buffer_inner), ctypes.byref(null), ctypes.byref(buffer2_inner))
+        abi.unpack_arb(
+            awaitable_inner,
+            ctypes.byref(buffer_inner),
+            ctypes.byref(null),
+            ctypes.byref(buffer2_inner),
+        )
         assert buffer_inner.value == b"test"
         assert buffer2_inner.value == b"hello"
         return 0
@@ -412,7 +421,7 @@ async def test_null_save_arb():
 @pytest.mark.asyncio
 async def test_int_values():
     awaitable = abi.new()
-    
+
     abi.save_int(awaitable, 3, 42, 3000, -10)
 
     @awaitcallback
@@ -420,14 +429,18 @@ async def test_int_values():
         first = ctypes.c_int()
         second = ctypes.c_int()
         third = ctypes.c_int()
-        abi.unpack_int(awaitable_inner, first, second, third)
+        abi.unpack_int(
+            awaitable_inner,
+            ctypes.byref(first),
+            ctypes.byref(second),
+            ctypes.byref(third),
+        )
         assert first.value == 42
         assert second.value == 3000
         assert third.value == -10
         return 0
-    
-    async def coro():
-        ...
+
+    async def coro(): ...
 
     add_await(awaitable, coro(), cb, awaitcallback_err(0))
     await awaitable
