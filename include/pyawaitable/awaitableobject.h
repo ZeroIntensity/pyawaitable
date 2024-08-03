@@ -20,6 +20,7 @@ typedef struct _pyawaitable_callback
 struct _PyAwaitableObject
 {
     PyObject_HEAD
+    PyObject *aw_result;
 
     // Callbacks
     pyawaitable_callback *aw_callbacks[CALLBACK_ARRAY_SIZE];
@@ -42,10 +43,6 @@ struct _PyAwaitableObject
     bool aw_done;
     bool aw_awaited;
     bool aw_used;
-
-    // Misc
-    PyObject *aw_result;
-    PyObject *aw_gen;
 };
 
 typedef struct _PyAwaitableObject PyAwaitableObject;

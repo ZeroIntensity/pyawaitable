@@ -28,8 +28,15 @@ static void
 gen_dealloc(PyObject *self)
 {
     GenWrapperObject *g = (GenWrapperObject *) self;
-    Py_XDECREF(g->gw_current_await);
-    Py_XDECREF(g->gw_aw);
+    if (g->gw_current_await != NULL)
+    {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "sanity check: gw_current_await was not cleared!"
+        );
+        PyErr_WriteUnraisable(self);
+    }
+    // Trying to decref gw_aw here is useless, since that would be a reference cycle
     Py_TYPE(self)->tp_free(self);
 }
 
@@ -67,13 +74,12 @@ genwrapper_fire_err_callback(
         return -1;
     }
 
-    Py_INCREF(self);
     PyObject *err = PyErr_GetRaisedException();
 
+    Py_INCREF(self);
     int e_res = cb->err_callback(self, err);
-    cb->done = true;
-
     Py_DECREF(self);
+    cb->done = true;
 
     if (e_res < 0)
     {
@@ -143,7 +149,7 @@ genwrapper_next(PyObject *self)
         {
             PyErr_Format(
                 PyExc_TypeError,
-                "pyawaitable: %R has no __await__",
+                "pyawaitable: %R is not awaitable",
                 cb->coro
             );
             return NULL;
@@ -184,19 +190,18 @@ genwrapper_next(PyObject *self)
     PyObject *occurred = PyErr_Occurred();
     if (!occurred)
     {
-        // Coro is done
+        // Coro is done, no result.
         if (!cb->callback)
         {
+            // No callback, skip that step.
             Py_CLEAR(g->gw_current_await);
             return genwrapper_next(self);
         }
     }
 
+    // TODO: I wonder if the occurred check is needed here.
     if (
-        occurred && !PyErr_GivenExceptionMatches(
-            occurred,
-            PyExc_StopIteration
-        )
+        occurred && !PyErr_ExceptionMatches(PyExc_StopIteration)
     )
     {
         if (
@@ -226,26 +231,17 @@ genwrapper_next(PyObject *self)
     PyObject *value;
     if (occurred)
     {
-        PyObject *type, *traceback;
-        PyErr_Fetch(&type, &value, &traceback);
-        PyErr_NormalizeException(&type, &value, &traceback);
-        Py_XDECREF(type);
-        Py_XDECREF(traceback);
-
-        if (value == NULL)
+        value = PyErr_GetRaisedException();
+        assert(value != NULL);
+        assert(PyObject_IsInstance(value, PyExc_StopIteration));
+        PyObject *tmp = PyObject_GetAttrString(value, "value");
+        if (tmp == NULL)
         {
-            value = Py_NewRef(Py_None);
-        } else
-        {
-            assert(PyObject_IsInstance(value, PyExc_StopIteration));
-            PyObject *tmp = PyObject_GetAttrString(value, "value");
-            if (tmp == NULL)
-            {
-                Py_DECREF(value);
-                return NULL;
-            }
-            value = tmp;
+            Py_DECREF(value);
+            return NULL;
         }
+        // TODO: setref might not be needed here.
+        Py_SETREF(value, tmp);
     } else
     {
         value = Py_NewRef(Py_None);

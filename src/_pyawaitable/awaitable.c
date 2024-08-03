@@ -49,15 +49,7 @@ awaitable_next(PyObject *self)
         return NULL;
     }
 
-    PyObject *gen = genwrapper_new(aw);
-
-    if (gen == NULL)
-    {
-        return NULL;
-    }
-
-    aw->aw_gen = gen;
-    return Py_NewRef(gen);
+    return genwrapper_new(aw);
 }
 
 static void
@@ -71,7 +63,6 @@ awaitable_dealloc(PyObject *self)
         Py_DECREF(aw->aw_values[i]);
     }
 
-    Py_XDECREF(aw->aw_gen);
     Py_XDECREF(aw->aw_result);
 
     for (int i = 0; i < CALLBACK_ARRAY_SIZE; ++i)

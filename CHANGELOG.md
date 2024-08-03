@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Changed error message when attempting to await a non-awaitable object (*i.e.*, it has no `__await__`).
 - Fixed coroutine iterator reference leak.
 - Fixed reference leak in error callbacks.
 - Fixed early exit of `pyawaitable_unpack_arb` if a `NULL` value was saved.
