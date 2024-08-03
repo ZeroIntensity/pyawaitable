@@ -177,6 +177,7 @@ genwrapper_next(PyObject *self)
     {
         return result;
     }
+
     PyObject *occurred = PyErr_Occurred();
     if (!occurred)
     {
@@ -259,7 +260,7 @@ genwrapper_next(PyObject *self)
         return NULL;
     }
 
-    if (result < 0)
+    if (res < 0)
     {
         if (!PyErr_Occurred())
         {
