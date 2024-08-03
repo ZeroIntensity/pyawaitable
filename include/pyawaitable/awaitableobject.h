@@ -22,7 +22,7 @@ struct _PyAwaitableObject
     PyObject_HEAD
 
     // Callbacks
-    pyawaitable_callback *aw_callbacks[CALLBACK_ARRAY_SIZE];
+    pyawaitable_callback aw_callbacks[CALLBACK_ARRAY_SIZE];
     Py_ssize_t aw_callback_index;
 
     // Stored Values

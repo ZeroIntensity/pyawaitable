@@ -6,7 +6,12 @@
 #define DONE(cb)                 \
         do { cb->done = true;    \
              Py_CLEAR(cb->coro); \
-             Py_CLEAR(g->gw_current_await); } while (0);
+             Py_CLEAR(g->gw_current_await); } while (0)
+#define AW_DONE()               \
+        do {                    \
+            aw->aw_done = true; \
+            Py_CLEAR(g->gw_aw); \
+        } while (0)
 
 static PyObject *
 gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
@@ -127,23 +132,23 @@ genwrapper_next(PyObject *self)
             PyExc_SystemError,
             "pyawaitable: object cannot handle more than 255 coroutines"
         );
+        AW_DONE();
         return NULL;
     }
 
     if (g->gw_current_await == NULL)
     {
-        if (aw->aw_callbacks[aw->aw_state] == NULL)
+        if (aw->aw_callbacks[aw->aw_state].coro == NULL)
         {
-            aw->aw_done = true;
             PyErr_SetObject(
                 PyExc_StopIteration,
                 aw->aw_result ? aw->aw_result : Py_None
             );
-            Py_CLEAR(g->gw_aw);
+            AW_DONE();
             return NULL;
         }
 
-        cb = aw->aw_callbacks[aw->aw_state++];
+        cb = &aw->aw_callbacks[aw->aw_state++];
 
         if (
             Py_TYPE(cb->coro)->tp_as_async == NULL ||
@@ -156,6 +161,7 @@ genwrapper_next(PyObject *self)
                 cb->coro
             );
             DONE(cb);
+            AW_DONE();
             return NULL;
         }
 
@@ -173,6 +179,7 @@ genwrapper_next(PyObject *self)
             )
             {
                 DONE(cb);
+                AW_DONE();
                 return NULL;
             }
 
@@ -181,7 +188,7 @@ genwrapper_next(PyObject *self)
         }
     } else
     {
-        cb = aw->aw_callbacks[aw->aw_state - 1];
+        cb = &aw->aw_callbacks[aw->aw_state - 1];
     }
 
     PyObject *result = Py_TYPE(
@@ -219,6 +226,7 @@ genwrapper_next(PyObject *self)
         )
         {
             DONE(cb);
+            AW_DONE();
             return NULL;
         }
 
@@ -246,6 +254,7 @@ genwrapper_next(PyObject *self)
         {
             Py_DECREF(value);
             DONE(cb);
+            AW_DONE();
             return NULL;
         }
         Py_DECREF(value);
@@ -265,6 +274,7 @@ genwrapper_next(PyObject *self)
         // -2 or lower denotes that the error should be deferred,
         // regardless of whether a handler is present.
         DONE(cb);
+        AW_DONE();
         return NULL;
     }
 
@@ -277,6 +287,7 @@ genwrapper_next(PyObject *self)
                 "pyawaitable: callback returned -1 without exception set"
             );
             DONE(cb);
+            AW_DONE();
             return NULL;
         }
         if (
@@ -288,6 +299,7 @@ genwrapper_next(PyObject *self)
         )
         {
             DONE(cb);
+            AW_DONE();
             return NULL;
         }
     }

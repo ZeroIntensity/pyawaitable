@@ -68,7 +68,7 @@ awaitable_dealloc(PyObject *self)
 
     for (int i = 0; i < CALLBACK_ARRAY_SIZE; ++i)
     {
-        pyawaitable_callback *cb = aw->aw_callbacks[i];
+        pyawaitable_callback *cb = &aw->aw_callbacks[i];
         if (cb == NULL)
             break;
 
@@ -84,8 +84,6 @@ awaitable_dealloc(PyObject *self)
             }
         } else
             Py_XDECREF(cb->coro);
-
-        PyMem_Free(cb);
     }
 
     if (!aw->aw_done && aw->aw_used)
@@ -113,14 +111,15 @@ pyawaitable_cancel_impl(PyObject *aw)
 
     for (int i = 0; i < CALLBACK_ARRAY_SIZE; ++i)
     {
-        pyawaitable_callback *cb = a->aw_callbacks[i];
+        pyawaitable_callback *cb = &a->aw_callbacks[i];
         if (!cb)
             break;
 
-        if (!cb->done)
-            Py_CLEAR(cb->coro);
-
-        a->aw_callbacks[i] = NULL;
+        // Reset the callback
+        Py_CLEAR(cb->coro);
+        cb->done = false;
+        cb->callback = NULL;
+        cb->err_callback = NULL;
     }
 }
 
@@ -142,18 +141,11 @@ pyawaitable_await_impl(
         return -1;
     }
 
-    pyawaitable_callback *aw_c = PyMem_Malloc(sizeof(pyawaitable_callback));
-    if (aw_c == NULL)
-    {
-        PyErr_NoMemory();
-        return -1;
-    }
-
+    pyawaitable_callback *aw_c = &a->aw_callbacks[a->aw_callback_index++];
     aw_c->coro = Py_NewRef(coro);
     aw_c->callback = cb;
     aw_c->err_callback = err;
     aw_c->done = false;
-    a->aw_callbacks[a->aw_callback_index++] = aw_c;
 
     return 0;
 }
