@@ -41,7 +41,7 @@ PyErr_GetRaisedException(void)
 void
 PyErr_SetRaisedException(PyObject *err)
 {
-    PyErr_Restore(Py_TYPE(err), err, NULL);
+    PyErr_Restore((PyObject *) Py_TYPE(err), err, NULL);
 }
 
 #endif
