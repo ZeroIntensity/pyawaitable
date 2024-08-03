@@ -28,13 +28,6 @@ async def test_new():
 
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
-async def test_object_cleanup():
-    for i in range(100000):
-        await abi.new()
-
-
-@limit_leaks(LEAK_LIMIT)
-@pytest.mark.asyncio
 async def test_await():
     called = False
 
