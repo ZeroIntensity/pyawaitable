@@ -3,7 +3,10 @@
 #include <pyawaitable/awaitableobject.h>
 #include <pyawaitable/genwrapper.h>
 #include <stdlib.h>
-
+#define DONE(cb)                 \
+        do { cb->done = true;    \
+             Py_CLEAR(cb->coro); \
+             Py_CLEAR(g->gw_current_await); } while (0);
 
 static PyObject *
 gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
@@ -36,7 +39,14 @@ gen_dealloc(PyObject *self)
         );
         PyErr_WriteUnraisable(self);
     }
-    // Trying to decref gw_aw here is useless, since that would be a reference cycle
+    if (g->gw_aw != NULL)
+    {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "sanity check: gw_aw was not cleared!"
+        );
+        PyErr_WriteUnraisable(self);
+    }
     Py_TYPE(self)->tp_free(self);
 }
 
@@ -57,7 +67,6 @@ genwrapper_new(PyAwaitableObject *aw)
     return (PyObject *) g;
 }
 
-// Steals references to `cb->coro` and `await`
 int
 genwrapper_fire_err_callback(
     PyObject *self,
@@ -69,8 +78,6 @@ genwrapper_fire_err_callback(
     if (!cb->err_callback)
     {
         cb->done = true;
-        Py_DECREF(cb->coro);
-        Py_XDECREF(await);
         return -1;
     }
 
@@ -91,13 +98,9 @@ genwrapper_fire_err_callback(
         } else
             Py_DECREF(err);
 
-        Py_DECREF(cb->coro);
-        Py_XDECREF(await);
         return -1;
     }
 
-    Py_DECREF(cb->coro);
-    Py_XDECREF(await);
     Py_DECREF(err);
     return 0;
 }
@@ -152,6 +155,7 @@ genwrapper_next(PyObject *self)
                 "pyawaitable: %R is not awaitable",
                 cb->coro
             );
+            DONE(cb);
             return NULL;
         }
 
@@ -168,9 +172,11 @@ genwrapper_next(PyObject *self)
                 ) < 0
             )
             {
+                DONE(cb);
                 return NULL;
             }
 
+            DONE(cb);
             return genwrapper_next(self);
         }
     } else
@@ -194,7 +200,7 @@ genwrapper_next(PyObject *self)
         if (!cb->callback)
         {
             // No callback, skip that step.
-            Py_CLEAR(g->gw_current_await);
+            DONE(cb);
             return genwrapper_next(self);
         }
     }
@@ -212,10 +218,11 @@ genwrapper_next(PyObject *self)
             ) < 0
         )
         {
+            DONE(cb);
             return NULL;
         }
 
-        Py_CLEAR(g->gw_current_await);
+        DONE(cb);
         return genwrapper_next(self);
     }
 
@@ -223,7 +230,7 @@ genwrapper_next(PyObject *self)
     {
         // Coroutine is done, but with a result.
         // We can disregard the result if theres no callback.
-        Py_CLEAR(g->gw_current_await);
+        DONE(cb);
         PyErr_Clear();
         return genwrapper_next(self);
     }
@@ -238,10 +245,11 @@ genwrapper_next(PyObject *self)
         if (tmp == NULL)
         {
             Py_DECREF(value);
+            DONE(cb);
             return NULL;
         }
-        // TODO: setref might not be needed here.
-        Py_SETREF(value, tmp);
+        Py_DECREF(value);
+        value = tmp;
     } else
     {
         value = Py_NewRef(Py_None);
@@ -256,6 +264,7 @@ genwrapper_next(PyObject *self)
     {
         // -2 or lower denotes that the error should be deferred,
         // regardless of whether a handler is present.
+        DONE(cb);
         return NULL;
     }
 
@@ -267,6 +276,7 @@ genwrapper_next(PyObject *self)
                 PyExc_SystemError,
                 "pyawaitable: callback returned -1 without exception set"
             );
+            DONE(cb);
             return NULL;
         }
         if (
@@ -277,12 +287,12 @@ genwrapper_next(PyObject *self)
             ) < 0
         )
         {
+            DONE(cb);
             return NULL;
         }
     }
 
-    cb->done = true;
-    Py_CLEAR(g->gw_current_await);
+    DONE(cb);
     return genwrapper_next(self);
 }
 

@@ -6,7 +6,7 @@ from typing import Any, Callable
 
 import pytest
 
-ITERATIONS: int = 100
+ITERATIONS: int = 10000
 
 
 def pytest_addoption(parser: Any) -> None:
