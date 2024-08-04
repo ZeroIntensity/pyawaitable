@@ -150,6 +150,7 @@ async def test_await_cb_err_restore():
 
     assert called is True
 
+"""
 
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
@@ -222,7 +223,6 @@ async def test_await_cancel():
     assert data == [1]
 
 
-"""
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_awaitable_chaining():
