@@ -5,17 +5,16 @@ repo_name: ZeroIntensity/pyawaitable
 
 nav:
     - Home: index.md
-    - Overview: overview.md
-    - Awaiting Coroutines: adding_coros.md
+    - Installation: installation.md
+    - Awaiting Coroutines: awaiting.md
     - Callbacks: callbacks.md
-    - Storing and Fetching Values: storing_and_fetching.md
-    - Version Rules: version_rules.md
+    - Storing and Fetching Values: storage.md
 
 theme:
     name: material
     palette:
         - media: "(prefers-color-scheme)"
-          primary: grey
+          primary: black
           accent: light blue
           toggle:
               icon: material/brightness-auto
@@ -24,7 +23,7 @@ theme:
         # Palette toggle for light mode
         - media: "(prefers-color-scheme: light)"
           scheme: default
-          primary: grey
+          primary: black
           accent: light blue
           toggle:
               icon: material/brightness-7
@@ -33,7 +32,7 @@ theme:
         # Palette toggle for dark mode
         - media: "(prefers-color-scheme: dark)"
           scheme: slate
-          primary: grey
+          primary: black
           accent: light blue
           toggle:
               icon: material/brightness-4
