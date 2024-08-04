@@ -150,8 +150,6 @@ async def test_await_cb_err_restore():
 
     assert called is True
 
-"""
-
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_await_cb_err_norestore():
@@ -444,4 +442,3 @@ async def test_int_values():
 
     add_await(awaitable, coro(), cb, awaitcallback_err(0))
     await awaitable
-"""
