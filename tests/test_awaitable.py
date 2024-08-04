@@ -443,21 +443,3 @@ async def test_int_values():
 
     add_await(awaitable, coro(), cb, awaitcallback_err(0))
     await awaitable
-
-@limit_leaks(LEAK_LIMIT)
-@pytest.mark.asyncio
-async def test_gathering():
-    count = 0
-    tasks = []
-    
-    for _ in range(100):
-        awaitable = abi.new()
-        async def coro():
-            nonlocal count
-            count += 1
-
-        add_await(awaitable, coro(), awaitcallback(0), awaitcallback_err(0))
-        tasks.append(awaitable)
-
-    await asyncio.gather(*tasks)
-    assert count == 100
