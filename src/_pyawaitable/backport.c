@@ -41,6 +41,8 @@ PyErr_GetRaisedException(void)
 void
 PyErr_SetRaisedException(PyObject *err)
 {
+    // NOTE: We need to incref the type object here, even though
+    // this function steals a reference to err.
     PyErr_Restore(Py_NewRef((PyObject *) Py_TYPE(err)), err, NULL);
 }
 

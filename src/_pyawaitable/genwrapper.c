@@ -3,7 +3,15 @@
 #include <pyawaitable/awaitableobject.h>
 #include <pyawaitable/genwrapper.h>
 #include <stdlib.h>
-
+#define DONE(cb)                 \
+        do { cb->done = true;    \
+             Py_CLEAR(cb->coro); \
+             Py_CLEAR(g->gw_current_await); } while (0)
+#define AW_DONE()               \
+        do {                    \
+            aw->aw_done = true; \
+            Py_CLEAR(g->gw_aw); \
+        } while (0)
 
 static PyObject *
 gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
@@ -28,8 +36,22 @@ static void
 gen_dealloc(PyObject *self)
 {
     GenWrapperObject *g = (GenWrapperObject *) self;
-    Py_XDECREF(g->gw_current_await);
-    Py_XDECREF(g->gw_aw);
+    if (g->gw_current_await != NULL)
+    {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "sanity check: gw_current_await was not cleared!"
+        );
+        PyErr_WriteUnraisable(self);
+    }
+    if (g->gw_aw != NULL)
+    {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "sanity check: gw_aw was not cleared!"
+        );
+        PyErr_WriteUnraisable(self);
+    }
     Py_TYPE(self)->tp_free(self);
 }
 
@@ -61,18 +83,15 @@ genwrapper_fire_err_callback(
     if (!cb->err_callback)
     {
         cb->done = true;
-        Py_DECREF(cb->coro);
-        Py_XDECREF(await);
         return -1;
     }
 
-    Py_INCREF(self);
     PyObject *err = PyErr_GetRaisedException();
 
+    Py_INCREF(self);
     int e_res = cb->err_callback(self, err);
-    cb->done = true;
-
     Py_DECREF(self);
+    cb->done = true;
 
     if (e_res < 0)
     {
@@ -84,8 +103,6 @@ genwrapper_fire_err_callback(
         } else
             Py_DECREF(err);
 
-        Py_DECREF(cb->coro);
-        Py_XDECREF(await);
         return -1;
     }
 
@@ -115,24 +132,23 @@ genwrapper_next(PyObject *self)
             PyExc_SystemError,
             "pyawaitable: object cannot handle more than 255 coroutines"
         );
+        AW_DONE();
         return NULL;
     }
 
     if (g->gw_current_await == NULL)
     {
-        if (aw->aw_callbacks[aw->aw_state] == NULL)
+        if (aw->aw_callbacks[aw->aw_state].coro == NULL)
         {
-            aw->aw_done = true;
             PyErr_SetObject(
                 PyExc_StopIteration,
                 aw->aw_result ? aw->aw_result : Py_None
             );
-            Py_DECREF(g->gw_aw);
-            g->gw_aw = NULL;
+            AW_DONE();
             return NULL;
         }
 
-        cb = aw->aw_callbacks[aw->aw_state++];
+        cb = &aw->aw_callbacks[aw->aw_state++];
 
         if (
             Py_TYPE(cb->coro)->tp_as_async == NULL ||
@@ -141,9 +157,11 @@ genwrapper_next(PyObject *self)
         {
             PyErr_Format(
                 PyExc_TypeError,
-                "pyawaitable: %R has no __await__",
+                "pyawaitable: %R is not awaitable",
                 cb->coro
             );
+            DONE(cb);
+            AW_DONE();
             return NULL;
         }
 
@@ -160,136 +178,134 @@ genwrapper_next(PyObject *self)
                 ) < 0
             )
             {
+                DONE(cb);
+                AW_DONE();
                 return NULL;
             }
 
+            DONE(cb);
             return genwrapper_next(self);
         }
     } else
     {
-        cb = aw->aw_callbacks[aw->aw_state - 1];
+        cb = &aw->aw_callbacks[aw->aw_state - 1];
     }
 
     PyObject *result = Py_TYPE(
         g->gw_current_await
     )->tp_iternext(g->gw_current_await);
 
-    if (result == NULL)
+    if (result != NULL)
     {
-        PyObject *occurred = PyErr_Occurred();
-        if (!occurred)
-        {
-            // Coro is done
-            if (!cb->callback)
-            {
-                Py_DECREF(g->gw_current_await);
-                g->gw_current_await = NULL;
-                return genwrapper_next(self);
-            }
-        }
+        return result;
+    }
 
+    PyObject *occurred = PyErr_Occurred();
+    if (!occurred)
+    {
+        // Coro is done, no result.
+        if (!cb->callback)
+        {
+            // No callback, skip that step.
+            DONE(cb);
+            return genwrapper_next(self);
+        }
+    }
+
+    // TODO: I wonder if the occurred check is needed here.
+    if (
+        occurred && !PyErr_ExceptionMatches(PyExc_StopIteration)
+    )
+    {
         if (
-            occurred && !PyErr_GivenExceptionMatches(
-                occurred,
-                PyExc_StopIteration
-            )
+            genwrapper_fire_err_callback(
+                (PyObject *) aw,
+                g->gw_current_await,
+                cb
+            ) < 0
         )
         {
-            if (
-                genwrapper_fire_err_callback(
-                    (PyObject *) aw,
-                    g->gw_current_await,
-                    cb
-                ) < 0
-            )
-            {
-                return NULL;
-            }
-
-            Py_DECREF(g->gw_current_await);
-            g->gw_current_await = NULL;
-            return genwrapper_next(self);
-        }
-
-        if (cb->callback == NULL)
-        {
-            // Coroutine is done, but with a result.
-            // We can disregard the result if theres no callback.
-            Py_DECREF(g->gw_current_await);
-            g->gw_current_await = NULL;
-            PyErr_Clear();
-            return genwrapper_next(self);
-        }
-
-        PyObject *value;
-        if (occurred)
-        {
-            PyObject *type, *traceback;
-            PyErr_Fetch(&type, &value, &traceback);
-            PyErr_NormalizeException(&type, &value, &traceback);
-            Py_XDECREF(type);
-            Py_XDECREF(traceback);
-
-            if (value == NULL)
-            {
-                value = Py_NewRef(Py_None);
-            } else
-            {
-                assert(PyObject_IsInstance(value, PyExc_StopIteration));
-                PyObject *tmp = PyObject_GetAttrString(value, "value");
-                if (tmp == NULL)
-                {
-                    Py_DECREF(value);
-                    return NULL;
-                }
-                value = tmp;
-            }
-        } else
-        {
-            value = Py_NewRef(Py_None);
-        }
-
-        Py_INCREF(aw);
-        int result = cb->callback((PyObject *) aw, value);
-        Py_DECREF(aw);
-        Py_DECREF(value);
-
-        if (result < -1)
-        {
-            // -2 or lower denotes that the error should be deferred,
-            // regardless of whether a handler is present.
+            DONE(cb);
+            AW_DONE();
             return NULL;
         }
 
-        if (result < 0)
-        {
-            if (!PyErr_Occurred())
-            {
-                PyErr_SetString(
-                    PyExc_SystemError,
-                    "pyawaitable: callback returned -1 without exception set"
-                );
-                return NULL;
-            }
-            if (
-                genwrapper_fire_err_callback(
-                    (PyObject *) aw,
-                    g->gw_current_await,
-                    cb
-                ) < 0
-            )
-            {
-                return NULL;
-            }
-        }
-
-        cb->done = true;
-        Py_DECREF(g->gw_current_await);
-        g->gw_current_await = NULL;
+        DONE(cb);
         return genwrapper_next(self);
     }
 
-    return result;
+    if (cb->callback == NULL)
+    {
+        // Coroutine is done, but with a result.
+        // We can disregard the result if theres no callback.
+        DONE(cb);
+        PyErr_Clear();
+        return genwrapper_next(self);
+    }
+
+    PyObject *value;
+    if (occurred)
+    {
+        value = PyErr_GetRaisedException();
+        assert(value != NULL);
+        assert(PyObject_IsInstance(value, PyExc_StopIteration));
+        PyObject *tmp = PyObject_GetAttrString(value, "value");
+        if (tmp == NULL)
+        {
+            Py_DECREF(value);
+            DONE(cb);
+            AW_DONE();
+            return NULL;
+        }
+        Py_DECREF(value);
+        value = tmp;
+    } else
+    {
+        value = Py_NewRef(Py_None);
+    }
+
+    Py_INCREF(aw);
+    int res = cb->callback((PyObject *) aw, value);
+    Py_DECREF(aw);
+    Py_DECREF(value);
+
+    if (res < -1)
+    {
+        // -2 or lower denotes that the error should be deferred,
+        // regardless of whether a handler is present.
+        DONE(cb);
+        AW_DONE();
+        return NULL;
+    }
+
+    if (res < 0)
+    {
+        if (!PyErr_Occurred())
+        {
+            PyErr_SetString(
+                PyExc_SystemError,
+                "pyawaitable: callback returned -1 without exception set"
+            );
+            DONE(cb);
+            AW_DONE();
+            return NULL;
+        }
+        if (
+            genwrapper_fire_err_callback(
+                (PyObject *) aw,
+                g->gw_current_await,
+                cb
+            ) < 0
+        )
+        {
+            DONE(cb);
+            AW_DONE();
+            return NULL;
+        }
+    }
+
+    DONE(cb);
+    return genwrapper_next(self);
 }
 
 PyTypeObject _PyAwaitableGenWrapperType =

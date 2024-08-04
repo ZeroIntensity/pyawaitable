@@ -38,9 +38,7 @@ PyObject *
 awaitable_next(PyObject *self)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *)self;
-    aw->aw_awaited = true;
-
-    if (aw->aw_done)
+    if (aw->aw_awaited)
     {
         PyErr_SetString(
             PyExc_RuntimeError,
@@ -48,16 +46,10 @@ awaitable_next(PyObject *self)
         );
         return NULL;
     }
-
+    aw->aw_awaited = true;
     PyObject *gen = genwrapper_new(aw);
-
-    if (gen == NULL)
-    {
-        return NULL;
-    }
-
-    aw->aw_gen = gen;
-    return Py_NewRef(gen);
+    aw->aw_gen = Py_XNewRef(gen);
+    return gen;
 }
 
 static void
@@ -76,13 +68,22 @@ awaitable_dealloc(PyObject *self)
 
     for (int i = 0; i < CALLBACK_ARRAY_SIZE; ++i)
     {
-        pyawaitable_callback *cb = aw->aw_callbacks[i];
+        pyawaitable_callback *cb = &aw->aw_callbacks[i];
         if (cb == NULL)
             break;
 
-        if (!cb->done)
-            Py_DECREF(cb->coro);
-        PyMem_Free(cb);
+        if (cb->done)
+        {
+            if (cb->coro != NULL)
+            {
+                PyErr_SetString(
+                    PyExc_SystemError,
+                    "sanity check: coro was not cleared"
+                );
+                PyErr_WriteUnraisable(self);
+            }
+        } else
+            Py_XDECREF(cb->coro);
     }
 
     if (!aw->aw_done && aw->aw_used)
@@ -106,23 +107,20 @@ void
 pyawaitable_cancel_impl(PyObject *aw)
 {
     assert(aw != NULL);
-    Py_INCREF(aw);
-
     PyAwaitableObject *a = (PyAwaitableObject *) aw;
 
     for (int i = 0; i < CALLBACK_ARRAY_SIZE; ++i)
     {
-        pyawaitable_callback *cb = a->aw_callbacks[i];
+        pyawaitable_callback *cb = &a->aw_callbacks[i];
         if (!cb)
             break;
 
-        if (!cb->done)
-            Py_DECREF(cb->coro);
-
-        a->aw_callbacks[i] = NULL;
+        // Reset the callback
+        Py_CLEAR(cb->coro);
+        cb->done = false;
+        cb->callback = NULL;
+        cb->err_callback = NULL;
     }
-
-    Py_DECREF(aw);
 }
 
 int
@@ -133,10 +131,6 @@ pyawaitable_await_impl(
     awaitcallback_err err
 )
 {
-    assert(aw != NULL);
-    assert(coro != NULL);
-    Py_INCREF(coro);
-    Py_INCREF(aw);
     PyAwaitableObject *a = (PyAwaitableObject *) aw;
     if (a->aw_callback_index == CALLBACK_ARRAY_SIZE)
     {
@@ -147,21 +141,11 @@ pyawaitable_await_impl(
         return -1;
     }
 
-    pyawaitable_callback *aw_c = PyMem_Malloc(sizeof(pyawaitable_callback));
-    if (aw_c == NULL)
-    {
-        Py_DECREF(aw);
-        Py_DECREF(coro);
-        PyErr_NoMemory();
-        return -1;
-    }
-
-    aw_c->coro = coro; // Steal our own reference
+    pyawaitable_callback *aw_c = &a->aw_callbacks[a->aw_callback_index++];
+    aw_c->coro = Py_NewRef(coro);
     aw_c->callback = cb;
     aw_c->err_callback = err;
     aw_c->done = false;
-    a->aw_callbacks[a->aw_callback_index++] = aw_c;
-    Py_DECREF(aw);
 
     return 0;
 }
@@ -169,9 +153,6 @@ pyawaitable_await_impl(
 int
 pyawaitable_set_result_impl(PyObject *awaitable, PyObject *result)
 {
-    assert(awaitable != NULL);
-    assert(result != NULL);
-
     PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
     aw->aw_result = Py_NewRef(result);
     return 0;

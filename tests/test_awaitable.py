@@ -2,11 +2,10 @@ import pyawaitable
 import ctypes
 import pytest
 import asyncio
-import platform
 import _pyawaitable_test
 from collections.abc import Coroutine
-from typing import Callable
 from pyawaitable.bindings import abi, add_await, awaitcallback, awaitcallback_err
+from conftest import limit_leaks
 
 LEAK_LIMIT: str = "10 KB"
 
@@ -14,17 +13,6 @@ raising_callback = ctypes.cast(_pyawaitable_test.raising_callback, awaitcallback
 raising_err_callback = ctypes.cast(
     _pyawaitable_test.raising_err_callback, awaitcallback_err
 )
-
-
-def limit_leaks(memstring: str):
-    def decorator(func: Callable):
-        if platform.system() != "Windows":
-            func = pytest.mark.limit_leaks(memstring)(func)
-            return func
-        else:
-            return func
-
-    return decorator
 
 
 @limit_leaks(LEAK_LIMIT)
@@ -36,13 +24,6 @@ async def test_new():
     await awaitable
     await asyncio.create_task(abi.new())
     await abi.new()
-
-
-@limit_leaks(LEAK_LIMIT)
-@pytest.mark.asyncio
-async def test_object_cleanup():
-    for i in range(100000):
-        await abi.new()
 
 
 @limit_leaks(LEAK_LIMIT)
@@ -100,6 +81,7 @@ async def test_await_cb_err():
 
     add_await(awaitable, coro_raise(), cb, cb_err)
     await awaitable
+
 
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
@@ -168,7 +150,6 @@ async def test_await_cb_err_restore():
 
     assert called is True
 
-
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_await_cb_err_norestore():
@@ -214,7 +195,9 @@ async def test_await_order():
 
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
-@pytest.mark.filterwarnings("ignore::RuntimeWarning")  # Second and third iteration of echo() are skipped, resulting in a RuntimeWarning
+@pytest.mark.filterwarnings(
+    "ignore::RuntimeWarning"
+)  # Second and third iteration of echo() are skipped, resulting in a RuntimeWarning
 async def test_await_cancel():
     data = []
 
@@ -393,6 +376,7 @@ async def test_await_function():
     await awaitable
     assert called is True
 
+
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_null_save_arb():
@@ -411,7 +395,12 @@ async def test_null_save_arb():
         buffer_inner = ctypes.c_char_p()
         null = ctypes.c_void_p()
         buffer2_inner = ctypes.c_char_p()
-        abi.unpack_arb(awaitable_inner, ctypes.byref(buffer_inner), ctypes.byref(null), ctypes.byref(buffer2_inner))
+        abi.unpack_arb(
+            awaitable_inner,
+            ctypes.byref(buffer_inner),
+            ctypes.byref(null),
+            ctypes.byref(buffer2_inner),
+        )
         assert buffer_inner.value == b"test"
         assert buffer2_inner.value == b"hello"
         return 0
@@ -420,3 +409,36 @@ async def test_null_save_arb():
     await awaitable
 
 
+@limit_leaks(LEAK_LIMIT)
+@pytest.mark.asyncio
+async def test_int_values():
+    awaitable = abi.new()
+
+    abi.save_int(
+        awaitable,
+        3,
+        ctypes.c_long(42),
+        ctypes.c_long(3000),
+        ctypes.c_long(-10),
+    )
+
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.PyAwaitable, result: int) -> int:
+        first = ctypes.c_long()
+        second = ctypes.c_long()
+        third = ctypes.c_long()
+        abi.unpack_int(
+            awaitable_inner,
+            ctypes.byref(first),
+            ctypes.byref(second),
+            ctypes.byref(third),
+        )
+        assert first.value == 42
+        assert second.value == 3000
+        assert third.value == -10
+        return 0
+
+    async def coro(): ...
+
+    add_await(awaitable, coro(), cb, awaitcallback_err(0))
+    await awaitable

@@ -14,6 +14,7 @@ awaitable_send_with_arg(PyObject *self, PyObject *value)
         if (gen == NULL)
             return NULL;
 
+        Py_DECREF(gen);
         Py_RETURN_NONE;
     }
 
@@ -82,7 +83,7 @@ awaitable_throw(PyObject *self, PyObject *args)
     if ((aw->aw_gen != NULL) && (aw->aw_state != 0))
     {
         GenWrapperObject *gw = (GenWrapperObject *)aw->aw_gen;
-        pyawaitable_callback *cb = aw->aw_callbacks[aw->aw_state - 1];
+        pyawaitable_callback *cb = &aw->aw_callbacks[aw->aw_state - 1];
         if (cb == NULL)
             return NULL;
 
@@ -101,10 +102,11 @@ awaitable_am_send(PyObject *self, PyObject *arg, PyObject **presult)
     PyObject *send_res = awaitable_send_with_arg(self, arg);
     if (send_res == NULL)
     {
-        PyObject *occurred = PyErr_Occurred();
-        if (PyErr_GivenExceptionMatches(occurred, PyExc_StopIteration))
+        if (PyErr_ExceptionMatches(PyExc_StopIteration))
         {
+            PyObject *occurred = PyErr_GetRaisedException();
             PyObject *item = PyObject_GetAttrString(occurred, "value");
+            Py_DECREF(occurred);
 
             if (item == NULL)
             {
