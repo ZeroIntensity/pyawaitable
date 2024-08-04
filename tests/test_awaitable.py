@@ -83,8 +83,6 @@ async def test_await_cb_err():
     await awaitable
 
 
-"""
-
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_await_cb_err_cb():
@@ -127,6 +125,8 @@ async def test_await_cb_noerr():
     with pytest.raises(SystemError):
         await awaitable
 
+
+"""
 
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
