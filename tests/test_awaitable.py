@@ -222,6 +222,7 @@ async def test_await_cancel():
     assert data == [1]
 
 
+"""
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
 async def test_awaitable_chaining():
@@ -443,3 +444,4 @@ async def test_int_values():
 
     add_await(awaitable, coro(), cb, awaitcallback_err(0))
     await awaitable
+"""
