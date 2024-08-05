@@ -24,7 +24,7 @@ static PyMethodDef methods[] = {
 
 ## Making an asynchronous C function
 
-Now let's make this asynchronous. First, we need to create a new PyAwaitable object, through `pyawaitable_new`. This is where the magic happens! Returning one of these objects from the C function inherently makes it asynchronous (in a sense, at least), as if it were defined with `async def`. Using `test` from above:
+Now let's make this asynchronous. First, we need to create a new PyAwaitable object, through `pyawaitable_new`. This is where the magic happens! Returning one of these objects from the C function inherently makes it asynchronous (in a sense, at least), as if it were defined with `async def`. Using `test` from above, this looks like:
 
 ```c
 static PyObject *
@@ -41,7 +41,44 @@ If you were to use `test` from Python, you can now execute it via `await` (note 
 >>> await test.test(42)
 ```
 
-However, this doesn't do anything yet, we simply have an awaitable function that's defined in C.
+This doesn't do anything yet, we simply have an awaitable function that's defined in C. However, we overrode the return value with our PyAwaitable object! If we want the `await` expression to return a value other than `None`, you can use `pyawaitable_set_result`:
+
+```c
+static PyObject *
+test(PyObject *self, PyObject *arg)
+{
+    PyObject *aw = pyawaitable_new();
+    if (aw == NULL)
+    {
+        return NULL;
+    }
+
+    PyObject *value = PyLong_FromLong(42);
+    if (value == NULL)
+    {
+        Py_DECREF(aw);
+        return NULL;
+    }
+
+    if (pyawaitable_set_result(aw, value) < 0)
+    {
+        Py_DECREF(aw);
+        Py_DECREF(value);
+        return NULL;
+    }
+
+    Py_DECREF(value);
+    return aw;
+}
+```
+
+Now, if we try this from Python:
+
+```py
+>>> import test
+>>> await test.test(None)  # To satisfy METH_O, once again
+42
+```
 
 ## What's going on here?
 
