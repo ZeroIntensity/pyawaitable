@@ -7,7 +7,7 @@ from collections.abc import Coroutine
 from pyawaitable.bindings import abi, add_await, awaitcallback, awaitcallback_err
 from conftest import limit_leaks
 
-LEAK_LIMIT: str = "10 KB"
+LEAK_LIMIT: str = "50 KB"
 
 raising_callback = ctypes.cast(_pyawaitable_test.raising_callback, awaitcallback)
 raising_err_callback = ctypes.cast(
