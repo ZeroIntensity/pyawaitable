@@ -3,7 +3,7 @@
 #include <Python.h>
 
 #define PYAWAITABLE_MAJOR_VERSION 1
-#define PYAWAITABLE_MINOR_VERSION 1
+#define PYAWAITABLE_MINOR_VERSION 2
 #define PYAWAITABLE_MICRO_VERSION 0
 /* Per CPython Conventions: 0xA for alpha, 0xB for beta, 0xC for release candidate or 0xF for final. */
 #define PYAWAITABLE_RELEASE_LEVEL 0xF
@@ -40,6 +40,12 @@ typedef struct _pyawaitable_abi
     );
     int (*save_int)(PyObject *, Py_ssize_t nargs, ...);
     int (*unpack_int)(PyObject *, ...);
+    int (*set)(PyObject *, Py_ssize_t, PyObject *);
+    int (*set_arb)(PyObject *, Py_ssize_t, void *);
+    int (*set_int)(PyObject *, Py_ssize_t, long);
+    PyObject *(*get)(PyObject *, Py_ssize_t);
+    void *(*get_arb)(PyObject *, Py_ssize_t);
+    long (*get_int)(PyObject *, Py_ssize_t);
 } PyAwaitableABI;
 
 #ifdef PYAWAITABLE_THIS_FILE_INIT
@@ -49,28 +55,30 @@ extern PyAwaitableABI *pyawaitable_abi;
 #endif
 
 #define pyawaitable_new pyawaitable_abi->new
-
-#define pyawaitable_await pyawaitable_abi->await
-
 #define pyawaitable_cancel pyawaitable_abi->cancel
-
 #define pyawaitable_set_result pyawaitable_abi->set_result
 
-#define pyawaitable_save pyawaitable_abi->save
+#define pyawaitable_await pyawaitable_abi->await
+#define pyawaitable_await_function pyawaitable_abi->await_function
 
+#define pyawaitable_save pyawaitable_abi->save
 #define pyawaitable_save_arb pyawaitable_abi->save_arb
+#define pyawaitable_save_int pyawaitable_abi->save_int
 
 #define pyawaitable_unpack pyawaitable_abi->unpack
-
 #define pyawaitable_unpack_arb pyawaitable_abi->unpack_arb
+#define pyawaitable_unpack_int pyawaitable_abi->unpack_int
+
+#define pyawaitable_set pyawaitable_abi->set
+#define pyawaitable_set_arb pyawaitable_abi->set_arb
+#define pyawaitable_set_int pyawaitable_abi->set_int
+
+#define pyawaitable_get pyawaitable_abi->get
+#define pyawaitable_get_arb pyawaitable_abi->get_arb
+#define pyawaitable_get_int pyawaitable_abi->get_int
 
 #define PyAwaitableType pyawaitable_abi->PyAwaitableType
 
-#define pyawaitable_await_function pyawaitable_abi->await_function
-
-#define pyawaitable_unpack_int pyawaitable_abi->unpack_int
-
-#define pyawaitable_save_int pyawaitable_abi->save_int
 
 #ifdef PYAWAITABLE_THIS_FILE_INIT
 static int
@@ -101,20 +109,32 @@ pyawaitable_init()
 #endif
 
 #ifdef PYAWAITABLE_PYAPI
-#define PyAwaitable_New pyawaitable_new
-#define PyAwaitable_AddAwait pyawaitable_await
-#define PyAwaitable_Cancel pyawaitable_cancel
-#define PyAwaitable_SetResult pyawaitable_set_result
-#define PyAwaitable_SaveValues pyawaitable_save
-#define PyAwaitable_SaveArbValues pyawaitable_save_arb
-#define PyAwaitable_UnpackValues pyawaitable_unpack
-#define PyAwaitable_UnpackArbValues pyawaitable_unpack_arb
 #define PyAwaitable_Init pyawaitable_init
 #define PyAwaitable_ABI pyawaitable_abi
 #define PyAwaitable_Type PyAwaitableType
+
+#define PyAwaitable_New pyawaitable_new
+#define PyAwaitable_Cancel pyawaitable_cancel
+#define PyAwaitable_SetResult pyawaitable_set_result
+
+#define PyAwaitable_AddAwait pyawaitable_await
 #define PyAwaitable_AwaitFunction pyawaitable_await_function
+
+#define PyAwaitable_SaveValues pyawaitable_save
+#define PyAwaitable_SaveArbValues pyawaitable_save_arb
 #define PyAwaitable_SaveIntValues pyawaitable_save_int
+
+#define PyAwaitable_UnpackValues pyawaitable_unpack
+#define PyAwaitable_UnpackArbValues pyawaitable_unpack_arb
 #define PyAwaitable_UnpackIntValues pyawaitable_unpack_int
+
+#define PyAwaitable_SetValue pyawaitable_set
+#define PyAwaitable_SetArbValue pyawaitable_set_arb
+#define PyAwaitable_SetIntValue pyawaitable_set_int
+
+#define PyAwaitable_GetValue pyawaitable_set
+#define PyAwaitable_GetArbValue pyawaitable_get_arb
+#define PyAwaitable_GetIntValue pyawaitable_get_int
 #endif
 
 static int

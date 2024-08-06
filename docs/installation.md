@@ -172,18 +172,24 @@ The complete mapping of names to their Python API counterparts are:
 | ---------------------------- | ----------------------------- |
 | `pyawaitable_new`            | `PyAwaitable_New`             |
 | `pyawaitable_await`          | `PyAwaitable_AddAwait`        |
+| `pyawaitable_await_function` | `PyAwaitable_AwaitFunction`   |
 | `pyawaitable_cancel`         | `PyAwaitable_Cancel`          |
 | `pyawaitable_set_result`     | `PyAwaitable_SetResult`       |
 | `pyawaitable_save`           | `PyAwaitable_SaveValues`      |
 | `pyawaitable_save_arb`       | `PyAwaitable_SaveArbValues`   |
+| `pyawaitable_save_int`       | `PyAwaitable_SaveIntValues`   |
 | `pyawaitable_unpack`         | `PyAwaitable_UnpackValues`    |
 | `pyawaitable_unpack_arb`     | `PyAwaitable_UnpackArbValues` |
+| `pyawaitable_unpack_int`     | `PyAwaitable_UnpackIntValues` |
+| `pyawaitable_set`            | `PyAwaitable_SetValue`        |
+| `pyawaitable_set_arb`        | `PyAwaitable_SetArbValue`     |
+| `pyawaitable_set_int`        | `PyAwaitable_SetIntValue`     |
+| `pyawaitable_get`            | `PyAwaitable_GetValue`        |
+| `pyawaitable_get_arb`        | `PyAwaitable_GetArbValue`     |
+| `pyawaitable_get_int`        | `PyAwaitable_GetIntValue`     |
 | `pyawaitable_init`           | `PyAwaitable_Init`            |
 | `pyawaitable_abi`            | `PyAwaitable_ABI`             |
 | `PyAwaitableType`            | `PyAwaitable_Type`            |
-| `pyawaitable_await_function` | `PyAwaitable_AwaitFunction`   |
-| `pyawaitable_save_int`       | `PyAwaitable_SaveIntValues`   |
-| `pyawaitable_unpack_int`     | `PyAwaitable_UnpackIntValues` |
 
 ## Vendored Copies
 

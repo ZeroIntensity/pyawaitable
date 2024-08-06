@@ -3,18 +3,44 @@
 
 #include <Python.h> // PyObject, Py_ssize_t
 
-PyObject *pyawaitable_new_impl(void);
+#define SAVE(name) int name(PyObject * awaitable, Py_ssize_t nargs, ...)
+#define UNPACK(name) int name(PyObject * awaitable, ...)
+#define SET(name, tp)     \
+        int name(         \
+    PyObject * awaitable, \
+    Py_ssize_t index,     \
+    tp new_value          \
+        )
+#define GET(name, tp)     \
+        tp name(          \
+    PyObject * awaitable, \
+    Py_ssize_t index      \
+        )
 
-int pyawaitable_save_arb_impl(PyObject *awaitable, Py_ssize_t nargs, ...);
+// Normal values
 
-int pyawaitable_unpack_arb_impl(PyObject *awaitable, ...);
+SAVE(pyawaitable_save_impl);
+UNPACK(pyawaitable_unpack_impl);
+SET(pyawaitable_set_impl, PyObject *);
+GET(pyawaitable_get_impl, PyObject *);
 
-int pyawaitable_save_impl(PyObject *awaitable, Py_ssize_t nargs, ...);
+// Arbitrary values
 
-int pyawaitable_unpack_impl(PyObject *awaitable, ...);
+SAVE(pyawaitable_save_arb_impl);
+UNPACK(pyawaitable_unpack_arb_impl);
+SET(pyawaitable_set_arb_impl, void *);
+GET(pyawaitable_get_arb_impl, void *);
 
-int pyawaitable_save_int_impl(PyObject *awaitable, Py_ssize_t nargs, ...);
+// Integer values
 
-int pyawaitable_unpack_int_impl(PyObject *awaitable, ...);
+SAVE(pyawaitable_save_int_impl);
+UNPACK(pyawaitable_unpack_int_impl);
+SET(pyawaitable_set_int_impl, long);
+GET(pyawaitable_get_int_impl, long);
+
+#undef SAVE
+#undef UNPACK
+#undef GET
+#undef SET
 
 #endif

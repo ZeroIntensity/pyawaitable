@@ -10,9 +10,10 @@ from _pyawaitable import _PyAwaitableType  # type: ignore
 from typing import Type
 
 __all__ = "PyAwaitable", "include", "abi"
-__version__ = "1.0.1"
+__version__ = "1.2.0"
 
 PyAwaitable: Type = _PyAwaitableType
+
 
 def include() -> str:
     """
@@ -21,4 +22,3 @@ def include() -> str:
     import os
 
     return os.path.dirname(__file__)
-    
