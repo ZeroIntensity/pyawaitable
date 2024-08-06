@@ -58,6 +58,19 @@
             return 0;                                                \
         } while (0)
 
+#define INDEX_HEAD(arr, idx, ret)                                \
+        PyAwaitableObject *aw = (PyAwaitableObject *) awaitable; \
+        if (index > idx) {                                       \
+            PyErr_Format(                                        \
+    PyExc_IndexError,                                            \
+    "pyawaitable: index %ld out of range for %ld stored values", \
+    index,                                                       \
+    idx                                                          \
+            );                                                   \
+            return ret;                                          \
+        }
+
+
 #define NOTHING
 
 /* Normal Values */
@@ -72,6 +85,28 @@ int
 pyawaitable_save_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
 {
     SAVE(aw->aw_values, aw->aw_values_index, PyObject *, "values", Py_NewRef);
+}
+
+int
+pyawaitable_set_impl(
+    PyObject *awaitable,
+    Py_ssize_t index,
+    PyObject *new_value
+)
+{
+    INDEX_HEAD(aw->aw_values, aw->aw_values_index, -1);
+    Py_SETREF(aw->aw_values[index], Py_NewRef(new_value));
+    return 0;
+}
+
+PyObject *
+pyawaitable_get_impl(
+    PyObject *awaitable,
+    Py_ssize_t index
+)
+{
+    INDEX_HEAD(aw->aw_values, aw->aw_values_index, NULL);
+    return aw->aw_values[index];
 }
 
 /* Arbitrary Values */
@@ -99,6 +134,28 @@ pyawaitable_save_arb_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
     );
 }
 
+int
+pyawaitable_set_arb_impl(
+    PyObject *awaitable,
+    Py_ssize_t index,
+    void *new_value
+)
+{
+    INDEX_HEAD(aw->aw_arb_values, aw->aw_arb_values_index, -1);
+    aw->aw_arb_values[index] = new_value;
+    return 0;
+}
+
+void *
+pyawaitable_get_arb_impl(
+    PyObject *awaitable,
+    Py_ssize_t index
+)
+{
+    INDEX_HEAD(aw->aw_arb_values, aw->aw_arb_values_index, NULL);
+    return aw->aw_arb_values[index];
+}
+
 /* Integer Values */
 
 int
@@ -122,4 +179,26 @@ pyawaitable_save_int_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
         "integer values",
         NOTHING
     );
+}
+
+int
+pyawaitable_set_int_impl(
+    PyObject *awaitable,
+    Py_ssize_t index,
+    long new_value
+)
+{
+    INDEX_HEAD(aw->aw_int_values, aw->aw_int_values_index, -1);
+    aw->aw_int_values[index] = new_value;
+    return 0;
+}
+
+long
+pyawaitable_get_int_impl(
+    PyObject *awaitable,
+    Py_ssize_t index
+)
+{
+    INDEX_HEAD(aw->aw_int_values, aw->aw_int_values_index, -1);
+    return aw->aw_int_values[index];
 }

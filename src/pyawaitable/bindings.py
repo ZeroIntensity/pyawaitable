@@ -77,6 +77,12 @@ class AwaitableABI(PyABI):
             ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object, ctypes.c_ssize_t),
         ),
         ("unpack_int", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object)),
+        ("set", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object, ctypes.c_ssize_t, ctypes.py_object)),
+        ("set_arb", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object, ctypes.c_ssize_t, ctypes.c_void_p)),
+        ("set_int", ctypes.PYFUNCTYPE(ctypes.c_int, ctypes.py_object, ctypes.c_ssize_t, ctypes.c_long)),
+        ("get", ctypes.PYFUNCTYPE(ctypes.py_object, ctypes.py_object, ctypes.c_ssize_t)),
+        ("get_arb", ctypes.PYFUNCTYPE(ctypes.c_void_p, ctypes.py_object, ctypes.c_ssize_t)),
+        ("get_int", ctypes.PYFUNCTYPE(ctypes.c_long, ctypes.py_object, ctypes.c_ssize_t)),
     ]
 
 
