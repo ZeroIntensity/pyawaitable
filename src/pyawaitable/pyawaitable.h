@@ -69,6 +69,14 @@ extern PyAwaitableABI *pyawaitable_abi;
 #define pyawaitable_unpack_arb pyawaitable_abi->unpack_arb
 #define pyawaitable_unpack_int pyawaitable_abi->unpack_int
 
+#define pyawaitable_set pyawaitable_abi->set
+#define pyawaitable_set_arb pyawaitable_abi->set_arb
+#define pyawaitable_set_int pyawaitable_abi->set_int
+
+#define pyawaitable_get pyawaitable_abi->get
+#define pyawaitable_get_arb pyawaitable_abi->get_arb
+#define pyawaitable_get_int pyawaitable_abi->get_int
+
 #define PyAwaitableType pyawaitable_abi->PyAwaitableType
 
 
@@ -119,6 +127,14 @@ pyawaitable_init()
 #define PyAwaitable_UnpackValues pyawaitable_unpack
 #define PyAwaitable_UnpackArbValues pyawaitable_unpack_arb
 #define PyAwaitable_UnpackIntValues pyawaitable_unpack_int
+
+#define PyAwaitable_SetValue pyawaitable_set
+#define PyAwaitable_SetArbValue pyawaitable_set_arb
+#define PyAwaitable_SetIntValue pyawaitable_set_int
+
+#define PyAwaitable_GetValue pyawaitable_set
+#define PyAwaitable_GetArbValue pyawaitable_get_arb
+#define PyAwaitable_GetIntValue pyawaitable_get_int
 #endif
 
 static int
