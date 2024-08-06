@@ -14,6 +14,7 @@ __version__ = "1.2.0"
 
 PyAwaitable: Type = _PyAwaitableType
 
+
 def include() -> str:
     """
     Get the directory containing the `pyawaitable.h` file.
@@ -21,4 +22,3 @@ def include() -> str:
     import os
 
     return os.path.dirname(__file__)
-    

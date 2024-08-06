@@ -60,7 +60,7 @@
 
 #define INDEX_HEAD(arr, idx, ret)                                \
         PyAwaitableObject *aw = (PyAwaitableObject *) awaitable; \
-        if (index > idx) {                                       \
+        if ((index >= idx) || (index < 0)) {                     \
             PyErr_Format(                                        \
     PyExc_IndexError,                                            \
     "pyawaitable: index %ld out of range for %ld stored values", \

@@ -1,11 +1,13 @@
-import pyawaitable
-import ctypes
-import pytest
 import asyncio
-import _pyawaitable_test
+import ctypes
 from collections.abc import Coroutine
-from pyawaitable.bindings import abi, add_await, awaitcallback, awaitcallback_err
+
+import _pyawaitable_test
+import pytest
 from conftest import limit_leaks
+
+import pyawaitable
+from pyawaitable.bindings import abi, add_await, awaitcallback, awaitcallback_err
 
 LEAK_LIMIT: str = "50 KB"
 
@@ -149,6 +151,7 @@ async def test_await_cb_err_restore():
         await awaitable
 
     assert called is True
+
 
 @limit_leaks(LEAK_LIMIT)
 @pytest.mark.asyncio
@@ -320,6 +323,44 @@ async def test_store_arb_values():
         buffer_inner = ctypes.c_char_p()
         abi.unpack_arb(awaitable_inner, ctypes.byref(buffer_inner))
         assert buffer_inner.value == b"test"
+        assert ctypes.cast(abi.get_arb(awaitable, 0), ctypes.c_char_p).value == b"test"
+
+        unicode = ctypes.create_unicode_buffer("hello")
+        abi.save_arb(
+            awaitable,
+            2,
+            ctypes.byref(ctypes.py_object(1)),
+            ctypes.byref(unicode),
+        )
+        obj_inner = ctypes.py_object()
+        unicode_inner = ctypes.c_wchar_p()
+        abi.unpack_arb(
+            awaitable_inner,
+            None,
+            ctypes.byref(obj_inner),
+            ctypes.byref(unicode_inner),
+        )
+        assert unicode_inner.value == "hello"
+        assert obj_inner == 1
+
+        assert abi.get_arb(awaitable_inner, 2).value == "hello"
+
+        with pytest.raises(IndexError):
+            abi.get_arb(awaitable_inner, 3)
+
+        with pytest.raises(IndexError):
+            abi.get_arb(awaitable_inner, 300)
+
+        with pytest.raises(IndexError):
+            abi.get_arb(awaitable_inner, -10)
+
+        assert abi.get_arb(awaitable_inner, 0).value == b"test"
+
+        with pytest.raises(IndexError):
+            abi.set_arb(awaitable_inner, 10, None)
+
+        abi.set_arb(awaitable_inner, 0, ctypes.py_object("hello"))
+        assert abi.get_arb(awaitable_inner, 0) == "hello"
         return 0
 
     add_await(awaitable, echo(42), cb, awaitcallback_err(0))
@@ -436,6 +477,55 @@ async def test_int_values():
         assert first.value == 42
         assert second.value == 3000
         assert third.value == -10
+        assert abi.get_int(awaitable_inner, 0) == 42
+
+        with pytest.raises(IndexError):
+            abi.set_int(awaitable_inner, 10, ctypes.c_long(4))
+
+        with pytest.raises(IndexError):
+            abi.set_int(awaitable_inner, 3, ctypes.c_long(4))
+
+        abi.set_int(awaitable_inner, 2, ctypes.c_long(4))
+        abi.unpack_int(
+            awaitable_inner,
+            ctypes.byref(first),
+            ctypes.byref(second),
+            ctypes.byref(third),
+        )
+
+        assert first.value == 42
+        assert second.value == 3000
+        assert third.value == 4
+
+        abi.set_int(awaitable_inner, 0, ctypes.c_long(-400))
+        assert abi.get_int(awaitable_inner, 0) == -400
+        assert abi.get_int(awaitable_inner, 2) == 4
+
+        with pytest.raises(IndexError):
+            abi.get_int(awaitable_inner, 3)
+
+        with pytest.raises(IndexError):
+            abi.get_int(awaitable_inner, 100)
+
+        with pytest.raises(IndexError):
+            abi.get_int(awaitable_inner, -10)
+
+        abi.save_int(
+            awaitable,
+            3,
+            ctypes.c_long(1),
+            ctypes.c_long(2),
+            ctypes.c_long(3),
+        )
+
+        assert abi.get_int(awaitable_inner, 5) == 3
+        assert abi.get_int(awaitable_inner, 3) == 1
+        abi.set_int(awaitable_inner, 5, ctypes.c_long(1000))
+        assert abi.get_int(awaitable_inner, 5) == 1000
+
+        with pytest.raises(IndexError):
+            abi.get_int(awaitable_inner, 10)
+
         return 0
 
     async def coro(): ...
