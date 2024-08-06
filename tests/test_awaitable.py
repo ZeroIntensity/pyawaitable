@@ -7,7 +7,8 @@ import pytest
 from conftest import limit_leaks
 
 import pyawaitable
-from pyawaitable.bindings import abi, add_await, awaitcallback, awaitcallback_err
+from pyawaitable.bindings import (abi, add_await, awaitcallback,
+                                  awaitcallback_err)
 
 LEAK_LIMIT: str = "50 KB"
 
@@ -326,27 +327,24 @@ async def test_store_arb_values():
         assert ctypes.cast(abi.get_arb(awaitable, 0), ctypes.c_char_p).value == b"test"
 
         unicode = ctypes.create_unicode_buffer("hello")
+        
         abi.save_arb(
             awaitable,
-            2,
-            ctypes.byref(ctypes.py_object(1)),
+            1,
             ctypes.byref(unicode),
         )
-        obj_inner = ctypes.py_object()
         unicode_inner = ctypes.c_wchar_p()
         abi.unpack_arb(
             awaitable_inner,
             None,
-            ctypes.byref(obj_inner),
             ctypes.byref(unicode_inner),
         )
         assert unicode_inner.value == "hello"
-        assert obj_inner == 1
 
-        assert abi.get_arb(awaitable_inner, 2).value == "hello"
+        assert ctypes.cast(abi.get_arb(awaitable_inner, 1), ctypes.c_wchar_p).value == "hello"
 
         with pytest.raises(IndexError):
-            abi.get_arb(awaitable_inner, 3)
+            abi.get_arb(awaitable_inner, 2)
 
         with pytest.raises(IndexError):
             abi.get_arb(awaitable_inner, 300)
@@ -354,13 +352,13 @@ async def test_store_arb_values():
         with pytest.raises(IndexError):
             abi.get_arb(awaitable_inner, -10)
 
-        assert abi.get_arb(awaitable_inner, 0).value == b"test"
+        assert ctypes.cast(abi.get_arb(awaitable_inner, 0), ctypes.c_char_p).value == b"test"
 
         with pytest.raises(IndexError):
             abi.set_arb(awaitable_inner, 10, None)
 
-        abi.set_arb(awaitable_inner, 0, ctypes.py_object("hello"))
-        assert abi.get_arb(awaitable_inner, 0) == "hello"
+        abi.set_arb(awaitable_inner, 0, ctypes.c_char_p(b"hello"))
+        assert ctypes.cast(abi.get_arb(awaitable_inner, 0), ctypes.c_char_p).value == b"hello"
         return 0
 
     add_await(awaitable, echo(42), cb, awaitcallback_err(0))
