@@ -295,11 +295,45 @@ async def test_store_values():
         data_inner = ctypes.py_object()
         some_val_inner = ctypes.py_object()
         abi.unpack(
-            awaitable_inner, ctypes.byref(data_inner), ctypes.byref(some_val_inner)
+            awaitable_inner, ctypes.byref(data_inner), ctypes.byref(some_val_inner),
         )
         assert data.value == data_inner.value
         assert some_val.value == some_val_inner.value
+        assert abi.get(awaitable, 0) == data.value
         data.value.append(4)
+
+        with pytest.raises(IndexError):
+            abi.get(awaitable, 2)
+        
+        with pytest.raises(IndexError):
+            abi.get(awaitable, 200)
+        
+        with pytest.raises(IndexError):
+            abi.get(awaitable, -2)
+        
+        with pytest.raises(IndexError):
+            abi.set(awaitable, 2, "test")
+        
+        with pytest.raises(IndexError):
+            abi.set(awaitable, -42, "test")
+        
+        abi.set(awaitable, 1, "hello")
+        assert abi.get(awaitable, 1) == "hello"
+        foo = ctypes.py_object("foo")
+        bar = ctypes.py_object("bar")
+
+        abi.save(awaitable, 2, foo, bar)
+        
+        foo_inner = ctypes.py_object()
+        bar_inner = ctypes.py_object()
+
+        abi.unpack(awaitable, None, None, ctypes.byref(foo_inner), ctypes.byref(bar_inner),)
+        assert foo_inner.value == "foo"
+        assert bar_inner.value == "bar"
+
+        assert abi.get(awaitable, 2) == "foo"
+        assert abi.get(awaitable, 3) == "bar"
+
         return 0
 
     add_await(awaitable, echo(42), cb, awaitcallback_err(0))
@@ -325,7 +359,6 @@ async def test_store_arb_values():
         abi.unpack_arb(awaitable_inner, ctypes.byref(buffer_inner))
         assert buffer_inner.value == b"test"
         assert ctypes.cast(abi.get_arb(awaitable, 0), ctypes.c_char_p).value == b"test"
-
         unicode = ctypes.create_unicode_buffer("hello")
         
         abi.save_arb(
