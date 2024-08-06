@@ -304,8 +304,110 @@ test(PyObject *self, PyObject *coro) // We're back to METH_O!
 }
 ```
 
+## Getting and Setting
+
+In some cases, you might want to overwrite existing saved values (e.g. in a recursive callback). For example, we could have some state information, and want to change that between calls.
+
+Let's start in a callback that uses itself recursively:
+
+```c
+static int
+callback(PyObject *aw, PyObject *result)
+{
+    if (!PyCoro_CheckExact(result)) {
+        return 0;
+    }
+
+    if (pyawaitable_await(aw, result, callback, NULL) < 0)
+        return -1;
+
+    return 0;
+}
+
+static PyObject *
+test(PyObject *self, PyObject *coro) // We're back to METH_O!
+{
+    PyObject *aw = pyawaitable_new();
+
+    if (pyawaitable_await(aw, coro, callback, NULL) < 0)
+    {
+        Py_DECREF(aw);
+        return NULL;
+    }
+
+    return aw;
+}
+```
+
+Theoretically, `callback` could be called an infinite number of times for the same PyAwaitable object, so we don't know what the state of the call is!
+
+OK, let's start by saving an integer value:
+
+```c
+static PyObject *
+test(PyObject *self, PyObject *coro) // We're back to METH_O!
+{
+    PyObject *aw = pyawaitable_new();
+
+    if (pyawaitable_await(aw, coro, callback, NULL) < 0)
+    {
+        Py_DECREF(aw);
+        return NULL;
+    }
+
+    if (pyawaitable_save_int(aw, 1, 1) < 0)
+    {
+        Py_DECREF(aw);
+        return NULL;
+    }
+
+    return aw;
+}
+```
+
+But, so far, we've only learned about _appending_ to the values array, not mutating in place. So, how do we do that? Each of the value arrays have their own get and set functions.
+
+In this case, we want `pyawaitable_set_int`:
+
+```c
+static int
+callback(PyObject *aw, PyObject *result)
+{
+    long value = pyawaitable_get_int(aw, 0);
+    if (value == -1 && PyErr_Occurred())
+    {
+        return -1;
+    }
+
+    if (pyawaitable_set_int(aw, 0, value + 1) < 0)
+    {
+        return -1;
+    }
+
+    if (!PyCoro_CheckExact(result))
+    {
+        return 0;
+    }
+
+    if (pyawaitable_await(aw, result, callback, NULL) < 0)
+        return -1;
+
+    return 0;
+}
+```
+
+Great! We increment our state for each call!
+
+!!! warning "Prefer `unpack` over `get`!"
+
+    In the above, `pyawaitable_get_int` was used for teaching purposes. `pyawaitable_get_*` functions exist for very niche cases, they shouldn't be preferred over `pyawaitable_unpack_*`!
+
 ## Next Steps
 
 Congratuilations, you now know how to use PyAwaitable! If you're interested in reading about the internals, be sure to take a look at the [scrapped PEP draft](https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926), where this was originally designed to be part of CPython.
 
 Moreover, this project was conceived due to being needed in [view.py](https://github.com/ZeroIntensity/view.py). If you would like to see some very complex examples of PyAwaitable usage, take a look at their [C ASGI implementation](https://github.com/ZeroIntensity/view.py/blob/master/src/_view/app.c#L273), which is powered by PyAwaitable.
+
+```
+
+```
