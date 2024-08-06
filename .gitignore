@@ -7,6 +7,7 @@ __pycache__/
 test/
 dist/
 pyawaitable-vendor/
+*.so
 
 # LSP
 compile_flags.txt
