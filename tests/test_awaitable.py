@@ -7,11 +7,18 @@ import pytest
 from conftest import limit_leaks
 
 import pyawaitable
-from pyawaitable.bindings import abi, add_await, awaitcallback, awaitcallback_err
+from pyawaitable.bindings import (
+    abi,
+    add_await,
+    awaitcallback,
+    awaitcallback_err,
+)
 
 LEAK_LIMIT: str = "50 KB"
 
-raising_callback = ctypes.cast(_pyawaitable_test.raising_callback, awaitcallback)
+raising_callback = ctypes.cast(
+    _pyawaitable_test.raising_callback, awaitcallback
+)
 raising_err_callback = ctypes.cast(
     _pyawaitable_test.raising_err_callback, awaitcallback_err
 )
@@ -77,7 +84,9 @@ async def test_await_cb_err():
         raise RuntimeError(b"no good!")
 
     @awaitcallback_err
-    def cb_err(awaitable_inner: pyawaitable.PyAwaitable, err: Exception) -> int:
+    def cb_err(
+        awaitable_inner: pyawaitable.PyAwaitable, err: Exception
+    ) -> int:
         assert isinstance(err, ZeroDivisionError)
         return 0
 
@@ -95,7 +104,9 @@ async def test_await_cb_err_cb():
         return 42
 
     @awaitcallback_err
-    def cb_err(awaitable_inner: pyawaitable.PyAwaitable, err: Exception) -> int:
+    def cb_err(
+        awaitable_inner: pyawaitable.PyAwaitable, err: Exception
+    ) -> int:
         assert isinstance(err, RuntimeError)
         assert str(err) == "test"
         return 0
@@ -139,7 +150,9 @@ async def test_await_cb_err_restore():
         return 42
 
     @awaitcallback_err
-    def cb_err(awaitable_inner: pyawaitable.PyAwaitable, err: Exception) -> int:
+    def cb_err(
+        awaitable_inner: pyawaitable.PyAwaitable, err: Exception
+    ) -> int:
         assert str(err) == "test"
         nonlocal called
         called = True
@@ -365,7 +378,10 @@ async def test_store_arb_values():
         buffer_inner = ctypes.c_char_p()
         abi.unpack_arb(awaitable_inner, ctypes.byref(buffer_inner))
         assert buffer_inner.value == b"test"
-        assert ctypes.cast(abi.get_arb(awaitable, 0), ctypes.c_char_p).value == b"test"
+        assert (
+            ctypes.cast(abi.get_arb(awaitable, 0), ctypes.c_char_p).value
+            == b"test"
+        )
         unicode = ctypes.create_unicode_buffer("hello")
 
         abi.save_arb(
@@ -382,7 +398,9 @@ async def test_store_arb_values():
         assert unicode_inner.value == "hello"
 
         assert (
-            ctypes.cast(abi.get_arb(awaitable_inner, 1), ctypes.c_wchar_p).value
+            ctypes.cast(
+                abi.get_arb(awaitable_inner, 1), ctypes.c_wchar_p
+            ).value
             == "hello"
         )
 
@@ -460,7 +478,9 @@ async def test_await_function():
         assert result == "42hello"
         return 0
 
-    abi.await_function(awaitable, coro, b"is", cb, awaitcallback_err(0), 21, b"hello")
+    abi.await_function(
+        awaitable, coro, b"is", cb, awaitcallback_err(0), 21, b"hello"
+    )
     await awaitable
     assert called is True
 
