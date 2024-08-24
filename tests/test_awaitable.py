@@ -620,4 +620,59 @@ async def test_async_with():
 
     aw = abi.new()
     abi.async_with(aw, my_context(), inner, awaitcallback_err(0))
+
+    class Half:
+        def __aenter__(self): ...
+
+    class OtherHalf:
+        def __aexit__(self, *args): ...
+
+    with pytest.raises(TypeError):
+        abi.async_with(aw, 1, inner, awaitcallback_err(0))
+
+    with pytest.raises(TypeError):
+        abi.async_with(aw, Half(), inner, awaitcallback_err(0))
+
+    with pytest.raises(TypeError):
+        abi.async_with(aw, OtherHalf(), inner, awaitcallback_err(0))
+
+    await aw
+    assert called is True
+
+
+@limit_leaks
+@pytest.mark.asyncio
+async def test_async_with_no_callback():
+    called = False
+
+    @asynccontextmanager
+    async def my_context():
+        try:
+            yield 1
+        finally:
+            nonlocal called
+            called = True
+
+    aw = abi.new()
+    abi.async_with(aw, my_context(), awaitcallback(0), awaitcallback_err(0))
+    await aw
+    assert called is True
+
+
+@limit_leaks
+@pytest.mark.asyncio
+async def test_async_with_errors():
+    called = False
+
+    @asynccontextmanager
+    async def my_context():
+        try:
+            yield 1
+        finally:
+            nonlocal called
+            called = True
+
+    aw = abi.new()
+    abi.async_with(aw, my_context(), raising_callback, awaitcallback_err(0))
+    await aw
     assert called is True

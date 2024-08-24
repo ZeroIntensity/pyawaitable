@@ -17,7 +17,7 @@ async_with_inner(PyObject *aw, PyObject *res)
 
     Py_INCREF(aw);
     Py_INCREF(res);
-    int callback_result = cb(aw, res);
+    int callback_result = cb != NULL ? cb(aw, res) : 0;
     Py_DECREF(res);
     Py_DECREF(aw);
 
@@ -35,6 +35,10 @@ async_with_inner(PyObject *aw, PyObject *res)
             );
             return -1;
         }
+
+        // Traceback can still be NULL
+        if (tb == NULL)
+            tb = Py_NewRef(Py_None);
 
         PyObject *coro = PyObject_Vectorcall(
             exit,
@@ -91,12 +95,12 @@ pyawaitable_async_with_impl(
     awaitcallback_err err
 )
 {
-    PyObject *with = PyObject_GetAttrString(ctx, "__awith__");
+    PyObject *with = PyObject_GetAttrString(ctx, "__aenter__");
     if (with == NULL)
     {
         PyErr_Format(
             PyExc_TypeError,
-            "pyawaitable: %R is not an async context manager (missing __awith__)",
+            "pyawaitable: %R is not an async context manager (missing __aenter__)",
             ctx
         );
         return -1;
