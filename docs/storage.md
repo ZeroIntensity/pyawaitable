@@ -244,7 +244,7 @@ test(PyObject *self, PyObject *coro) // We're back to METH_O!
         return NULL;
     }
 
-    int val = MY_FLAG | SOME_OTHER_FLAG;
+    long val = MY_FLAG | SOME_OTHER_FLAG;
 
     // Notice that this is pyawaitable_save_int!
     if (pyawaitable_save_int(aw, 1, val) < 0)
@@ -263,7 +263,7 @@ Which, of course, is unpacked like so, via `pyawaitable_unpack_int`:
 static int
 callback(PyObject *aw, PyObject *result)
 {
-    int flags;
+    long flags;
     if (pyawaitable_unpack_int(aw, &flags) < 0)
         return -1;
 
@@ -407,7 +407,3 @@ Great! We increment our state for each call!
 Congratuilations, you now know how to use PyAwaitable! If you're interested in reading about the internals, be sure to take a look at the [scrapped PEP draft](https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926), where this was originally designed to be part of CPython.
 
 Moreover, this project was conceived due to being needed in [view.py](https://github.com/ZeroIntensity/view.py). If you would like to see some very complex examples of PyAwaitable usage, take a look at their [C ASGI implementation](https://github.com/ZeroIntensity/view.py/blob/master/src/_view/app.c#L273), which is powered by PyAwaitable.
-
-```
-
-```
