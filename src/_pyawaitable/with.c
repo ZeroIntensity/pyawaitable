@@ -57,14 +57,30 @@ async_with_inner(PyObject *aw, PyObject *res)
             return -1;
         }
 
+        Py_DECREF(coro);
         return 0;
     } else
     {
         // OK
+        PyObject *coro = PyObject_Vectorcall(
+            exit,
+            (PyObject *[]) { Py_None, Py_None, Py_None },
+            3,
+            NULL
+        );
+        if (coro == NULL)
+        {
+            return -1;
+        }
 
+        if (pyawaitable_await_impl(aw, coro, NULL, NULL) < 0)
+        {
+            Py_DECREF(coro);
+            return -1;
+        }
+        Py_DECREF(coro);
+        return 0;
     }
-
-    return 0;
 }
 
 int

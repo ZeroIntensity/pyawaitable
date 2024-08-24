@@ -5,12 +5,14 @@ Docs: https://awaitable.zintensity.dev/
 Source: https://github.com/ZeroIntensity/pyawaitable
 """
 
-from . import abi
-from _pyawaitable import _PyAwaitableType  # type: ignore
 from typing import Type
 
+from _pyawaitable import _PyAwaitableType  # type: ignore
+
+from . import abi
+
 __all__ = "PyAwaitable", "include", "abi"
-__version__ = "1.2.0"
+__version__ = "1.3.0-dev"
 
 PyAwaitable: Type = _PyAwaitableType
 

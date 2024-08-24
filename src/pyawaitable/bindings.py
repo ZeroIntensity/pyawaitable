@@ -153,6 +153,16 @@ class AwaitableABI(PyABI):
                 ctypes.c_long, ctypes.py_object, ctypes.c_ssize_t
             ),
         ),
+        (
+            "async_with",
+            ctypes.PYFUNCTYPE(
+                ctypes.c_int,
+                ctypes.py_object,
+                ctypes.py_object,
+                awaitcallback,
+                awaitcallback_err,
+            ),
+        ),
     ]
 
 
