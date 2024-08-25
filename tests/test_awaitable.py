@@ -661,7 +661,39 @@ async def test_async_with_no_callback():
 
 @limit_leaks
 @pytest.mark.asyncio
-async def test_async_with_errors():
+async def test_async_with_no_callback_error():
+    @asynccontextmanager
+    async def my_context():
+        yield 1
+        raise ZeroDivisionError
+
+    aw = abi.new()
+    abi.async_with(aw, my_context(), awaitcallback(0), awaitcallback_err(0))
+
+    with pytest.raises(ZeroDivisionError):
+        await aw
+
+
+@limit_leaks
+@pytest.mark.asyncio
+async def test_async_with_no_callback_exit_error():
+    @asynccontextmanager
+    async def my_context():
+        try:
+            yield 1
+        finally:
+            raise ZeroDivisionError
+
+    aw = abi.new()
+    abi.async_with(aw, my_context(), awaitcallback(0), awaitcallback_err(0))
+
+    with pytest.raises(ZeroDivisionError):
+        await aw
+
+
+@limit_leaks
+@pytest.mark.asyncio
+async def test_async_with_cb_error():
     called = False
 
     @asynccontextmanager
@@ -675,4 +707,50 @@ async def test_async_with_errors():
     aw = abi.new()
     abi.async_with(aw, my_context(), raising_callback, awaitcallback_err(0))
     await aw
+    assert called is True
+
+
+@limit_leaks
+@pytest.mark.asyncio
+async def test_async_with_exit_error():
+    @asynccontextmanager
+    async def my_context():
+        try:
+            yield 1
+        finally:
+            raise ZeroDivisionError
+
+    called = False
+
+    @awaitcallback_err
+    def cb(inner: pyawaitable.PyAwaitable, err: BaseException) -> int:
+        nonlocal called
+        called = True
+        assert isinstance(err, ZeroDivisionError)
+        return 0
+
+    aw = abi.new()
+    abi.async_with(aw, my_context(), awaitcallback(0), cb)
+    await aw
+    assert called is True
+
+
+@limit_leaks
+@pytest.mark.asyncio
+async def test_async_with_enter_error():
+    called = False
+
+    @asynccontextmanager
+    async def my_context():
+        try:
+            yield 1
+            raise ZeroDivisionError
+        finally:
+            nonlocal called
+            called = True
+
+    aw = abi.new()
+    abi.async_with(aw, my_context(), awaitcallback(0), awaitcallback_err(0))
+    with pytest.raises(ZeroDivisionError):
+        await aw
     assert called is True
