@@ -51,7 +51,6 @@ async_with_inner(PyObject *aw, PyObject *res)
         Py_DECREF(tb);
         if (coro == NULL)
         {
-            // TODO: Should we propagate?
             return -1;
         }
 

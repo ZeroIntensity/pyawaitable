@@ -27,7 +27,8 @@ async def test_await():
     called = False
 
     async def coro():
-        await asyncio.sleep(0)
+        for _ in range(10000):
+            await asyncio.sleep(0)
         nonlocal called
         called = True
 
@@ -155,6 +156,31 @@ async def test_set_results():
 
     add_await(awaitable, coro(), cb, awaitcallback(0))
     assert (await awaitable) == 42
+
+
+@limit_leaks
+@pytest.mark.asyncio
+async def test_set_results_tracked_type():
+    awaitable = abi.new()
+
+    class TestObject:
+        def __init__(self) -> None:
+            self.value = [1, 2, 3]
+
+    async def coro():
+        pass
+
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.PyAwaitable, result: str):
+        obj = TestObject()
+        obj.value.append(4)
+        abi.set_result(awaitable_inner, obj)
+        return 0
+
+    add_await(awaitable, coro(), cb, awaitcallback(0))
+    value = await awaitable
+    assert isinstance(value, TestObject)
+    assert value.value == [1, 2, 3, 4]
 
 
 @limit_leaks
