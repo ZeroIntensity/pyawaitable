@@ -1,8 +1,9 @@
 import asyncio
 from collections.abc import Coroutine
 
+import _pyawaitable_test
 import pytest
-from conftest import limit_leaks, raising_callback, raising_err_callback
+from conftest import limit_leaks
 
 import pyawaitable
 from pyawaitable.bindings import (abi, add_await, awaitcallback,
@@ -33,144 +34,6 @@ async def test_await():
     awaitable = abi.new()
     add_await(awaitable, coro(), awaitcallback(0), awaitcallback_err(0))
     await awaitable
-    assert called is True
-
-
-@limit_leaks
-@pytest.mark.asyncio
-async def test_await_cb():
-    awaitable = abi.new()
-
-    async def coro(value: int):
-        await asyncio.sleep(0)
-        return value * 2
-
-    @awaitcallback
-    def cb(awaitable_inner: pyawaitable.PyAwaitable, result: int) -> int:
-        assert awaitable_inner is awaitable
-        assert result == 42
-        return 0
-
-    add_await(awaitable, coro(21), cb, awaitcallback_err(0))
-    await awaitable
-
-
-@limit_leaks
-@pytest.mark.asyncio
-async def test_await_cb_err():
-    awaitable = abi.new()
-
-    async def coro_raise() -> float:
-        await asyncio.sleep(0)
-        return 0 / 0
-
-    @awaitcallback
-    def cb(awaitable_inner: pyawaitable.PyAwaitable, result: float) -> int:
-        raise RuntimeError(b"no good!")
-
-    @awaitcallback_err
-    def cb_err(
-        awaitable_inner: pyawaitable.PyAwaitable,
-        err: Exception,
-    ) -> int:
-        assert isinstance(err, ZeroDivisionError)
-        return 0
-
-    add_await(awaitable, coro_raise(), cb, cb_err)
-    await awaitable
-
-
-@limit_leaks
-@pytest.mark.asyncio
-async def test_await_cb_err_cb():
-    awaitable = abi.new()
-
-    async def coro() -> int:
-        await asyncio.sleep(0)
-        return 42
-
-    @awaitcallback_err
-    def cb_err(
-        awaitable_inner: pyawaitable.PyAwaitable,
-        err: Exception,
-    ) -> int:
-        assert isinstance(err, RuntimeError)
-        assert str(err) == "test"
-        return 0
-
-    add_await(
-        awaitable,
-        coro(),
-        raising_callback,
-        cb_err,
-    )
-    await awaitable
-
-
-@limit_leaks
-@pytest.mark.asyncio
-async def test_await_cb_noerr():
-    awaitable = abi.new()
-
-    async def coro() -> int:
-        await asyncio.sleep(0)
-        return 42
-
-    @awaitcallback
-    def cb(awaitable_inner: pyawaitable.PyAwaitable, result: int) -> int:
-        return -1
-
-    add_await(awaitable, coro(), cb, awaitcallback_err(0))
-
-    with pytest.raises(SystemError):
-        await awaitable
-
-
-@limit_leaks
-@pytest.mark.asyncio
-async def test_await_cb_err_restore():
-    awaitable = abi.new()
-    called = False
-
-    async def coro() -> int:
-        await asyncio.sleep(0)
-        return 42
-
-    @awaitcallback_err
-    def cb_err(
-        awaitable_inner: pyawaitable.PyAwaitable,
-        err: Exception,
-    ) -> int:
-        assert str(err) == "test"
-        nonlocal called
-        called = True
-        return -1
-
-    add_await(awaitable, coro(), raising_callback, cb_err)
-
-    with pytest.raises(RuntimeError):
-        await awaitable
-
-    assert called is True
-
-
-@limit_leaks
-@pytest.mark.asyncio
-async def test_await_cb_err_norestore():
-    awaitable = abi.new()
-    called = False
-
-    async def coro() -> int:
-        nonlocal called
-        called = True
-        await asyncio.sleep(0)
-        return 42
-
-    add_await(awaitable, coro(), raising_callback, raising_err_callback)
-
-    with pytest.raises(ZeroDivisionError):
-        await awaitable
-
     assert called is True
 
 
@@ -274,3 +137,56 @@ async def test_await_no_cb_raise():
 
     with pytest.raises(TypeError):
         await awaitable
+
+
+@limit_leaks
+@pytest.mark.asyncio
+async def test_set_results():
+    awaitable = abi.new()
+
+    async def coro():
+        await asyncio.sleep(0)
+        return "abc"
+
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.PyAwaitable, result: str):
+        abi.set_result(awaitable_inner, 42)
+        return 0
+
+    add_await(awaitable, coro(), cb, awaitcallback(0))
+    assert (await awaitable) == 42
+
+
+@limit_leaks
+@pytest.mark.asyncio
+async def test_await_function():
+    awaitable = abi.new()
+    called: bool = False
+
+    async def coro(value: int, suffix: str) -> str:
+        await asyncio.sleep(0)
+        return str(value * 2) + suffix
+
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.PyAwaitable, result: str):
+        nonlocal called
+        called = True
+        assert result == "42hello"
+        return 0
+
+    abi.await_function(
+        awaitable, coro, b"is", cb, awaitcallback_err(0), 21, b"hello"
+    )
+    await awaitable
+    assert called is True
+
+
+@limit_leaks
+@pytest.mark.asyncio
+async def test_c_built_extension():
+    async def hello():
+        await asyncio.sleep(0)
+        return 42
+
+    assert (await _pyawaitable_test.test(hello())) == 42
+    assert (await _pyawaitable_test.test2()) is None

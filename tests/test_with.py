@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 
 import pytest
-from conftest import limit_leaks, raising_callback, raising_err_callback
+from conftest import limit_leaks, raising_callback
 
 import pyawaitable
 from pyawaitable.bindings import abi, awaitcallback, awaitcallback_err

@@ -1,7 +1,6 @@
 import asyncio
 import ctypes
 
-import _pyawaitable_test
 import pytest
 from conftest import limit_leaks
 
@@ -153,59 +152,6 @@ async def test_store_arb_values():
 
     add_await(awaitable, echo(42), cb, awaitcallback_err(0))
     await awaitable
-
-
-@limit_leaks
-@pytest.mark.asyncio
-async def test_c_built_extension():
-    async def hello():
-        await asyncio.sleep(0)
-        return 42
-
-    assert (await _pyawaitable_test.test(hello())) == 42
-    assert (await _pyawaitable_test.test2()) is None
-
-
-@limit_leaks
-@pytest.mark.asyncio
-async def test_set_results():
-    awaitable = abi.new()
-
-    async def coro():
-        await asyncio.sleep(0)
-        return "abc"
-
-    @awaitcallback
-    def cb(awaitable_inner: pyawaitable.PyAwaitable, result: str):
-        abi.set_result(awaitable_inner, 42)
-        return 0
-
-    add_await(awaitable, coro(), cb, awaitcallback(0))
-    assert (await awaitable) == 42
-
-
-@limit_leaks
-@pytest.mark.asyncio
-async def test_await_function():
-    awaitable = abi.new()
-    called: bool = False
-
-    async def coro(value: int, suffix: str) -> str:
-        await asyncio.sleep(0)
-        return str(value * 2) + suffix
-
-    @awaitcallback
-    def cb(awaitable_inner: pyawaitable.PyAwaitable, result: str):
-        nonlocal called
-        called = True
-        assert result == "42hello"
-        return 0
-
-    abi.await_function(
-        awaitable, coro, b"is", cb, awaitcallback_err(0), 21, b"hello"
-    )
-    await awaitable
-    assert called is True
 
 
 @limit_leaks
