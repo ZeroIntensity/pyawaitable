@@ -127,6 +127,7 @@ pyawaitable_async_with_impl(
 
     if (pyawaitable_save_arb_impl(inner_aw, 2, cb, err) < 0)
     {
+        Py_DECREF(inner_aw);
         Py_DECREF(with);
         Py_DECREF(exit);
         return -1;
@@ -134,6 +135,7 @@ pyawaitable_async_with_impl(
 
     if (pyawaitable_save_impl(inner_aw, 1, exit) < 0)
     {
+        Py_DECREF(inner_aw);
         Py_DECREF(exit);
         Py_DECREF(with);
         return -1;
