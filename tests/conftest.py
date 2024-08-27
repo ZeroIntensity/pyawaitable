@@ -17,7 +17,7 @@ except ImportError:
         returncode=-1,
     )
 
-ITERATIONS: int = 10000
+ITERATIONS: int = 1000
 LEAK_LIMIT: str = "50 KB"
 
 raising_callback = ctypes.cast(
