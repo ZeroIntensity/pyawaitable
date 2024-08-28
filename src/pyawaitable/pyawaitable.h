@@ -3,10 +3,10 @@
 #include <Python.h>
 
 #define PYAWAITABLE_MAJOR_VERSION 1
-#define PYAWAITABLE_MINOR_VERSION 2
+#define PYAWAITABLE_MINOR_VERSION 3
 #define PYAWAITABLE_MICRO_VERSION 0
 /* Per CPython Conventions: 0xA for alpha, 0xB for beta, 0xC for release candidate or 0xF for final. */
-#define PYAWAITABLE_RELEASE_LEVEL 0xF
+#define PYAWAITABLE_RELEASE_LEVEL 0xA
 
 typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *);
@@ -46,6 +46,12 @@ typedef struct _pyawaitable_abi
     PyObject *(*get)(PyObject *, Py_ssize_t);
     void *(*get_arb)(PyObject *, Py_ssize_t);
     long (*get_int)(PyObject *, Py_ssize_t);
+    int (*async_with)(
+        PyObject *aw,
+        PyObject *ctx,
+        awaitcallback cb,
+        awaitcallback_err err
+    );
 } PyAwaitableABI;
 
 #ifdef PYAWAITABLE_THIS_FILE_INIT
@@ -60,6 +66,7 @@ extern PyAwaitableABI *pyawaitable_abi;
 
 #define pyawaitable_await pyawaitable_abi->await
 #define pyawaitable_await_function pyawaitable_abi->await_function
+#define pyawaitable_async_with pyawaitable_abi->async_with
 
 #define pyawaitable_save pyawaitable_abi->save
 #define pyawaitable_save_arb pyawaitable_abi->save_arb
@@ -119,6 +126,7 @@ pyawaitable_init()
 
 #define PyAwaitable_AddAwait pyawaitable_await
 #define PyAwaitable_AwaitFunction pyawaitable_await_function
+#define PyAwaitable_AsyncWith pyawaitable_async_with
 
 #define PyAwaitable_SaveValues pyawaitable_save
 #define PyAwaitable_SaveArbValues pyawaitable_save_arb
