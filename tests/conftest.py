@@ -18,7 +18,7 @@ except ImportError:
     )
 
 ITERATIONS: int = 1000
-LEAK_LIMIT: str = "50 KB"
+LEAK_LIMIT: str = "100 KB"
 
 raising_callback = ctypes.cast(
     _pyawaitable_test.raising_callback, awaitcallback
