@@ -3,6 +3,7 @@
 #include <pyawaitable/coro.h>
 #include <pyawaitable/values.h>
 #include <pyawaitable/genwrapper.h>
+#include <pyawaitable/with.h>
 #define ADD_TYPE(tp)                                               \
         do                                                         \
         {                                                          \
@@ -53,7 +54,8 @@ static PyAwaitableABI _abi_interface =
     pyawaitable_set_int_impl,
     pyawaitable_get_impl,
     pyawaitable_get_arb_impl,
-    pyawaitable_get_int_impl
+    pyawaitable_get_int_impl,
+    pyawaitable_async_with_impl
 };
 
 static void
