@@ -6,9 +6,6 @@ on:
             - v*
         branches:
             - master
-    pull_request:
-        branches:
-            - master
 
 concurrency:
     group: build-${{ github.head_ref }}
