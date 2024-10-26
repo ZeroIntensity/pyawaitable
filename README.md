@@ -1,6 +1,6 @@
 # PyAwaitable
 
-## CPython API for asynchronous functions
+## Call asynchronous code from an extension module
 
 ![Tests](https://github.com/ZeroIntensity/pyawaitable/actions/workflows/tests.yml/badge.svg)
 ![Memory Check](https://github.com/ZeroIntensity/pyawaitable/actions/workflows/memory_check.yml/badge.svg)

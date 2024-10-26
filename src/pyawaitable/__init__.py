@@ -1,5 +1,5 @@
 """
-PyAwaitable - CPython API for asynchronous functions.
+PyAwaitable - Call asynchronous code from an extension module.
 
 Docs: https://awaitable.zintensity.dev/
 Source: https://github.com/ZeroIntensity/pyawaitable
