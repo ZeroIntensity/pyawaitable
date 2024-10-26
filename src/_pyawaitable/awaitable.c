@@ -78,7 +78,7 @@ awaitable_dealloc(PyObject *self)
             {
                 PyErr_SetString(
                     PyExc_SystemError,
-                    "sanity check: coro was not cleared"
+                    "pyawaitable: sanity check: coro was not cleared"
                 );
                 PyErr_WriteUnraisable(self);
             }
@@ -260,6 +260,38 @@ pyawaitable_await_function_impl(
     return 0;
 }
 
+static int
+awaitable_clear(PyObject *self, visitproc visit, void *arg)
+{
+    PyAwaitableObject *aw = (PyAwaitableObject *)self;
+    Py_CLEAR(aw->aw_gen);
+    Py_CLEAR(aw->aw_result);
+
+    for (Py_ssize_t i = 0; i < aw->aw_callback_index; ++i)
+    {
+        Py_CLEAR(aw->aw_callbacks[i]->coro);
+    }
+
+    return 0;
+}
+
+static int
+awaitable_traverse(PyObject *self, visitproc visit, void *arg)
+{
+    PyAwaitableObject *aw = (PyAwaitableObject *)self;
+    Py_VISIT(aw->aw_gen);
+    Py_VISIT(aw->aw_result);
+
+    for (Py_ssize_t i = 0; i < aw->aw_callback_index; ++i)
+    {
+        Py_VISIT(aw->aw_callbacks[i]->coro);
+    }
+
+    return 0;
+}
+
+static void
+
 PyTypeObject _PyAwaitableType =
 {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -267,7 +299,9 @@ PyTypeObject _PyAwaitableType =
     .tp_basicsize = sizeof(PyAwaitableObject),
     .tp_dealloc = awaitable_dealloc,
     .tp_as_async = &pyawaitable_async_methods,
-    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
+    .tp_traverse = awaitable_traverse,
+    .tp_clear = awaitable_clear,
     .tp_doc = awaitable_doc,
     .tp_iternext = awaitable_next,
     .tp_new = awaitable_new_func,

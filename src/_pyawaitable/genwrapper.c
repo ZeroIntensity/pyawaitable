@@ -40,7 +40,7 @@ gen_dealloc(PyObject *self)
     {
         PyErr_SetString(
             PyExc_SystemError,
-            "sanity check: gw_current_await was not cleared!"
+            "pyawaitable: sanity check: gw_current_await was not cleared!"
         );
         PyErr_WriteUnraisable(self);
     }
@@ -48,7 +48,7 @@ gen_dealloc(PyObject *self)
     {
         PyErr_SetString(
             PyExc_SystemError,
-            "sanity check: gw_aw was not cleared!"
+            "pyawaitable: sanity check: gw_aw was not cleared!"
         );
         PyErr_WriteUnraisable(self);
     }
