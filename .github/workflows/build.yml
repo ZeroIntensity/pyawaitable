@@ -1,9 +1,11 @@
-name: CI
+name: Build Wheels
 
 on:
     push:
         tags:
             - v*
+        branches:
+            - master
 
 concurrency:
     group: build-${{ github.head_ref }}
@@ -29,12 +31,12 @@ jobs:
                   fetch-depth: 0
 
             - name: Build wheels
-              uses: pypa/cibuildwheel@v2.16.5
+              uses: pypa/cibuildwheel@v2.21.3
               env:
                   CIBW_ARCHS_MACOS: x86_64
                   HATCH_BUILD_HOOKS_ENABLE: "true"
 
-            - uses: actions/upload-artifact@v2
+            - uses: actions/upload-artifact@v3
               with:
                   name: artifacts
                   path: wheelhouse/*.whl
@@ -61,12 +63,12 @@ jobs:
                   platforms: arm64
 
             - name: Build wheels
-              uses: pypa/cibuildwheel@v2.15.0
+              uses: pypa/cibuildwheel@v2.21.3
               env:
                   CIBW_ARCHS_LINUX: aarch64
                   HATCH_BUILD_HOOKS_ENABLE: "true"
 
-            - uses: actions/upload-artifact@v2
+            - uses: actions/upload-artifact@v3
               with:
                   name: artifacts
                   path: wheelhouse/*.whl
@@ -87,7 +89,7 @@ jobs:
                   path: dist
 
             - name: Push build artifacts to PyPI
-              uses: pypa/gh-action-pypi-publish@v1.4.2
+              uses: pypa/gh-action-pypi-publish@v1.10.3
               with:
                   skip_existing: true
                   user: __token__
