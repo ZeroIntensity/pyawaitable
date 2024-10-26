@@ -1,9 +1,14 @@
-name: CI
+name: Build Wheels
 
 on:
     push:
         tags:
             - v*
+        branches:
+            - master
+    pull_request:
+        branches:
+            - master
 
 concurrency:
     group: build-${{ github.head_ref }}
@@ -61,7 +66,7 @@ jobs:
                   platforms: arm64
 
             - name: Build wheels
-              uses: pypa/cibuildwheel@v2.15.0
+              uses: pypa/cibuildwheel@v2.21.3
               env:
                   CIBW_ARCHS_LINUX: aarch64
                   HATCH_BUILD_HOOKS_ENABLE: "true"
@@ -87,7 +92,7 @@ jobs:
                   path: dist
 
             - name: Push build artifacts to PyPI
-              uses: pypa/gh-action-pypi-publish@v1.4.2
+              uses: pypa/gh-action-pypi-publish@v1.10.3
               with:
                   skip_existing: true
                   user: __token__
