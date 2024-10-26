@@ -158,4 +158,38 @@ In fact, we don't actually `await` anything in our function body. Instead, we ma
 
 For example, if you wanted to `await` three coroutines: `foo`, `bar`, and `baz`, you would call `pyawaitable_await` on each of them, but they wouldn't actually get executed until _after_ the C function has returned.
 
+### Calling Utilities
+
+So far, it might seem like this is a lot of boilerplate. In general, calling functions in the C API is a lot of work--is there any way to make it prettier in PyAwaitable. CPython has `PyObject_CallFunction`, which allows you to call a function with a format string similar to `Py_BuildValue`. For example:
+
+```c
+static PyObject *
+test(PyObject *self, PyObject *my_func)
+{
+    // Equivalent to my_func(42, -10)
+    PyObject *result = PyObject_CallFunction(my_func, "ii", 42, -10);
+    /* ... */
+}
+```
+
+Much nicer, right? For convenience, PyAwaitable has an analogue of this function, called `pyawaitable_await_function`, which calls a function with a format string _and_ marks it for execution via `pyawaitable_await`. For example, if `my_func` from above was asynchronous:
+
+```c
+static PyObject *
+test(PyObject *self, PyObject *my_func)
+{
+    PyObject *awaitable = pyawaitable_new();
+
+    // Equivalent to await my_func(42, -10)
+    if (pyawaitable_await_function(awaitable, my_func, "ii", NULL, NULL, 42, -10) < 0)
+    {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+    /* ... */
+}
+```
+
+## Next Steps
+
 Now, how do we do something with the result of the awaited coroutine? We do that with a callback, which we'll talk about next.
