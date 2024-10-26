@@ -12,7 +12,7 @@ from _pyawaitable import _PyAwaitableType  # type: ignore
 from . import abi
 
 __all__ = "PyAwaitable", "include", "abi"
-__version__ = "1.3.0-dev"
+__version__ = "1.3.0"
 
 PyAwaitable: Type = _PyAwaitableType
 
