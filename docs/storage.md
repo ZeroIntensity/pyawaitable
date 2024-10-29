@@ -404,6 +404,4 @@ Great! We increment our state for each call!
 
 ## Next Steps
 
-Congratuilations, you now know how to use PyAwaitable! If you're interested in reading about the internals, be sure to take a look at the [scrapped PEP draft](https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926), where this was originally designed to be part of CPython.
-
-Moreover, this project was conceived due to being needed in [view.py](https://github.com/ZeroIntensity/view.py). If you would like to see some very complex examples of PyAwaitable usage, take a look at their [C ASGI implementation](https://github.com/ZeroIntensity/view.py/blob/master/src/_view/app.c#L273), which is powered by PyAwaitable.
+So, now we know how to use PyAwaitable, but there's quite a bit of boilerplate here. PyAwaitable comes with a few utility functions to help ease boilerplate, which we'll talk about next.
