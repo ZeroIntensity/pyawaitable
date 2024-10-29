@@ -158,4 +158,6 @@ In fact, we don't actually `await` anything in our function body. Instead, we ma
 
 For example, if you wanted to `await` three coroutines: `foo`, `bar`, and `baz`, you would call `pyawaitable_await` on each of them, but they wouldn't actually get executed until _after_ the C function has returned.
 
+## Next Steps
+
 Now, how do we do something with the result of the awaited coroutine? We do that with a callback, which we'll talk about next.

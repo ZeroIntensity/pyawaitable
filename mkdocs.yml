@@ -9,6 +9,7 @@ nav:
     - Awaiting Coroutines: awaiting.md
     - Callbacks: callbacks.md
     - Storing and Fetching Values: storage.md
+    - Useful Utilities: utilities.md
 
 theme:
     name: material

@@ -241,7 +241,7 @@ err_callback(PyObject *awaitable, PyObject *err)
 }
 ```
 
-## Using Values
+## Next Steps
 
 Now that you've learned to use callbacks, how do we retain state from our original function (_i.e._, the thing that returned our PyAwaitable object) to a callback? In most other languages, this would be a stupid question, but if you've used callbacks in C before, you may have found yourself wondering what to do with the lack of closures.
 
