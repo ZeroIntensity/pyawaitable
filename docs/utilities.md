@@ -1,3 +1,8 @@
+---
+hide:
+    - navigation
+---
+
 # Useful Utilities
 
 ## Introduction
