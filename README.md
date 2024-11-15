@@ -46,19 +46,21 @@ if __name__ == "__main__":
 ## Example
 
 ```c
+#define PYAWAITABLE_PYAPI
 #include <pyawaitable.h>
 
 // Assuming that this is using METH_O
 static PyObject *
 hello(PyObject *self, PyObject *coro) {
     // Make our awaitable object
-    PyObject *awaitable = pyawaitable_new();
+    PyObject *awaitable = PyAwaitable_New();
 
-    if (!awaitable)
+    if (awaitable == NULL) {
         return NULL;
+    }
 
     // Mark the coroutine for being awaited
-    if (pyawaitable_await(awaitable, coro, NULL, NULL) < 0) {
+    if (PyAwaitable_AddAwait(awaitable, coro, NULL, NULL) < 0) {
         Py_DECREF(awaitable);
         return NULL;
     }
