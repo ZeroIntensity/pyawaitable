@@ -13,6 +13,7 @@ from . import abi
 
 __all__ = "PyAwaitable", "include", "abi"
 __version__ = "1.3.0"
+__author__ = "Peter Bierma"
 
 PyAwaitable: Type = _PyAwaitableType
 
