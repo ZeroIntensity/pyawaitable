@@ -13,7 +13,6 @@ on:
         paths-ignore:
             - 'src/_pyawaitable/**'
             - '.github/workflows/memory_leak.yml'
-
 jobs:
     memory-leaks:
         name: Check for memory leaks and errors
