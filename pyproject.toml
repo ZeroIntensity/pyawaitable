@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "pyawaitable"
 description = "Call asynchronous code from an extension module."
 authors = [
-    { name = "ZeroIntensity", email = "zintensitydev@gmail.com" },
+    { name = "Peter Bierma", email = "zintensitydev@gmail.com" },
 ]
 readme = "README.md"
 license = { file = "LICENSE" }
