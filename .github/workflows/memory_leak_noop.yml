@@ -1,6 +1,12 @@
 name: Memory Leaks (Unchanged)
 
 on:
+    push:
+        branches:
+            - master
+        paths-ignore:
+            - 'src/_pyawaitable/**'
+            - '.github/workflows/memory_leak.yml'
     pull_request:
         branches:
             - master
