@@ -1,13 +1,6 @@
 name: Tests (Unchanged)
 
 on:
-    push:
-        branches:
-            - master
-        paths-ignore:
-            - 'tests/**'
-            - 'src/**'
-            - '.github/workflows/tests.yml'
     pull_request:
         paths-ignore:
             - 'tests/**'
