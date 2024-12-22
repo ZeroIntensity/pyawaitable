@@ -9,6 +9,8 @@ on:
             - 'src/**'
             - '.github/workflows/tests.yml'
     pull_request:
+        branches:
+            - master
         paths:
             - 'tests/**'
             - 'src/**'
