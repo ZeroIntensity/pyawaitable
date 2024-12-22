@@ -2,14 +2,10 @@ name: Memory Leaks
 
 on:
     push:
-        branches:
-            - master
         paths:
             - 'src/_pyawaitable/**'
             - '.github/workflows/memory_leak.yml'
     pull_request:
-        branches:
-            - master
         paths:
             - 'src/_pyawaitable/**'
             - '.github/workflows/memory_leak.yml'

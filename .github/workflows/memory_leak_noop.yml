@@ -1,0 +1,19 @@
+name: Memory Leaks
+
+on:
+    push:
+        paths-ignore:
+            - 'src/_pyawaitable/**'
+            - '.github/workflows/memory_leak.yml'
+    pull_request:
+        paths-ignore:
+            - 'src/_pyawaitable/**'
+            - '.github/workflows/memory_leak.yml'
+
+jobs:
+    memory-leaks:
+        name: Check for memory leaks and errors
+        runs-on: ubuntu-latest
+
+        steps:
+            - run: 'echo "This change does not affect C code."'

@@ -1,0 +1,21 @@
+name: Tests
+
+on:
+    push:
+        paths:
+            - 'tests/**'
+            - 'src/**'
+            - '.github/workflows/tests.yml'
+    pull_request:
+        paths:
+            - 'tests/**'
+            - 'src/**'
+            - '.github/workflows/tests.yml'
+
+jobs:
+    run-tests:
+        name: Tests
+        runs-on: ubuntu-latest
+
+        steps:
+            - run: 'echo "This change does not affect tests."'
