@@ -5,16 +5,16 @@ on:
         branches:
             - master
         paths:
-            - 'tests/'
-            - 'src/'
-            - '.github/workflows'
+            - 'tests/**'
+            - 'src/**'
+            - '.github/workflows/tests.yml'
     pull_request:
         branches:
             - master
         paths:
-            - 'tests/'
-            - 'src/'
-            - '.github/workflows'
+            - 'tests/**'
+            - 'src/**'
+            - '.github/workflows/tests.yml'
 
 concurrency:
     group: test-${{ github.head_ref }}
