@@ -26,7 +26,7 @@ env:
     PYTHONIOENCODING: "utf8"
 
 jobs:
-    run:
+    run-tests:
         name: Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
         runs-on: ${{ matrix.os }}
         strategy:
