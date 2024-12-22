@@ -4,9 +4,17 @@ on:
     push:
         branches:
             - master
+        paths:
+            - 'tests/'
+            - 'src/'
+            - '.github/workflows'
     pull_request:
         branches:
             - master
+        paths:
+            - 'tests/'
+            - 'src/'
+            - '.github/workflows'
 
 concurrency:
     group: test-${{ github.head_ref }}
