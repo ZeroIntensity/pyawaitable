@@ -4,9 +4,17 @@ on:
     push:
         branches:
             - master
+        paths:
+            - 'tests/**'
+            - 'src/**'
+            - '.github/workflows/tests.yml'
     pull_request:
         branches:
             - master
+        paths:
+            - 'tests/**'
+            - 'src/**'
+            - '.github/workflows/tests.yml'
 
 concurrency:
     group: test-${{ github.head_ref }}
@@ -18,7 +26,7 @@ env:
     PYTHONIOENCODING: "utf8"
 
 jobs:
-    run:
+    run-tests:
         name: Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
         runs-on: ${{ matrix.os }}
         strategy:

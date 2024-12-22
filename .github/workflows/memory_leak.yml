@@ -1,12 +1,18 @@
-name: Memory Check
+name: Memory Leaks
 
 on:
     push:
         branches:
             - master
+        paths:
+            - 'src/**'
+            - '.github/workflows/memory_leak.yml'
     pull_request:
         branches:
             - master
+        paths:
+            - 'src/**'
+            - '.github/workflows/memory_leak.yml'
 
 env:
     PYTHONUNBUFFERED: "1"
@@ -14,7 +20,7 @@ env:
     PYTHONIOENCODING: "utf8"
 
 jobs:
-    run:
+    memory-leaks:
         name: Check for memory leaks and errors
         runs-on: ubuntu-latest
 
