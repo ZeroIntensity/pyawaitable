@@ -2,12 +2,12 @@ name: Tests
 
 on:
     push:
-        paths:
+        paths-ignore:
             - 'tests/**'
             - 'src/**'
             - '.github/workflows/tests.yml'
     pull_request:
-        paths:
+        paths-ignore:
             - 'tests/**'
             - 'src/**'
             - '.github/workflows/tests.yml'
@@ -18,4 +18,5 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - run: 'echo "This change does not affect tests."'
+            - name: "No-op the tests"
+              run: 'echo "This change does not affect tests."'

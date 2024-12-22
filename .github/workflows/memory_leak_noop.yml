@@ -16,4 +16,5 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - run: 'echo "This change does not affect C code."'
+            - name: "No-op the leak tests"
+              run: 'echo "This change does not affect C code."'
