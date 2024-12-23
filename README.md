@@ -2,8 +2,9 @@
 
 ## Call asynchronous code from an extension module
 
+[![Build Wheels](https://github.com/ZeroIntensity/pyawaitable/actions/workflows/build.yml/badge.svg)](https://github.com/ZeroIntensity/pyawaitable/actions/workflows/build.yml)
 ![Tests](https://github.com/ZeroIntensity/pyawaitable/actions/workflows/tests.yml/badge.svg)
-![Memory Check](https://github.com/ZeroIntensity/pyawaitable/actions/workflows/memory_check.yml/badge.svg)
+![Memory Leaks](https://github.com/ZeroIntensity/pyawaitable/actions/workflows/memory_leaks.yml/badge.svg)
 
 -   [Docs](https://awaitable.zintensity.dev)
 -   [Source](https://github.com/ZeroIntensity/pyawaitable)
