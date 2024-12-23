@@ -5,13 +5,13 @@ on:
         branches:
             - master
         paths:
-            - 'src/**'
+            - 'src/_pyawaitable/**'
             - '.github/workflows/memory_leak.yml'
     pull_request:
         branches:
             - master
         paths:
-            - 'src/**'
+            - 'src/_pyawaitable/**'
             - '.github/workflows/memory_leak.yml'
 
 env:

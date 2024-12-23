@@ -45,7 +45,6 @@ jobs:
     binary-wheels-arm:
         name: Build Linux wheels for ARM
         runs-on: ubuntu-latest
-        # Very slow, no need to run on PRs
         if: >
             github.event_name == 'push'
             &&
