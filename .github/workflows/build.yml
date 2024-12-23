@@ -6,6 +6,8 @@ on:
             - v*
         branches:
             - master
+        paths:
+            - 'src/**'
 
 concurrency:
     group: build-${{ github.head_ref }}
@@ -62,7 +64,7 @@ jobs:
                   platforms: arm64
 
             - name: Build wheels
-              uses: pypa/cibuildwheel@v2.21.3
+              uses: pypa/cibuildwheel@v2.22.0
               env:
                   CIBW_ARCHS_LINUX: aarch64
                   HATCH_BUILD_HOOKS_ENABLE: "true"
