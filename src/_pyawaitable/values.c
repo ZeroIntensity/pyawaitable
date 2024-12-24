@@ -1,90 +1,82 @@
 #include <Python.h>
-#include <pyawaitable/backport.h>
-#include <pyawaitable/values.h>
+#include <stdarg.h>
+
 #include <pyawaitable/awaitableobject.h>
-#define UNPACK(arr, tp, err, index)                                  \
-        do {                                                         \
-            assert(awaitable != NULL);                               \
-            PyAwaitableObject *aw = (PyAwaitableObject *) awaitable; \
-            Py_INCREF(awaitable);                                    \
-            if (index == 0) {                                        \
-                PyErr_SetString(                                     \
-    PyExc_ValueError,                                                \
-    "pyawaitable: awaitable object has no stored " err               \
-                );                                                   \
-                Py_DECREF(awaitable);                                \
-                return -1;                                           \
-            }                                                        \
-            va_list args;                                            \
-            va_start(args, awaitable);                               \
-            for (Py_ssize_t i = 0; i < index; ++i) {                 \
-                tp ptr = va_arg(args, tp);                           \
-                if (ptr == NULL)                                     \
-                continue;                                            \
-                *ptr = arr[i];                                       \
-            }                                                        \
-            va_end(args);                                            \
-            Py_DECREF(awaitable);                                    \
-            return 0;                                                \
-        } while (0)
+#include <pyawaitable/backport.h>
+#include <pyawaitable/array.h>
+#include <pyawaitable/values.h>
 
-#define SAVE_ERR(err)                                     \
-        "pyawaitable: " err " array has a capacity of 32" \
-        ", so storing %ld more would overflow it"         \
+#define SAVE(field, type, extra)                                   \
+        PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;   \
+        pyawaitable_array *array = &aw->field;                     \
+        va_list vargs;                                             \
+        va_start(vargs, nargs);                                    \
+        for (Py_ssize_t i = 0; i < nargs; ++i) {                   \
+            type ptr = va_arg(vargs, type);                        \
+            assert(ptr != NULL);                                   \
+            if (pyawaitable_array_append(array, (type) ptr) < 0) { \
+                PyErr_NoMemory();                                  \
+                return -1;                                         \
+            }                                                      \
+            extra;                                                 \
+        }                                                          \
+        va_end(vargs);                                             \
+        return 0
 
-#define SAVE(arr, index, tp, err, wrap)                              \
-        do {                                                         \
-            assert(awaitable != NULL);                               \
-            assert(nargs != 0);                                      \
-            Py_INCREF(awaitable);                                    \
-            PyAwaitableObject *aw = (PyAwaitableObject *) awaitable; \
-            Py_ssize_t final_size = index + nargs;                   \
-            if (final_size >= VALUE_ARRAY_SIZE) {                    \
-                PyErr_Format(                                        \
-    PyExc_SystemError,                                               \
-    SAVE_ERR(err),                                                   \
-    final_size                                                       \
-                );                                                   \
-                return -1;                                           \
-            }                                                        \
-            va_list vargs;                                           \
-            va_start(vargs, nargs);                                  \
-            for (Py_ssize_t i = index; i < final_size; ++i) {        \
-                arr[i] = wrap(va_arg(vargs, tp));                    \
-            }                                                        \
-            index += nargs;                                          \
-            va_end(vargs);                                           \
-            Py_DECREF(awaitable);                                    \
-            return 0;                                                \
-        } while (0)
-
-#define INDEX_HEAD(arr, idx, ret)                                \
-        PyAwaitableObject *aw = (PyAwaitableObject *) awaitable; \
-        if ((index >= idx) || (index < 0)) {                     \
-            PyErr_Format(                                        \
-    PyExc_IndexError,                                            \
-    "pyawaitable: index %ld out of range for %ld stored values", \
-    index,                                                       \
-    idx                                                          \
-            );                                                   \
-            return ret;                                          \
-        }
-
-
-#define NOTHING
-
-/* Normal Values */
+#define UNPACK(field, type)                                                \
+        PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;           \
+        pyawaitable_array *array = &aw->field;                             \
+        if (pyawaitable_array_LENGTH(array) == 0) {                        \
+            PyErr_SetString(                                               \
+    PyExc_SystemError,                                                     \
+    "pyawaitable: object has no stored values"                             \
+            );                                                             \
+            return -1;                                                     \
+        }                                                                  \
+        va_list vargs;                                                     \
+        va_start(vargs, awaitable);                                        \
+        for (Py_ssize_t i = 0; i < pyawaitable_array_LENGTH(array); ++i) { \
+            type *ptr = va_arg(vargs, type *);                             \
+            *ptr = pyawaitable_array_GET_ITEM(array, i);                   \
+        }                                                                  \
+        va_end(vargs);                                                     \
+        return 0
 
 int
 pyawaitable_unpack_impl(PyObject *awaitable, ...)
 {
-    UNPACK(aw->aw_values, PyObject * *, "values", aw->aw_values_index);
+    UNPACK(aw_object_values, PyObject *);
 }
 
 int
 pyawaitable_save_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
 {
-    SAVE(aw->aw_values, aw->aw_values_index, PyObject *, "values", Py_NewRef);
+    SAVE(aw_object_values, PyObject *, Py_INCREF(ptr));
+}
+
+static int
+check_index(Py_ssize_t index, pyawaitable_array *array)
+{
+    assert(array != NULL);
+    if (index < 0)
+    {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "pyawaitable: cannot set negative index"
+        );
+        return -1;
+    }
+
+    if (index >= pyawaitable_array_LENGTH(array))
+    {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "pyawaitable: cannot set index that is out of bounds"
+        );
+        return -1;
+    }
+
+    return 0;
 }
 
 int
@@ -94,8 +86,15 @@ pyawaitable_set_impl(
     PyObject *new_value
 )
 {
-    INDEX_HEAD(aw->aw_values, aw->aw_values_index, -1);
-    Py_SETREF(aw->aw_values[index], Py_NewRef(new_value));
+    assert(awaitable != NULL);
+    assert(new_value != NULL);
+    PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
+    pyawaitable_array *array = &aw->aw_object_values;
+    if (check_index(index, array) < 0)
+    {
+        return -1;
+    }
+    pyawaitable_array_set(array, index, (PyObject *)Py_NewRef(new_value));
     return 0;
 }
 
@@ -105,8 +104,14 @@ pyawaitable_get_impl(
     Py_ssize_t index
 )
 {
-    INDEX_HEAD(aw->aw_values, aw->aw_values_index, NULL);
-    return aw->aw_values[index];
+    assert(awaitable != NULL);
+    PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
+    pyawaitable_array *array = &aw->aw_object_values;
+    if (check_index(index, array) < 0)
+    {
+        return NULL;
+    }
+    return pyawaitable_array_GET_ITEM(array, index);
 }
 
 /* Arbitrary Values */
