@@ -110,7 +110,7 @@ pyawaitable_array_insert(
  * Note that this does *not* free the actual dynamic array
  * structure--use pyawaitable_array_Free() for that.
  *
- * It's safe to call pyawaitable_array_Init() or InitWithSize() again
+ * It's safe to call pyawaitable_array_init() or init_with_size() again
  * on the array after calling this.
  */
 void pyawaitable_array_clear(pyawaitable_array *array);
@@ -148,7 +148,7 @@ pyawaitable_array_pop(pyawaitable_array *array, Py_ssize_t index);
  * Clear all the fields on a dynamic array, and then
  * free the dynamic array structure itself.
  *
- * The array must have been created by pyawaitable_array_New()
+ * The array must have been created by pyawaitable_array_new()
  */
 static inline void
 pyawaitable_array_free(pyawaitable_array *array)
