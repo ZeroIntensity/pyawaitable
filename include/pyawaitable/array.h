@@ -40,6 +40,17 @@ typedef struct
 } pyawaitable_array;
 
 
+/* Zero out the array */
+static inline void
+pyawaitable_array_ZERO(pyawaitable_array *array)
+{
+    assert(array != NULL);
+    array->deallocator = NULL;
+    array->items = NULL;
+    array->length = 0;
+    array->capacity = 0;
+}
+
 static inline void
 pyawaitable_array_ASSERT_VALID(pyawaitable_array *array)
 {

@@ -32,26 +32,30 @@ gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     return (PyObject *) g;
 }
 
+static int
+genwrapper_traverse(PyObject *self, visitproc visit, void *arg)
+{
+    GenWrapperObject *gw = (GenWrapperObject *) self;
+    Py_VISIT(gw->gw_current_await);
+    Py_VISIT(gw->gw_aw);
+    return 0;
+}
+
+static int
+genwrapper_clear(PyObject *self)
+{
+    GenWrapperObject *gw = (GenWrapperObject *) self;
+    Py_CLEAR(gw->gw_current_await);
+    Py_CLEAR(gw->gw_aw);
+    return 0;
+}
+
 static void
 gen_dealloc(PyObject *self)
 {
     GenWrapperObject *g = (GenWrapperObject *) self;
-    if (g->gw_current_await != NULL)
-    {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "sanity check: gw_current_await was not cleared!"
-        );
-        PyErr_WriteUnraisable(self);
-    }
-    if (g->gw_aw != NULL)
-    {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "sanity check: gw_aw was not cleared!"
-        );
-        PyErr_WriteUnraisable(self);
-    }
+    (void)genwrapper_clear(self);
+    PyObject_GC_UnTrack(self);
     Py_TYPE(self)->tp_free(self);
 }
 
@@ -110,6 +114,25 @@ genwrapper_fire_err_callback(
     return 0;
 }
 
+// XXX Refactor to pop off the list?
+static inline pyawaitable_callback *
+genwrapper_peek(GenWrapperObject *gw)
+{
+    return pyawaitable_array_GET_ITEM(
+        &gw->gw_aw->aw_callbacks,
+        gw->gw_aw->aw_state
+    );
+}
+
+static inline pyawaitable_callback *
+genwrapper_advance(GenWrapperObject *gw)
+{
+    return pyawaitable_array_GET_ITEM(
+        &gw->gw_aw->aw_callbacks,
+        gw->gw_aw->aw_state
+    );
+}
+
 PyObject *
 genwrapper_next(PyObject *self)
 {
@@ -126,19 +149,11 @@ genwrapper_next(PyObject *self)
     }
 
     pyawaitable_callback *cb;
-    if (aw->aw_state == CALLBACK_ARRAY_SIZE)
-    {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "pyawaitable: object cannot handle more than 255 coroutines"
-        );
-        AW_DONE();
-        return NULL;
-    }
 
     if (g->gw_current_await == NULL)
     {
-        if (aw->aw_callbacks[aw->aw_state].coro == NULL)
+
+        if (genwrapper_peek(g)->coro == NULL)
         {
             PyErr_SetObject(
                 PyExc_StopIteration,
@@ -148,7 +163,7 @@ genwrapper_next(PyObject *self)
             return NULL;
         }
 
-        cb = &aw->aw_callbacks[aw->aw_state++];
+        cb = genwrapper_advance(g);
 
         if (
             Py_TYPE(cb->coro)->tp_as_async == NULL ||
@@ -188,7 +203,7 @@ genwrapper_next(PyObject *self)
         }
     } else
     {
-        cb = &aw->aw_callbacks[aw->aw_state - 1];
+        cb = pyawaitable_array_GET_ITEM(&aw->aw_callbacks, aw->aw_state - 1);
     }
 
     PyObject *result = Py_TYPE(
@@ -314,8 +329,10 @@ PyTypeObject _PyAwaitableGenWrapperType =
     .tp_name = "_genwrapper",
     .tp_basicsize = sizeof(GenWrapperObject),
     .tp_dealloc = gen_dealloc,
-    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .tp_iter = PyObject_SelfIter,
     .tp_iternext = genwrapper_next,
+    .tp_clear = genwrapper_clear,
+    .tp_traverse = genwrapper_traverse,
     .tp_new = gen_new,
 };

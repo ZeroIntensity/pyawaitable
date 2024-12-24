@@ -21,10 +21,10 @@ struct _PyAwaitableObject
 {
     PyObject_HEAD
 
-    pyawaitable_array callbacks;
-    pyawaitable_array object_values;
-    pyawaitable_array arbitrary_values;
-    pyawaitable_array integer_values;
+    pyawaitable_array aw_callbacks;
+    pyawaitable_array aw_object_values;
+    pyawaitable_array aw_arbitrary_values;
+    pyawaitable_array aw_integer_values;
 
     /* Index of current callback */
     Py_ssize_t aw_state;
@@ -67,10 +67,5 @@ pyawaitable_await_function_impl(
     awaitcallback_err err,
     ...
 );
-
-int
-alloc_awaitable_pool(void);
-void
-dealloc_awaitable_pool(void);
 
 #endif

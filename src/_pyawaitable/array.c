@@ -55,7 +55,7 @@ resize_if_needed(pyawaitable_array *array)
 }
 
 int
-pyawaitable_array_Append(pyawaitable_array *array, void *item)
+pyawaitable_array_append(pyawaitable_array *array, void *item)
 {
     pyawaitable_array_ASSERT_VALID(array);
     array->items[array->length++] = item;

@@ -34,19 +34,36 @@ awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     }
 
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
-    aw->aw_state = 0;
-    aw->aw_awaited = false;
-    aw->aw_done = false;
-    aw->aw_gen = NULL;
-    aw->aw_result = NULL;
+    memset(aw, 0, sizeof(PyAwaitableObject));
 
-    if (pyawaitable_array_init(&aw->callbacks, callback_dealloc) < 0)
+    if (pyawaitable_array_init(&aw->aw_callbacks, callback_dealloc) < 0)
     {
-        PyErr_NoMemory();
-        return NULL;
+        goto error;
+    }
+
+    if (pyawaitable_array_init(
+        &aw->aw_object_values,
+        (pyawaitable_array_deallocator) Py_DecRef
+        ) < 0)
+    {
+        goto error;
+    }
+
+    if (pyawaitable_array_init(&aw->aw_arbitrary_values, NULL) < 0)
+    {
+        goto error;
+    }
+
+    if (pyawaitable_array_init(&aw->aw_integer_values, NULL) < 0)
+    {
+        goto error;
     }
 
     return (PyObject *) aw;
+error:
+    PyErr_NoMemory();
+    Py_DECREF(self);
+    return NULL;
 }
 
 PyObject *
@@ -71,7 +88,10 @@ static void
 awaitable_dealloc(PyObject *self)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *)self;
-    pyawaitable_array_clear(&aw->callbacks);
+    if (aw->aw_callbacks.items != NULL)
+    {
+        pyawaitable_array_clear(&aw->aw_callbacks);
+    }
 
     Py_XDECREF(aw->aw_gen);
     Py_XDECREF(aw->aw_result);
@@ -94,48 +114,53 @@ awaitable_dealloc(PyObject *self)
 }
 
 void
-pyawaitable_cancel_impl(PyObject *aw)
+pyawaitable_cancel_impl(PyObject *self)
 {
-    assert(aw != NULL);
-    PyAwaitableObject *a = (PyAwaitableObject *) aw;
-
-    for (int i = 0; i < CALLBACK_ARRAY_SIZE; ++i)
+    assert(self != NULL);
+    PyAwaitableObject *aw = (PyAwaitableObject *) self;
+    for (Py_ssize_t i = 0; i < pyawaitable_array_LENGTH(&aw->aw_callbacks);
+         ++i)
     {
-        pyawaitable_callback *cb = &a->aw_callbacks[i];
-        if (!cb)
+        pyawaitable_callback *cb =
+            pyawaitable_array_GET_ITEM(&aw->aw_callbacks, i);
+        if (cb == NULL)
+        {
             break;
+        }
 
-        // Reset the callback
-        Py_CLEAR(cb->coro);
-        cb->done = false;
-        cb->callback = NULL;
-        cb->err_callback = NULL;
+        Py_XDECREF(cb->coro);
+        memset(cb, 0, sizeof(pyawaitable_callback));
     }
 }
 
 int
 pyawaitable_await_impl(
-    PyObject *aw,
+    PyObject *self,
     PyObject *coro,
     awaitcallback cb,
     awaitcallback_err err
 )
 {
-    PyAwaitableObject *a = (PyAwaitableObject *) aw;
-    if (a->aw_callback_index == CALLBACK_ARRAY_SIZE)
+    PyAwaitableObject *aw = (PyAwaitableObject *) self;
+
+    pyawaitable_callback *aw_c = PyMem_Malloc(sizeof(pyawaitable_callback));
+    if (aw_c == NULL)
     {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "pyawaitable: awaitable object cannot store more than 128 coroutines"
-        );
+        PyErr_NoMemory();
         return -1;
     }
 
-    pyawaitable_callback *aw_c = &a->aw_callbacks[a->aw_callback_index++];
     aw_c->coro = Py_NewRef(coro);
     aw_c->callback = cb;
     aw_c->err_callback = err;
     aw_c->done = false;
+
+    if (pyawaitable_array_append(&aw->aw_callbacks, aw_c) < 0)
+    {
+        PyMem_Free(aw_c);
+        PyErr_NoMemory();
+        return -1;
+    }
 
     return 0;
 }
@@ -151,9 +176,8 @@ pyawaitable_set_result_impl(PyObject *awaitable, PyObject *result)
 PyObject *
 pyawaitable_new_impl(void)
 {
-    PyObject *aw = awaitable_new_func(&_PyAwaitableType, NULL, NULL);
-    ((PyAwaitableObject *) aw)->aw_used = true;
-    return aw;
+    // XXX Use a freelist?
+    return awaitable_new_func(&_PyAwaitableType, NULL, NULL);
 }
 
 int

@@ -83,7 +83,8 @@ awaitable_throw(PyObject *self, PyObject *args)
     if ((aw->aw_gen != NULL) && (aw->aw_state != 0))
     {
         GenWrapperObject *gw = (GenWrapperObject *)aw->aw_gen;
-        pyawaitable_callback *cb = &aw->aw_callbacks[aw->aw_state - 1];
+        pyawaitable_callback *cb =
+            pyawaitable_array_GET_ITEM(&aw->aw_callbacks, aw->aw_state - 1);
         if (cb == NULL)
             return NULL;
 
