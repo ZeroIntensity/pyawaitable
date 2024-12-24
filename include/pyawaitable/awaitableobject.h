@@ -4,10 +4,10 @@
 #include <Python.h>
 #include <stdbool.h>
 
+#include <pyawaitable/array.h>
+
 typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *);
-#define CALLBACK_ARRAY_SIZE 128
-#define VALUE_ARRAY_SIZE 32
 
 typedef struct _pyawaitable_callback
 {
@@ -21,30 +21,20 @@ struct _PyAwaitableObject
 {
     PyObject_HEAD
 
-    // Callbacks
-    pyawaitable_callback aw_callbacks[CALLBACK_ARRAY_SIZE];
-    Py_ssize_t aw_callback_index;
+    pyawaitable_array callbacks;
+    pyawaitable_array object_values;
+    pyawaitable_array arbitrary_values;
+    pyawaitable_array integer_values;
 
-    // Stored Values
-    PyObject *aw_values[VALUE_ARRAY_SIZE];
-    Py_ssize_t aw_values_index;
-
-    // Arbitrary Values
-    void *aw_arb_values[VALUE_ARRAY_SIZE];
-    Py_ssize_t aw_arb_values_index;
-
-    // Integer Values
-    long aw_int_values[VALUE_ARRAY_SIZE];
-    Py_ssize_t aw_int_values_index;
-
-    // Awaitable State
+    /* Index of current callback */
     Py_ssize_t aw_state;
+    /* Is the awaitable done? */
     bool aw_done;
+    /* Was the awaitable awaited? */
     bool aw_awaited;
-    bool aw_used;
-
-    // Misc
+    /* Strong reference to the result of the coroutine. */
     PyObject *aw_result;
+    /* Strong reference to the genwrapper. */
     PyObject *aw_gen;
 };
 

@@ -1,18 +1,25 @@
 #include <Python.h>
-#include <pyawaitable/backport.h>
-#include <pyawaitable/awaitableobject.h>
-#include <pyawaitable/genwrapper.h>
-#include <pyawaitable/coro.h>
 #include <stdlib.h>
-#define AWAITABLE_POOL_SIZE 256
+
+#include <pyawaitable/array.h>
+#include <pyawaitable/awaitableobject.h>
+#include <pyawaitable/backport.h>
+#include <pyawaitable/coro.h>
+#include <pyawaitable/genwrapper.h>
 
 PyDoc_STRVAR(
     awaitable_doc,
     "Awaitable transport utility for the C API."
 );
 
-static Py_ssize_t pool_index = 0;
-static PyObject *pool[AWAITABLE_POOL_SIZE];
+static void
+callback_dealloc(void *ptr)
+{
+    assert(ptr != NULL);
+    pyawaitable_callback *cb = (pyawaitable_callback *) ptr;
+    Py_DECREF(cb->coro);
+    PyMem_Free(cb);
+}
 
 static PyObject *
 awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
@@ -27,9 +34,17 @@ awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     }
 
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
+    aw->aw_state = 0;
     aw->aw_awaited = false;
     aw->aw_done = false;
-    aw->aw_used = false;
+    aw->aw_gen = NULL;
+    aw->aw_result = NULL;
+
+    if (pyawaitable_array_init(&aw->callbacks, callback_dealloc) < 0)
+    {
+        PyErr_NoMemory();
+        return NULL;
+    }
 
     return (PyObject *) aw;
 }
@@ -56,37 +71,12 @@ static void
 awaitable_dealloc(PyObject *self)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *)self;
-    for (Py_ssize_t i = 0; i < aw->aw_values_index; ++i)
-    {
-        if (!aw->aw_values[i])
-            break;
-        Py_DECREF(aw->aw_values[i]);
-    }
+    pyawaitable_array_clear(&aw->callbacks);
 
     Py_XDECREF(aw->aw_gen);
     Py_XDECREF(aw->aw_result);
 
-    for (int i = 0; i < CALLBACK_ARRAY_SIZE; ++i)
-    {
-        pyawaitable_callback *cb = &aw->aw_callbacks[i];
-        if (cb == NULL)
-            break;
-
-        if (cb->done)
-        {
-            if (cb->coro != NULL)
-            {
-                PyErr_SetString(
-                    PyExc_SystemError,
-                    "sanity check: coro was not cleared"
-                );
-                PyErr_WriteUnraisable(self);
-            }
-        } else
-            Py_XDECREF(cb->coro);
-    }
-
-    if (!aw->aw_done && aw->aw_used)
+    if (!aw->aw_done)
     {
         if (
             PyErr_WarnEx(
@@ -161,51 +151,9 @@ pyawaitable_set_result_impl(PyObject *awaitable, PyObject *result)
 PyObject *
 pyawaitable_new_impl(void)
 {
-    if (pool_index == AWAITABLE_POOL_SIZE)
-    {
-        PyObject *aw = awaitable_new_func(&_PyAwaitableType, NULL, NULL);
-        ((PyAwaitableObject *) aw)->aw_used = true;
-        return aw;
-    }
-
-    PyObject *pool_obj = pool[pool_index++];
-    ((PyAwaitableObject *) pool_obj)->aw_used = true;
-    return pool_obj;
-}
-
-void
-dealloc_awaitable_pool(void)
-{
-    for (Py_ssize_t i = pool_index; i < AWAITABLE_POOL_SIZE; ++i)
-    {
-        if (Py_REFCNT(pool[i]) != 1)
-        {
-            PyErr_Format(
-                PyExc_SystemError,
-                "expected %R to have a reference count of 1",
-                pool[i]
-            );
-            PyErr_WriteUnraisable(NULL);
-        }
-        Py_DECREF(pool[i]);
-    }
-}
-
-int
-alloc_awaitable_pool(void)
-{
-    for (Py_ssize_t i = 0; i < AWAITABLE_POOL_SIZE; ++i)
-    {
-        pool[i] = awaitable_new_func(&_PyAwaitableType, NULL, NULL);
-        if (!pool[i])
-        {
-            for (Py_ssize_t x = 0; x < i; ++x)
-                Py_DECREF(pool[x]);
-            return -1;
-        }
-    }
-
-    return 0;
+    PyObject *aw = awaitable_new_func(&_PyAwaitableType, NULL, NULL);
+    ((PyAwaitableObject *) aw)->aw_used = true;
+    return aw;
 }
 
 int
