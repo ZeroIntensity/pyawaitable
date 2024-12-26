@@ -93,7 +93,7 @@ awaitable_throw(PyObject *self, PyObject *args)
     } else
         return NULL;
 
-    assert(NULL);
+    Py_UNREACHABLE();
 }
 
 #if PY_MINOR_VERSION > 9
@@ -120,7 +120,6 @@ awaitable_am_send(PyObject *self, PyObject *arg, PyObject **presult)
         *presult = NULL;
         return PYGEN_ERROR;
     }
-    PyAwaitableObject *aw = (PyAwaitableObject *)self;
     *presult = send_res;
 
     return PYGEN_NEXT;

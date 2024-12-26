@@ -62,7 +62,7 @@
         PyAwaitableObject *aw = (PyAwaitableObject *) awaitable; \
         pyawaitable_array *array = &aw->field;                   \
         if (check_index(index, array) < 0) {                     \
-            return NULL;                                         \
+            return (type)NULL;                                   \
         }                                                        \
         return (type)pyawaitable_array_GET_ITEM(array, index)
 
