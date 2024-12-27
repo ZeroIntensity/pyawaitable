@@ -29,8 +29,6 @@ gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     g->gw_aw = NULL;
     g->gw_current_await = NULL;
 
-    PyObject_GC_Track(self);
-
     return (PyObject *) g;
 }
 
@@ -55,8 +53,8 @@ genwrapper_clear(PyObject *self)
 static void
 gen_dealloc(PyObject *self)
 {
-    (void)genwrapper_clear(self);
     PyObject_GC_UnTrack(self);
+    (void)genwrapper_clear(self);
     Py_TYPE(self)->tp_free(self);
 }
 
@@ -154,7 +152,7 @@ genwrapper_next(PyObject *self)
     if (g->gw_current_await == NULL)
     {
 
-        if (genwrapper_peek(g)->coro == NULL)
+        if (genwrapper_peek(g) == NULL)
         {
             PyErr_SetObject(
                 PyExc_StopIteration,
