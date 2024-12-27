@@ -34,17 +34,22 @@ awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     }
 
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
-    memset(aw, 0, sizeof(PyAwaitableObject));
+    aw->aw_gen = NULL;
+    aw->aw_done = false;
+    aw->aw_state = 0;
+    aw->aw_result = NULL;
 
     if (pyawaitable_array_init(&aw->aw_callbacks, callback_dealloc) < 0)
     {
         goto error;
     }
 
-    if (pyawaitable_array_init(
-        &aw->aw_object_values,
-        (pyawaitable_array_deallocator) Py_DecRef
-        ) < 0)
+    if (
+        pyawaitable_array_init(
+            &aw->aw_object_values,
+            (pyawaitable_array_deallocator) Py_DecRef
+        ) < 0
+    )
     {
         goto error;
     }
@@ -59,7 +64,7 @@ awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
         goto error;
     }
 
-    return (PyObject *) aw;
+    return self;
 error:
     PyErr_NoMemory();
     Py_DECREF(self);
@@ -118,8 +123,10 @@ pyawaitable_cancel_impl(PyObject *self)
 {
     assert(self != NULL);
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
-    for (Py_ssize_t i = 0; i < pyawaitable_array_LENGTH(&aw->aw_callbacks);
-         ++i)
+    for (
+        Py_ssize_t i = 0; i < pyawaitable_array_LENGTH(&aw->aw_callbacks);
+        ++i
+    )
     {
         pyawaitable_callback *cb =
             pyawaitable_array_GET_ITEM(&aw->aw_callbacks, i);
