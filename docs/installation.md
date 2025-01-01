@@ -195,7 +195,7 @@ The complete mapping of names to their Python API counterparts are:
 
 Using precompiled headers in a large C extension project is supported, just replace `PYAWAITABLE_THIS_FILE_INIT` with `PYAWAITABLE_USE_PCH` **BEFORE** including your precompiled header file in every source file.
 
-After that inside of the precompiled header file right after it includes `pyawaitable.h` add this line:
+After that inside of the precompiled header file right after including `pyawaitable.h` add this line:
 
 ```c
 DECLARE_PYAWAITABLE_ABI;
