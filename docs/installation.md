@@ -193,9 +193,9 @@ The complete mapping of names to their Python API counterparts are:
 
 ## Using Precompiled Headers with PyAwaitable
 
-Using precompiled headers in a large C extension project is supported, just replace `PYAWAITABLE_THIS_FILE_INIT` with `PYAWAITABLE_USE_PCH` ***BEFORE*** including your precompiled header file in every source file.
+Using precompiled headers in a large C extension project is supported, just replace `PYAWAITABLE_THIS_FILE_INIT` with `PYAWAITABLE_USE_PCH` **BEFORE** including your precompiled header file in every source file.
 
-After that in each non-module init C file this should be done ***AFTER*** including your precompiled header file:
+After that in each non-module init C file this should be done **AFTER** including your precompiled header file:
 
 ```c
 DECLARE_PYAWAITABLE_ABI;
@@ -213,7 +213,7 @@ And then finally after the include of `pch.h` inside of `pch.c` (`pch` is placeh
 DECLARE_PYAWAITABLE_ABI = NULL;
 ```
 
-After that all logic from the example code from `test.c` still applies.
+After that, all logic from the example code in `test.c` still applies.
 
 ## Vendored Copies
 
