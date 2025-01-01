@@ -201,11 +201,16 @@ After that in each non-module init C file this should be done ***AFTER*** includ
 DECLARE_PYAWAITABLE_ABI;
 ```
 
-And in the source file with the module initialization code:
+In the source file with the module initialization code:
+
+```c
+PYAWAITABLE_INIT_DEF;
+```
+
+And then finally after the include of `pch.h` inside of `pch.c` (`pch` is placeholder name for the precompiled header):
 
 ```c
 DECLARE_PYAWAITABLE_ABI = NULL;
-PYAWAITABLE_INIT_DEF;
 ```
 
 After that all logic from the example code from `test.c` still applies.
