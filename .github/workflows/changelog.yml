@@ -1,0 +1,23 @@
+name: Changelog Update
+on:
+  pull_request:
+    types:
+      - "opened"
+      - "reopened"
+      - "synchronize"
+      - "labeled"
+      - "unlabeled"
+
+jobs:
+  changelog_check:
+    runs-on: ubuntu-latest
+    name: Check for changelog updates
+    steps:
+      - name: "Check for changelog updates"
+        uses: brettcannon/check-for-changed-files@v1
+        with:
+          file-pattern: |
+            CHANGELOG.md
+          skip-label: "skip changelog"
+          failure-message: "Missing a CHANGELOG.md update; please add one or apply the ${skip-label} label to the pull request"
+
