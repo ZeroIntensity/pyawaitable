@@ -149,7 +149,7 @@ async def test_await_cb_err_norestore():
 @pytest.mark.asyncio
 async def test_a_lot_of_coroutines():
     awaitable = abi.new()
-    amount = 100
+    amount = 500
 
     awaited = 0
     called = 0
