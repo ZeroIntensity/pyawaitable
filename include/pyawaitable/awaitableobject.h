@@ -36,6 +36,8 @@ struct _PyAwaitableObject
     PyObject *aw_result;
     /* Strong reference to the genwrapper. */
     PyObject *aw_gen;
+    /* Set to 1 if the object was cancelled, for introspection against callbacks */
+    int aw_recently_cancelled;
 };
 
 typedef struct _PyAwaitableObject PyAwaitableObject;

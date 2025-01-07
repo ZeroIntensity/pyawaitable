@@ -12,6 +12,10 @@
             aw->aw_done = true; \
             Py_CLEAR(g->gw_aw); \
         } while (0)
+#define DONE_IF_OK(cb)    \
+        if (cb != NULL) { \
+            DONE(cb);     \
+        }
 
 static PyObject *
 gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
@@ -78,22 +82,20 @@ genwrapper_new(PyAwaitableObject *aw)
 int
 genwrapper_fire_err_callback(
     PyObject *self,
-    pyawaitable_callback *cb
+    awaitcallback_err err_callback
 )
 {
     assert(PyErr_Occurred() != NULL);
-    if (!cb->err_callback)
+    if (err_callback == NULL)
     {
-        cb->done = true;
         return -1;
     }
 
     PyObject *err = PyErr_GetRaisedException();
 
     Py_INCREF(self);
-    int e_res = cb->err_callback(self, err);
+    int e_res = err_callback(self, err);
     Py_DECREF(self);
-    cb->done = true;
 
     if (e_res < 0)
     {
@@ -103,8 +105,9 @@ genwrapper_fire_err_callback(
         {
             PyErr_SetRaisedException(err);
         } else
+        {
             Py_DECREF(err);
-
+        }
         return -1;
     }
 
@@ -187,16 +190,16 @@ genwrapper_next(PyObject *self)
             if (
                 genwrapper_fire_err_callback(
                     (PyObject *)aw,
-                    cb
+                    cb->err_callback
                 ) < 0
             )
             {
-                DONE(cb);
+                DONE_IF_OK(cb);
                 AW_DONE();
                 return NULL;
             }
 
-            DONE(cb);
+            DONE_IF_OK(cb);
             return genwrapper_next(self);
         }
     } else
@@ -234,7 +237,7 @@ genwrapper_next(PyObject *self)
         if (
             genwrapper_fire_err_callback(
                 (PyObject *) aw,
-                cb
+                cb->err_callback
             ) < 0
         )
         {
@@ -278,22 +281,24 @@ genwrapper_next(PyObject *self)
         value = Py_NewRef(Py_None);
     }
 
-    /* To protect us from cancellation of the callbacks, we store
-     * a copy of the current callback in a stack allocation. */
-    pyawaitable_callback stack_cb;
-    memcpy(&stack_cb, cb, sizeof(pyawaitable_callback));
-    cb = &stack_cb;
-
+    // Preserve the error callback in case we get cancelled
+    awaitcallback_err err_callback = cb->err_callback;
     Py_INCREF(aw);
     int res = cb->callback((PyObject *) aw, value);
     Py_DECREF(aw);
     Py_DECREF(value);
 
+    // If we recently cancelled, then cb is no longer valid
+    if (aw->aw_recently_cancelled)
+    {
+        cb = NULL;
+    }
+
     if (res < -1)
     {
         // -2 or lower denotes that the error should be deferred,
         // regardless of whether a handler is present.
-        DONE(cb);
+        DONE_IF_OK(cb);
         AW_DONE();
         return NULL;
     }
@@ -313,17 +318,17 @@ genwrapper_next(PyObject *self)
         if (
             genwrapper_fire_err_callback(
                 (PyObject *) aw,
-                cb
+                err_callback
             ) < 0
         )
         {
-            DONE(cb);
+            DONE_IF_OK(cb);
             AW_DONE();
             return NULL;
         }
     }
 
-    DONE(cb);
+    DONE_IF_OK(cb);
     return genwrapper_next(self);
 }
 

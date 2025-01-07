@@ -6,6 +6,7 @@ call_deallocator_maybe(pyawaitable_array *array, Py_ssize_t index)
     if (array->deallocator != NULL && array->items[index] != NULL)
     {
         array->deallocator(array->items[index]);
+        array->items[index] = NULL;
     }
 }
 

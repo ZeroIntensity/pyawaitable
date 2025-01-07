@@ -17,7 +17,7 @@ callback_dealloc(void *ptr)
 {
     assert(ptr != NULL);
     pyawaitable_callback *cb = (pyawaitable_callback *) ptr;
-    Py_XDECREF(cb->coro);
+    Py_CLEAR(cb->coro);
     PyMem_Free(cb);
 }
 
@@ -38,6 +38,7 @@ awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     aw->aw_done = false;
     aw->aw_state = 0;
     aw->aw_result = NULL;
+    aw->aw_recently_cancelled = 0;
 
     if (pyawaitable_array_init(&aw->aw_callbacks, callback_dealloc) < 0)
     {
@@ -130,6 +131,8 @@ pyawaitable_cancel_impl(PyObject *self)
         GenWrapperObject *gw = (GenWrapperObject *)aw->aw_gen;
         Py_CLEAR(gw->gw_current_await);
     }
+
+    aw->aw_recently_cancelled = 1;
 }
 
 int
