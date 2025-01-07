@@ -94,10 +94,15 @@ static void
 awaitable_dealloc(PyObject *self)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *)self;
-    if (aw->aw_callbacks.items != NULL)
-    {
-        pyawaitable_array_clear(&aw->aw_callbacks);
-    }
+#define CLEAR_IF_NON_NULL(array)             \
+        if (array.items != NULL) {           \
+            pyawaitable_array_clear(&array); \
+        }
+    CLEAR_IF_NON_NULL(aw->aw_callbacks);
+    CLEAR_IF_NON_NULL(aw->aw_object_values);
+    CLEAR_IF_NON_NULL(aw->aw_arbitrary_values);
+    CLEAR_IF_NON_NULL(aw->aw_integer_values);
+#undef CLEAR_IF_NON_NULL
 
     Py_XDECREF(aw->aw_gen);
     Py_XDECREF(aw->aw_result);
