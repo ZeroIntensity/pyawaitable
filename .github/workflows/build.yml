@@ -16,6 +16,7 @@ concurrency:
 env:
     CIBW_SKIP: >
         pp*
+    PYAWAITABLE_OPTIMIZED: 1
 
 jobs:
     binary-wheels-standard:

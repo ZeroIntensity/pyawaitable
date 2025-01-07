@@ -128,7 +128,7 @@ genwrapper_advance(GenWrapperObject *gw)
 {
     return pyawaitable_array_GET_ITEM(
         &gw->gw_aw->aw_callbacks,
-        gw->gw_aw->aw_state
+        gw->gw_aw->aw_state++
     );
 }
 

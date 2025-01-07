@@ -24,6 +24,7 @@ env:
     PYTHONUNBUFFERED: "1"
     FORCE_COLOR: "1"
     PYTHONIOENCODING: "utf8"
+    PYAWAITABLE_OPTIMIZED: 1
 
 jobs:
     run-tests:

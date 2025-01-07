@@ -17,7 +17,7 @@ callback_dealloc(void *ptr)
 {
     assert(ptr != NULL);
     pyawaitable_callback *cb = (pyawaitable_callback *) ptr;
-    Py_DECREF(cb->coro);
+    Py_XDECREF(cb->coro);
     PyMem_Free(cb);
 }
 

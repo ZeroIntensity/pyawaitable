@@ -1,6 +1,7 @@
 from glob import glob
 
 from setuptools import Extension, setup
+import os
 
 if __name__ == "__main__":
     setup(
@@ -12,7 +13,7 @@ if __name__ == "__main__":
                 "_pyawaitable",
                 glob("./src/_pyawaitable/*.c"),
                 include_dirs=["./include/", "./src/pyawaitable/"],
-                extra_compile_args=["-g", "-O3"],
+                extra_compile_args=["-g", "-O3" if os.environ.get("PYAWAITABLE_OPTIMIZED") else "-O0"],
             )
         ],
         package_dir={"": "src"},
