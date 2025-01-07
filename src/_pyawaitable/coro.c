@@ -12,7 +12,9 @@ awaitable_send_with_arg(PyObject *self, PyObject *value)
     {
         PyObject *gen = awaitable_next(self);
         if (gen == NULL)
+        {
             return NULL;
+        }
 
         Py_DECREF(gen);
         Py_RETURN_NONE;
@@ -27,7 +29,9 @@ awaitable_send(PyObject *self, PyObject *args)
     PyObject *value;
 
     if (!PyArg_ParseTuple(args, "O", &value))
+    {
         return NULL;
+    }
 
     return awaitable_send_with_arg(self, value);
 }
@@ -65,19 +69,23 @@ awaitable_throw(PyObject *self, PyObject *args)
         }
 
         if (traceback)
+        {
             if (PyException_SetTraceback(err, traceback) < 0)
             {
                 Py_DECREF(err);
                 return NULL;
             }
+        }
 
         PyErr_Restore(err, NULL, NULL);
     } else
+    {
         PyErr_Restore(
             Py_NewRef(type),
             Py_XNewRef(value),
             Py_XNewRef(traceback)
         );
+    }
 
     PyAwaitableObject *aw = (PyAwaitableObject *)self;
     if ((aw->aw_gen != NULL) && (aw->aw_state != 0))
@@ -86,12 +94,18 @@ awaitable_throw(PyObject *self, PyObject *args)
         pyawaitable_callback *cb =
             pyawaitable_array_GET_ITEM(&aw->aw_callbacks, aw->aw_state - 1);
         if (cb == NULL)
+        {
             return NULL;
+        }
 
-        if (genwrapper_fire_err_callback(self, gw->gw_current_await, cb) < 0)
+        if (genwrapper_fire_err_callback(self, cb) < 0)
+        {
             return NULL;
+        }
     } else
+    {
         return NULL;
+    }
 
     Py_UNREACHABLE();
 }

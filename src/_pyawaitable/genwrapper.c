@@ -78,7 +78,6 @@ genwrapper_new(PyAwaitableObject *aw)
 int
 genwrapper_fire_err_callback(
     PyObject *self,
-    PyObject *await,
     pyawaitable_callback *cb
 )
 {
@@ -113,16 +112,6 @@ genwrapper_fire_err_callback(
     return 0;
 }
 
-// XXX Refactor to pop off the list?
-static inline pyawaitable_callback *
-genwrapper_peek(GenWrapperObject *gw)
-{
-    return pyawaitable_array_GET_ITEM(
-        &gw->gw_aw->aw_callbacks,
-        gw->gw_aw->aw_state
-    );
-}
-
 static inline pyawaitable_callback *
 genwrapper_advance(GenWrapperObject *gw)
 {
@@ -141,7 +130,7 @@ genwrapper_next(PyObject *self)
     if (!aw)
     {
         PyErr_SetString(
-            PyExc_SystemError,
+            PyExc_RuntimeError,
             "pyawaitable: genwrapper used after return"
         );
         return NULL;
@@ -151,8 +140,7 @@ genwrapper_next(PyObject *self)
 
     if (g->gw_current_await == NULL)
     {
-
-        if (genwrapper_peek(g) == NULL)
+        if (pyawaitable_array_LENGTH(&aw->aw_callbacks) == aw->aw_state)
         {
             PyErr_SetObject(
                 PyExc_StopIteration,
@@ -163,6 +151,18 @@ genwrapper_next(PyObject *self)
         }
 
         cb = genwrapper_advance(g);
+        assert(cb != NULL);
+        assert(cb->done == false);
+        assert(cb->coro != NULL);
+
+        if (cb->coro == NULL)
+        {
+            printf(
+                "len: %ld, state: %ld\n",
+                pyawaitable_array_LENGTH(&aw->aw_callbacks),
+                aw->aw_state
+            );
+        }
 
         if (
             Py_TYPE(cb->coro)->tp_as_async == NULL ||
@@ -187,7 +187,6 @@ genwrapper_next(PyObject *self)
             if (
                 genwrapper_fire_err_callback(
                     (PyObject *)aw,
-                    g->gw_current_await,
                     cb
                 ) < 0
             )
@@ -211,6 +210,7 @@ genwrapper_next(PyObject *self)
 
     if (result != NULL)
     {
+        // Yield!
         return result;
     }
 
@@ -234,7 +234,6 @@ genwrapper_next(PyObject *self)
         if (
             genwrapper_fire_err_callback(
                 (PyObject *) aw,
-                g->gw_current_await,
                 cb
             ) < 0
         )
@@ -257,6 +256,7 @@ genwrapper_next(PyObject *self)
         return genwrapper_next(self);
     }
 
+    // Deduce the return value of the coroutine
     PyObject *value;
     if (occurred)
     {
@@ -278,6 +278,12 @@ genwrapper_next(PyObject *self)
         value = Py_NewRef(Py_None);
     }
 
+    /* To protect us from cancellation of the callbacks, we store
+     * a copy of the current callback in a stack allocation. */
+    pyawaitable_callback stack_cb;
+    memcpy(&stack_cb, cb, sizeof(pyawaitable_callback));
+    cb = &stack_cb;
+
     Py_INCREF(aw);
     int res = cb->callback((PyObject *) aw, value);
     Py_DECREF(aw);
@@ -297,8 +303,8 @@ genwrapper_next(PyObject *self)
         if (!PyErr_Occurred())
         {
             PyErr_SetString(
-                PyExc_SystemError,
-                "pyawaitable: callback returned -1 without exception set"
+                PyExc_RuntimeError,
+                "pyawaitable: user callback returned -1 without exception set"
             );
             DONE(cb);
             AW_DONE();
@@ -307,7 +313,6 @@ genwrapper_next(PyObject *self)
         if (
             genwrapper_fire_err_callback(
                 (PyObject *) aw,
-                g->gw_current_await,
                 cb
             ) < 0
         )

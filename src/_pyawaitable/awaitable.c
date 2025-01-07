@@ -123,20 +123,12 @@ pyawaitable_cancel_impl(PyObject *self)
 {
     assert(self != NULL);
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
-    for (
-        Py_ssize_t i = 0; i < pyawaitable_array_LENGTH(&aw->aw_callbacks);
-        ++i
-    )
+    pyawaitable_array_clear_items(&aw->aw_callbacks);
+    aw->aw_state = 0;
+    if (aw->aw_gen != NULL)
     {
-        pyawaitable_callback *cb =
-            pyawaitable_array_GET_ITEM(&aw->aw_callbacks, i);
-        if (cb == NULL)
-        {
-            break;
-        }
-
-        Py_XDECREF(cb->coro);
-        memset(cb, 0, sizeof(pyawaitable_callback));
+        GenWrapperObject *gw = (GenWrapperObject *)aw->aw_gen;
+        Py_CLEAR(gw->gw_current_await);
     }
 }
 

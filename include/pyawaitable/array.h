@@ -62,8 +62,8 @@ static inline void
 pyawaitable_array_ASSERT_INDEX(pyawaitable_array *array, Py_ssize_t index)
 {
     // Ensure the index is valid
-    assert(index >= 0);
     assert(index < array->length);
+    assert(index >= 0);
 }
 
 /*
@@ -103,6 +103,9 @@ pyawaitable_array_insert(
     void *item
 );
 
+/* Remove all items from the array. */
+void
+pyawaitable_array_clear_items(pyawaitable_array *array);
 
 /*
  * Clear all the fields on the array.

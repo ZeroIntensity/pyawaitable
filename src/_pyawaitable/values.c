@@ -30,7 +30,7 @@
         pyawaitable_array *array = &aw->field;                             \
         if (pyawaitable_array_LENGTH(array) == 0) {                        \
             PyErr_SetString(                                               \
-    PyExc_SystemError,                                                     \
+    PyExc_RuntimeError,                                                    \
     "pyawaitable: object has no stored values"                             \
             );                                                             \
             return -1;                                                     \
@@ -73,7 +73,7 @@ check_index(Py_ssize_t index, pyawaitable_array *array)
     if (index < 0)
     {
         PyErr_SetString(
-            PyExc_SystemError,
+            PyExc_IndexError,
             "pyawaitable: cannot set negative index"
         );
         return -1;
@@ -82,7 +82,7 @@ check_index(Py_ssize_t index, pyawaitable_array *array)
     if (index >= pyawaitable_array_LENGTH(array))
     {
         PyErr_SetString(
-            PyExc_SystemError,
+            PyExc_IndexError,
             "pyawaitable: cannot set index that is out of bounds"
         );
         return -1;

@@ -134,13 +134,23 @@ pyawaitable_array_pop(pyawaitable_array *array, Py_ssize_t index)
 }
 
 void
-pyawaitable_array_clear(pyawaitable_array *array)
+pyawaitable_array_clear_items(pyawaitable_array *array)
 {
     pyawaitable_array_ASSERT_VALID(array);
     for (Py_ssize_t i = 0; i < array->length; ++i)
     {
         call_deallocator_maybe(array, i);
+        array->items[i] = NULL;
     }
+
+    array->length = 0;
+}
+
+void
+pyawaitable_array_clear(pyawaitable_array *array)
+{
+    pyawaitable_array_ASSERT_VALID(array);
+    pyawaitable_array_clear_items(array);
     PyMem_Free(array->items);
 
     // It would be nice if others could reuse the allocation for another
