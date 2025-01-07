@@ -94,7 +94,7 @@ async def test_await_cb_noerr():
 
     add_await(awaitable, coro(), cb, awaitcallback_err(0))
 
-    with pytest.raises(SystemError):
+    with pytest.raises(RuntimeError):
         await awaitable
 
 
