@@ -12,6 +12,10 @@
             aw->aw_done = true; \
             Py_CLEAR(g->gw_aw); \
         } while (0)
+#define DONE_IF_OK(cb)    \
+        if (cb != NULL) { \
+            DONE(cb);     \
+        }
 
 static PyObject *
 gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
@@ -32,26 +36,29 @@ gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     return (PyObject *) g;
 }
 
+static int
+genwrapper_traverse(PyObject *self, visitproc visit, void *arg)
+{
+    GenWrapperObject *gw = (GenWrapperObject *) self;
+    Py_VISIT(gw->gw_current_await);
+    Py_VISIT(gw->gw_aw);
+    return 0;
+}
+
+static int
+genwrapper_clear(PyObject *self)
+{
+    GenWrapperObject *gw = (GenWrapperObject *) self;
+    Py_CLEAR(gw->gw_current_await);
+    Py_CLEAR(gw->gw_aw);
+    return 0;
+}
+
 static void
 gen_dealloc(PyObject *self)
 {
-    GenWrapperObject *g = (GenWrapperObject *) self;
-    if (g->gw_current_await != NULL)
-    {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "sanity check: gw_current_await was not cleared!"
-        );
-        PyErr_WriteUnraisable(self);
-    }
-    if (g->gw_aw != NULL)
-    {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "sanity check: gw_aw was not cleared!"
-        );
-        PyErr_WriteUnraisable(self);
-    }
+    PyObject_GC_UnTrack(self);
+    (void)genwrapper_clear(self);
     Py_TYPE(self)->tp_free(self);
 }
 
@@ -75,23 +82,20 @@ genwrapper_new(PyAwaitableObject *aw)
 int
 genwrapper_fire_err_callback(
     PyObject *self,
-    PyObject *await,
-    pyawaitable_callback *cb
+    awaitcallback_err err_callback
 )
 {
     assert(PyErr_Occurred() != NULL);
-    if (!cb->err_callback)
+    if (err_callback == NULL)
     {
-        cb->done = true;
         return -1;
     }
 
     PyObject *err = PyErr_GetRaisedException();
 
     Py_INCREF(self);
-    int e_res = cb->err_callback(self, err);
+    int e_res = err_callback(self, err);
     Py_DECREF(self);
-    cb->done = true;
 
     if (e_res < 0)
     {
@@ -101,13 +105,23 @@ genwrapper_fire_err_callback(
         {
             PyErr_SetRaisedException(err);
         } else
+        {
             Py_DECREF(err);
-
+        }
         return -1;
     }
 
     Py_DECREF(err);
     return 0;
+}
+
+static inline pyawaitable_callback *
+genwrapper_advance(GenWrapperObject *gw)
+{
+    return pyawaitable_array_GET_ITEM(
+        &gw->gw_aw->aw_callbacks,
+        gw->gw_aw->aw_state++
+    );
 }
 
 PyObject *
@@ -119,26 +133,17 @@ genwrapper_next(PyObject *self)
     if (!aw)
     {
         PyErr_SetString(
-            PyExc_SystemError,
+            PyExc_RuntimeError,
             "pyawaitable: genwrapper used after return"
         );
         return NULL;
     }
 
     pyawaitable_callback *cb;
-    if (aw->aw_state == CALLBACK_ARRAY_SIZE)
-    {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "pyawaitable: object cannot handle more than 255 coroutines"
-        );
-        AW_DONE();
-        return NULL;
-    }
 
     if (g->gw_current_await == NULL)
     {
-        if (aw->aw_callbacks[aw->aw_state].coro == NULL)
+        if (pyawaitable_array_LENGTH(&aw->aw_callbacks) == aw->aw_state)
         {
             PyErr_SetObject(
                 PyExc_StopIteration,
@@ -148,7 +153,19 @@ genwrapper_next(PyObject *self)
             return NULL;
         }
 
-        cb = &aw->aw_callbacks[aw->aw_state++];
+        cb = genwrapper_advance(g);
+        assert(cb != NULL);
+        assert(cb->done == false);
+        assert(cb->coro != NULL);
+
+        if (cb->coro == NULL)
+        {
+            printf(
+                "len: %ld, state: %ld\n",
+                pyawaitable_array_LENGTH(&aw->aw_callbacks),
+                aw->aw_state
+            );
+        }
 
         if (
             Py_TYPE(cb->coro)->tp_as_async == NULL ||
@@ -173,22 +190,21 @@ genwrapper_next(PyObject *self)
             if (
                 genwrapper_fire_err_callback(
                     (PyObject *)aw,
-                    g->gw_current_await,
-                    cb
+                    cb->err_callback
                 ) < 0
             )
             {
-                DONE(cb);
+                DONE_IF_OK(cb);
                 AW_DONE();
                 return NULL;
             }
 
-            DONE(cb);
+            DONE_IF_OK(cb);
             return genwrapper_next(self);
         }
     } else
     {
-        cb = &aw->aw_callbacks[aw->aw_state - 1];
+        cb = pyawaitable_array_GET_ITEM(&aw->aw_callbacks, aw->aw_state - 1);
     }
 
     PyObject *result = Py_TYPE(
@@ -197,6 +213,7 @@ genwrapper_next(PyObject *self)
 
     if (result != NULL)
     {
+        // Yield!
         return result;
     }
 
@@ -220,8 +237,7 @@ genwrapper_next(PyObject *self)
         if (
             genwrapper_fire_err_callback(
                 (PyObject *) aw,
-                g->gw_current_await,
-                cb
+                cb->err_callback
             ) < 0
         )
         {
@@ -243,6 +259,7 @@ genwrapper_next(PyObject *self)
         return genwrapper_next(self);
     }
 
+    // Deduce the return value of the coroutine
     PyObject *value;
     if (occurred)
     {
@@ -264,16 +281,24 @@ genwrapper_next(PyObject *self)
         value = Py_NewRef(Py_None);
     }
 
+    // Preserve the error callback in case we get cancelled
+    awaitcallback_err err_callback = cb->err_callback;
     Py_INCREF(aw);
     int res = cb->callback((PyObject *) aw, value);
     Py_DECREF(aw);
     Py_DECREF(value);
 
+    // If we recently cancelled, then cb is no longer valid
+    if (aw->aw_recently_cancelled)
+    {
+        cb = NULL;
+    }
+
     if (res < -1)
     {
         // -2 or lower denotes that the error should be deferred,
         // regardless of whether a handler is present.
-        DONE(cb);
+        DONE_IF_OK(cb);
         AW_DONE();
         return NULL;
     }
@@ -283,8 +308,8 @@ genwrapper_next(PyObject *self)
         if (!PyErr_Occurred())
         {
             PyErr_SetString(
-                PyExc_SystemError,
-                "pyawaitable: callback returned -1 without exception set"
+                PyExc_RuntimeError,
+                "pyawaitable: user callback returned -1 without exception set"
             );
             DONE(cb);
             AW_DONE();
@@ -293,18 +318,17 @@ genwrapper_next(PyObject *self)
         if (
             genwrapper_fire_err_callback(
                 (PyObject *) aw,
-                g->gw_current_await,
-                cb
+                err_callback
             ) < 0
         )
         {
-            DONE(cb);
+            DONE_IF_OK(cb);
             AW_DONE();
             return NULL;
         }
     }
 
-    DONE(cb);
+    DONE_IF_OK(cb);
     return genwrapper_next(self);
 }
 
@@ -314,8 +338,10 @@ PyTypeObject _PyAwaitableGenWrapperType =
     .tp_name = "_genwrapper",
     .tp_basicsize = sizeof(GenWrapperObject),
     .tp_dealloc = gen_dealloc,
-    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .tp_iter = PyObject_SelfIter,
     .tp_iternext = genwrapper_next,
+    .tp_clear = genwrapper_clear,
+    .tp_traverse = genwrapper_traverse,
     .tp_new = gen_new,
 };

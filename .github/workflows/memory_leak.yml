@@ -18,6 +18,7 @@ env:
     PYTHONUNBUFFERED: "1"
     FORCE_COLOR: "1"
     PYTHONIOENCODING: "utf8"
+    PYTHONMALLOC: malloc
 
 jobs:
     memory-leaks:

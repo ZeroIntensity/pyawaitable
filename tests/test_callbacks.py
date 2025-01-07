@@ -94,7 +94,7 @@ async def test_await_cb_noerr():
 
     add_await(awaitable, coro(), cb, awaitcallback_err(0))
 
-    with pytest.raises(SystemError):
+    with pytest.raises(RuntimeError):
         await awaitable
 
 
@@ -144,3 +144,31 @@ async def test_await_cb_err_norestore():
         await awaitable
 
     assert called is True
+
+@limit_leaks
+@pytest.mark.asyncio
+async def test_a_lot_of_coroutines():
+    awaitable = abi.new()
+    amount = 500
+
+    awaited = 0
+    called = 0
+
+    async def coro():
+        await asyncio.sleep(0)
+        nonlocal awaited
+        awaited += 1
+
+    @awaitcallback
+    def callback(awaitable: pyawaitable.PyAwaitable, result: None) -> int:
+        assert result is None
+        nonlocal called
+        called += 1
+        return 0
+    
+    for _ in range(amount):
+        add_await(awaitable, coro(), callback, awaitcallback_err(0))
+
+    await awaitable
+    assert called == amount
+    assert awaited == amount

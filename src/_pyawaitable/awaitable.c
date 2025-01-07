@@ -1,18 +1,25 @@
 #include <Python.h>
-#include <pyawaitable/backport.h>
-#include <pyawaitable/awaitableobject.h>
-#include <pyawaitable/genwrapper.h>
-#include <pyawaitable/coro.h>
 #include <stdlib.h>
-#define AWAITABLE_POOL_SIZE 256
+
+#include <pyawaitable/array.h>
+#include <pyawaitable/awaitableobject.h>
+#include <pyawaitable/backport.h>
+#include <pyawaitable/coro.h>
+#include <pyawaitable/genwrapper.h>
 
 PyDoc_STRVAR(
     awaitable_doc,
     "Awaitable transport utility for the C API."
 );
 
-static Py_ssize_t pool_index = 0;
-static PyObject *pool[AWAITABLE_POOL_SIZE];
+static void
+callback_dealloc(void *ptr)
+{
+    assert(ptr != NULL);
+    pyawaitable_callback *cb = (pyawaitable_callback *) ptr;
+    Py_CLEAR(cb->coro);
+    PyMem_Free(cb);
+}
 
 static PyObject *
 awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
@@ -27,11 +34,42 @@ awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     }
 
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
-    aw->aw_awaited = false;
+    aw->aw_gen = NULL;
     aw->aw_done = false;
-    aw->aw_used = false;
+    aw->aw_state = 0;
+    aw->aw_result = NULL;
+    aw->aw_recently_cancelled = 0;
 
-    return (PyObject *) aw;
+    if (pyawaitable_array_init(&aw->aw_callbacks, callback_dealloc) < 0)
+    {
+        goto error;
+    }
+
+    if (
+        pyawaitable_array_init(
+            &aw->aw_object_values,
+            (pyawaitable_array_deallocator) Py_DecRef
+        ) < 0
+    )
+    {
+        goto error;
+    }
+
+    if (pyawaitable_array_init(&aw->aw_arbitrary_values, NULL) < 0)
+    {
+        goto error;
+    }
+
+    if (pyawaitable_array_init(&aw->aw_integer_values, NULL) < 0)
+    {
+        goto error;
+    }
+
+    return self;
+error:
+    PyErr_NoMemory();
+    Py_DECREF(self);
+    return NULL;
 }
 
 PyObject *
@@ -56,37 +94,20 @@ static void
 awaitable_dealloc(PyObject *self)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *)self;
-    for (Py_ssize_t i = 0; i < aw->aw_values_index; ++i)
-    {
-        if (!aw->aw_values[i])
-            break;
-        Py_DECREF(aw->aw_values[i]);
-    }
+#define CLEAR_IF_NON_NULL(array)             \
+        if (array.items != NULL) {           \
+            pyawaitable_array_clear(&array); \
+        }
+    CLEAR_IF_NON_NULL(aw->aw_callbacks);
+    CLEAR_IF_NON_NULL(aw->aw_object_values);
+    CLEAR_IF_NON_NULL(aw->aw_arbitrary_values);
+    CLEAR_IF_NON_NULL(aw->aw_integer_values);
+#undef CLEAR_IF_NON_NULL
 
     Py_XDECREF(aw->aw_gen);
     Py_XDECREF(aw->aw_result);
 
-    for (int i = 0; i < CALLBACK_ARRAY_SIZE; ++i)
-    {
-        pyawaitable_callback *cb = &aw->aw_callbacks[i];
-        if (cb == NULL)
-            break;
-
-        if (cb->done)
-        {
-            if (cb->coro != NULL)
-            {
-                PyErr_SetString(
-                    PyExc_SystemError,
-                    "sanity check: coro was not cleared"
-                );
-                PyErr_WriteUnraisable(self);
-            }
-        } else
-            Py_XDECREF(cb->coro);
-    }
-
-    if (!aw->aw_done && aw->aw_used)
+    if (!aw->aw_done)
     {
         if (
             PyErr_WarnEx(
@@ -104,48 +125,49 @@ awaitable_dealloc(PyObject *self)
 }
 
 void
-pyawaitable_cancel_impl(PyObject *aw)
+pyawaitable_cancel_impl(PyObject *self)
 {
-    assert(aw != NULL);
-    PyAwaitableObject *a = (PyAwaitableObject *) aw;
-
-    for (int i = 0; i < CALLBACK_ARRAY_SIZE; ++i)
+    assert(self != NULL);
+    PyAwaitableObject *aw = (PyAwaitableObject *) self;
+    pyawaitable_array_clear_items(&aw->aw_callbacks);
+    aw->aw_state = 0;
+    if (aw->aw_gen != NULL)
     {
-        pyawaitable_callback *cb = &a->aw_callbacks[i];
-        if (!cb)
-            break;
-
-        // Reset the callback
-        Py_CLEAR(cb->coro);
-        cb->done = false;
-        cb->callback = NULL;
-        cb->err_callback = NULL;
+        GenWrapperObject *gw = (GenWrapperObject *)aw->aw_gen;
+        Py_CLEAR(gw->gw_current_await);
     }
+
+    aw->aw_recently_cancelled = 1;
 }
 
 int
 pyawaitable_await_impl(
-    PyObject *aw,
+    PyObject *self,
     PyObject *coro,
     awaitcallback cb,
     awaitcallback_err err
 )
 {
-    PyAwaitableObject *a = (PyAwaitableObject *) aw;
-    if (a->aw_callback_index == CALLBACK_ARRAY_SIZE)
+    PyAwaitableObject *aw = (PyAwaitableObject *) self;
+
+    pyawaitable_callback *aw_c = PyMem_Malloc(sizeof(pyawaitable_callback));
+    if (aw_c == NULL)
     {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "pyawaitable: awaitable object cannot store more than 128 coroutines"
-        );
+        PyErr_NoMemory();
         return -1;
     }
 
-    pyawaitable_callback *aw_c = &a->aw_callbacks[a->aw_callback_index++];
     aw_c->coro = Py_NewRef(coro);
     aw_c->callback = cb;
     aw_c->err_callback = err;
     aw_c->done = false;
+
+    if (pyawaitable_array_append(&aw->aw_callbacks, aw_c) < 0)
+    {
+        PyMem_Free(aw_c);
+        PyErr_NoMemory();
+        return -1;
+    }
 
     return 0;
 }
@@ -161,51 +183,8 @@ pyawaitable_set_result_impl(PyObject *awaitable, PyObject *result)
 PyObject *
 pyawaitable_new_impl(void)
 {
-    if (pool_index == AWAITABLE_POOL_SIZE)
-    {
-        PyObject *aw = awaitable_new_func(&_PyAwaitableType, NULL, NULL);
-        ((PyAwaitableObject *) aw)->aw_used = true;
-        return aw;
-    }
-
-    PyObject *pool_obj = pool[pool_index++];
-    ((PyAwaitableObject *) pool_obj)->aw_used = true;
-    return pool_obj;
-}
-
-void
-dealloc_awaitable_pool(void)
-{
-    for (Py_ssize_t i = pool_index; i < AWAITABLE_POOL_SIZE; ++i)
-    {
-        if (Py_REFCNT(pool[i]) != 1)
-        {
-            PyErr_Format(
-                PyExc_SystemError,
-                "expected %R to have a reference count of 1",
-                pool[i]
-            );
-            PyErr_WriteUnraisable(NULL);
-        }
-        Py_DECREF(pool[i]);
-    }
-}
-
-int
-alloc_awaitable_pool(void)
-{
-    for (Py_ssize_t i = 0; i < AWAITABLE_POOL_SIZE; ++i)
-    {
-        pool[i] = awaitable_new_func(&_PyAwaitableType, NULL, NULL);
-        if (!pool[i])
-        {
-            for (Py_ssize_t x = 0; x < i; ++x)
-                Py_DECREF(pool[x]);
-            return -1;
-        }
-    }
-
-    return 0;
+    // XXX Use a freelist?
+    return awaitable_new_func(&_PyAwaitableType, NULL, NULL);
 }
 
 int
