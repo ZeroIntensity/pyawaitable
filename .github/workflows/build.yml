@@ -14,8 +14,7 @@ concurrency:
     cancel-in-progress: true
 
 env:
-    CIBW_SKIP: >
-        pp*
+    CIBW_BUILD: cp3{9,10,11,12,13}-*
     PYAWAITABLE_OPTIMIZED: 1
 
 jobs:
