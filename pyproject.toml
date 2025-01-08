@@ -21,6 +21,7 @@ classifiers = [
 ]
 dependencies = []
 dynamic = ["version"]
+requires-python = ">=3.9"
 
 [project.urls]
 Documentation = "https://awaitable.zintensity.dev"
