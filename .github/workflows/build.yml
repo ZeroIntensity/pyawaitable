@@ -8,14 +8,18 @@ on:
             - master
         paths:
             - 'src/**'
+    pull_request:
+        branches:
+            - master
+        paths:
+            - '.github/workflows/build.yml'
 
 concurrency:
     group: build-${{ github.head_ref }}
     cancel-in-progress: true
 
 env:
-    CIBW_SKIP: >
-        pp*
+    CIBW_BUILD: cp3{9,10,11,12,13}-*
     PYAWAITABLE_OPTIMIZED: 1
 
 jobs:
