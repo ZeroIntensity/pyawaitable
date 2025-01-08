@@ -1,8 +1,4 @@
-#include <Python.h>
-#include <pyawaitable/backport.h>
-#include <pyawaitable/awaitableobject.h>
-#include <pyawaitable/genwrapper.h>
-#include <stdlib.h>
+#include <pyawaitable/_pyawaitable.h>
 #define DONE(cb)                 \
         do { cb->done = true;    \
              Py_CLEAR(cb->coro); \

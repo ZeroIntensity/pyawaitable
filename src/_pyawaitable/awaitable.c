@@ -1,11 +1,4 @@
-#include <Python.h>
-#include <stdlib.h>
-
-#include <pyawaitable/array.h>
-#include <pyawaitable/awaitableobject.h>
-#include <pyawaitable/backport.h>
-#include <pyawaitable/coro.h>
-#include <pyawaitable/genwrapper.h>
+#include <pyawaitable/_pyawaitable.h>
 
 PyDoc_STRVAR(
     awaitable_doc,

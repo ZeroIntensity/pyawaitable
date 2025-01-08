@@ -22,3 +22,6 @@ build/
 test.py
 a.py
 vgcore*
+
+# Other Visual Studio stuff.
+pcbuild/

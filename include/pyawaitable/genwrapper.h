@@ -1,9 +1,6 @@
 #ifndef PYAWAITABLE_GENWRAPPER_H
 #define PYAWAITABLE_GENWRAPPER_H
 
-#include <Python.h>
-#include <pyawaitable/awaitableobject.h>
-
 extern PyTypeObject _PyAwaitableGenWrapperType;
 
 typedef struct _GenWrapperObject

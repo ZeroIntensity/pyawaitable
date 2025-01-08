@@ -1,11 +1,6 @@
 #ifndef PYAWAITABLE_AWAITABLE_H
 #define PYAWAITABLE_AWAITABLE_H
 
-#include <Python.h>
-#include <stdbool.h>
-
-#include <pyawaitable/array.h>
-
 typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *);
 

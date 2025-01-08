@@ -1,9 +1,6 @@
 #ifndef PYAWAITABLE_ARRAY_H
 #define PYAWAITABLE_ARRAY_H
 
-#include <Python.h>
-#include <stdlib.h>
-
 #define pyawaitable_array_DEFAULT_SIZE 16
 
 /*
