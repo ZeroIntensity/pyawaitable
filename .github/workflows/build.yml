@@ -8,6 +8,11 @@ on:
             - master
         paths:
             - 'src/**'
+    pull_request:
+        branches:
+            - master
+        paths:
+            - '.github/workflows/memory_leak.yml'
 
 concurrency:
     group: build-${{ github.head_ref }}
