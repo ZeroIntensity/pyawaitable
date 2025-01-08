@@ -53,16 +53,13 @@ awaitable_throw(PyObject *self, PyObject *args)
     PyObject *traceback = NULL;
 
     if (!PyArg_ParseTuple(args, "O|OO", &type, &value, &traceback))
+    {
         return NULL;
+    }
 
     if (PyType_Check(type))
     {
-        PyObject *err = PyObject_Vectorcall(
-            type,
-            (PyObject *[]){value},
-            1,
-            NULL
-        );
+        PyObject *err = PyObject_CallOneArg(type, value);
         if (err == NULL)
         {
             return NULL;
@@ -107,7 +104,8 @@ awaitable_throw(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    Py_UNREACHABLE();
+    assert(PyErr_Occurred());
+    return NULL;
 }
 
 #if PY_MINOR_VERSION > 9
