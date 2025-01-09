@@ -22,6 +22,7 @@ env:
 
 jobs:
   changes:
+    name: Check for changed files
     runs-on: ubuntu-latest
     outputs:
       source: ${{ steps.filter.outputs.source }}
@@ -82,7 +83,13 @@ jobs:
       - name: Set up Python 3.12
         uses: actions/setup-python@v2
         with:
-          python-version: 3.12            
+          python-version: 3.12
+
+      - name: Install Pytest
+        run: |
+            pip install pytest pytest-asyncio pytest-memray typing_extensions
+        shell: bash
+
       - name: Build PyAwaitable
         run: pip install .
 
