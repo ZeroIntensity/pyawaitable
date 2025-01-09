@@ -4,7 +4,6 @@
 
 [![Build Wheels](https://github.com/ZeroIntensity/pyawaitable/actions/workflows/build.yml/badge.svg)](https://github.com/ZeroIntensity/pyawaitable/actions/workflows/build.yml)
 ![Tests](https://github.com/ZeroIntensity/pyawaitable/actions/workflows/tests.yml/badge.svg)
-![Memory Leak](https://github.com/ZeroIntensity/pyawaitable/actions/workflows/memory_leak.yml/badge.svg)
 
 -   [Docs](https://awaitable.zintensity.dev)
 -   [Source](https://github.com/ZeroIntensity/pyawaitable)
