@@ -177,6 +177,7 @@ async def test_a_lot_of_coroutines():
 @limit_leaks
 @pytest.mark.asyncio
 async def test_deferred_await():
+    called = 0
     awaitable = abi.new()
 
     async def coro(value: int):
@@ -187,12 +188,17 @@ async def test_deferred_await():
     def cb(awaitable_inner: pyawaitable.PyAwaitable, result: int) -> int:
         assert awaitable_inner is awaitable
         assert result == 42
+        nonlocal called
+        called += 1
         return 0
 
     @defer_callback
     def defer_cb(awaitable: pyawaitable.PyAwaitable):
+        nonlocal called
+        called += 1
         add_await(awaitable, coro(21), cb, awaitcallback_err(0))
         return 0
 
     defer_await(awaitable, defer_cb)
     await awaitable
+    assert called == 2
