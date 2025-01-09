@@ -1,5 +1,4 @@
-#include <Python.h>
-#include <pyawaitable/backport.h>
+#include <pyawaitable/_pyawaitable.h>
 
 #ifdef PYAWAITABLE_NEEDS_VECTORCALL
 PyObject *

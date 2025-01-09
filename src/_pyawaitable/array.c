@@ -1,4 +1,4 @@
-#include <pyawaitable/array.h>
+#include <pyawaitable/_pyawaitable.h>
 
 static inline void
 call_deallocator_maybe(pyawaitable_array *array, Py_ssize_t index)

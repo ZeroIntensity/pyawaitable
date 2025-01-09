@@ -1,9 +1,4 @@
-#include <pyawaitable.h>
-#include <pyawaitable/awaitableobject.h>
-#include <pyawaitable/coro.h>
-#include <pyawaitable/values.h>
-#include <pyawaitable/genwrapper.h>
-#include <pyawaitable/with.h>
+#include <pyawaitable/_pyawaitable.h>
 #define ADD_TYPE(tp)                                               \
         do                                                         \
         {                                                          \

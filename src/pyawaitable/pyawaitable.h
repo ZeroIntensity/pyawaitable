@@ -58,6 +58,7 @@ typedef struct _pyawaitable_abi
         defer_callback cb);
 } PyAwaitableABI;
 
+#ifndef PYAWAITABLE_BEING_BUILT
 #ifdef PYAWAITABLE_THIS_FILE_INIT
 PyAwaitableABI *pyawaitable_abi = NULL;
 #else
@@ -160,5 +161,6 @@ pyawaitable_vendor_init(PyObject *mod)
     );
     return -1;
 }
+#endif
 
 #endif

@@ -1,9 +1,8 @@
 #ifndef PYAWAITABLE_BACKPORT_H
 #define PYAWAITABLE_BACKPORT_H
 
-#include <Python.h>
-
-#ifndef _PyObject_Vectorcall
+/* assume after Python 3.11 that PyObject_Vectorcall is always available even in the (stable) limited API. */
+#if !defined(_PyObject_Vectorcall) && PY_VERSION_HEX < 0x030C0000
 #define PYAWAITABLE_NEEDS_VECTORCALL
 PyObject *_PyObject_VectorcallBackport(
     PyObject *obj,

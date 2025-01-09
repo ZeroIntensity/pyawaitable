@@ -1,8 +1,6 @@
 #ifndef PYAWAITABLE_VALUES_H
 #define PYAWAITABLE_VALUES_H
 
-#include <Python.h> // PyObject, Py_ssize_t
-
 #define SAVE(name) int name(PyObject * awaitable, Py_ssize_t nargs, ...)
 #define UNPACK(name) int name(PyObject * awaitable, ...)
 #define SET(name, tp)     \

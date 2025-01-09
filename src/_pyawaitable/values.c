@@ -1,10 +1,4 @@
-#include <Python.h>
-#include <stdarg.h>
-
-#include <pyawaitable/awaitableobject.h>
-#include <pyawaitable/backport.h>
-#include <pyawaitable/array.h>
-#include <pyawaitable/values.h>
+#include <pyawaitable/_pyawaitable.h>
 
 #define NOTHING
 

@@ -1,8 +1,4 @@
-#include <Python.h>
-#include <pyawaitable/backport.h>
-#include <pyawaitable/awaitableobject.h>
-#include <pyawaitable/genwrapper.h>
-#include <pyawaitable/coro.h>
+#include <pyawaitable/_pyawaitable.h>
 
 static PyObject *
 awaitable_send_with_arg(PyObject *self, PyObject *value)

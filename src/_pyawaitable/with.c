@@ -1,7 +1,4 @@
-#include <Python.h>
-#include <pyawaitable/backport.h>
-#include <pyawaitable/awaitableobject.h>
-#include <pyawaitable/values.h>
+#include <pyawaitable/_pyawaitable.h>
 
 static int
 async_with_inner(PyObject *aw, PyObject *res)
