@@ -5,7 +5,8 @@ from conftest import limit_leaks, raising_callback, raising_err_callback
 
 import pyawaitable
 from pyawaitable.bindings import (abi, add_await, awaitcallback,
-                                  awaitcallback_err)
+                                  awaitcallback_err, defer_callback,
+                                  defer_await)
 
 
 @limit_leaks
@@ -172,3 +173,26 @@ async def test_a_lot_of_coroutines():
     await awaitable
     assert called == amount
     assert awaited == amount
+
+@limit_leaks
+@pytest.mark.asyncio
+async def test_deferred_await():
+    awaitable = abi.new()
+
+    async def coro(value: int):
+        await asyncio.sleep(0)
+        return value * 2
+
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.PyAwaitable, result: int) -> int:
+        assert awaitable_inner is awaitable
+        assert result == 42
+        return 0
+
+    @defer_callback
+    def defer_cb(awaitable: pyawaitable.PyAwaitable):
+        add_await(awaitable, coro(21), cb, awaitcallback_err(0))
+        return 0
+
+    defer_await(awaitable, defer_cb)
+    await awaitable
