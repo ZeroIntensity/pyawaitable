@@ -92,19 +92,19 @@ check_index(Py_ssize_t index, pyawaitable_array *array)
 }
 
 int
-pyawaitable_unpack_impl(PyObject *awaitable, ...)
+pyawaitable_unpack(PyObject *awaitable, ...)
 {
     UNPACK(aw_object_values, PyObject *);
 }
 
 int
-pyawaitable_save_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
+pyawaitable_save(PyObject *awaitable, Py_ssize_t nargs, ...)
 {
     SAVE(aw_object_values, PyObject *, Py_INCREF(ptr));
 }
 
 int
-pyawaitable_set_impl(
+pyawaitable_set(
     PyObject *awaitable,
     Py_ssize_t index,
     PyObject *new_value
@@ -114,7 +114,7 @@ pyawaitable_set_impl(
 }
 
 PyObject *
-pyawaitable_get_impl(
+pyawaitable_get(
     PyObject *awaitable,
     Py_ssize_t index
 )
@@ -125,19 +125,19 @@ pyawaitable_get_impl(
 /* Arbitrary Values */
 
 int
-pyawaitable_unpack_arb_impl(PyObject *awaitable, ...)
+pyawaitable_unpack_arb(PyObject *awaitable, ...)
 {
     UNPACK(aw_arbitrary_values, void *);
 }
 
 int
-pyawaitable_save_arb_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
+pyawaitable_save_arb(PyObject *awaitable, Py_ssize_t nargs, ...)
 {
     SAVE(aw_arbitrary_values, void *, NOTHING);
 }
 
 int
-pyawaitable_set_arb_impl(
+pyawaitable_set_arb(
     PyObject *awaitable,
     Py_ssize_t index,
     void *new_value
@@ -147,7 +147,7 @@ pyawaitable_set_arb_impl(
 }
 
 void *
-pyawaitable_get_arb_impl(
+pyawaitable_get_arb(
     PyObject *awaitable,
     Py_ssize_t index
 )
@@ -158,19 +158,19 @@ pyawaitable_get_arb_impl(
 /* Integer Values */
 
 int
-pyawaitable_unpack_int_impl(PyObject *awaitable, ...)
+pyawaitable_unpack_int(PyObject *awaitable, ...)
 {
     UNPACK(aw_integer_values, long);
 }
 
 int
-pyawaitable_save_int_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
+pyawaitable_save_int(PyObject *awaitable, Py_ssize_t nargs, ...)
 {
     SAVE(aw_integer_values, long, NOTHING);
 }
 
 int
-pyawaitable_set_int_impl(
+pyawaitable_set_int(
     PyObject *awaitable,
     Py_ssize_t index,
     long new_value
@@ -180,7 +180,7 @@ pyawaitable_set_int_impl(
 }
 
 long
-pyawaitable_get_int_impl(
+pyawaitable_get_int(
     PyObject *awaitable,
     Py_ssize_t index
 )

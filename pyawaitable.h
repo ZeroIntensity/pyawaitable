@@ -392,10 +392,10 @@ typedef struct _PyAwaitableObject PyAwaitableObject;
 PyTypeObject PyAwaitableType;
 
 _PyAwaitable_API(int)
-pyawaitable_set_result_impl(PyObject * awaitable, PyObject * result);
+pyawaitable_set_result(PyObject * awaitable, PyObject * result);
 
 _PyAwaitable_API(int)
-pyawaitable_await_impl(
+pyawaitable_await(
     PyObject * aw,
     PyObject * coro,
     awaitcallback cb,
@@ -403,16 +403,16 @@ pyawaitable_await_impl(
 );
 
 _PyAwaitable_API(void)
-pyawaitable_cancel_impl(PyObject * aw);
+pyawaitable_cancel(PyObject * aw);
 
 _PyAwaitable_INTERNAL(PyObject *)
 __PyAwaitable_Internal_awaitable_next(PyObject * self);
 
 _PyAwaitable_API(PyObject *)
-pyawaitable_new_impl(void);
+pyawaitable_new(void);
 
 _PyAwaitable_API(int)
-pyawaitable_await_function_impl(
+pyawaitable_await_function(
     PyObject * awaitable,
     PyObject * func,
     const char *fmt,
@@ -470,24 +470,24 @@ __PyAwaitable_Internal_genwrapper_new(PyAwaitableObject * aw);
 
 // Normal values
 
-SAVE(pyawaitable_save_impl);
-UNPACK(pyawaitable_unpack_impl);
-SET(pyawaitable_set_impl, PyObject *);
-GET(pyawaitable_get_impl, PyObject *);
+SAVE(pyawaitable_save);
+UNPACK(pyawaitable_unpack);
+SET(pyawaitable_set, PyObject *);
+GET(pyawaitable_get, PyObject *);
 
 // Arbitrary values
 
-SAVE(pyawaitable_save_arb_impl);
-UNPACK(pyawaitable_unpack_arb_impl);
-SET(pyawaitable_set_arb_impl, void *);
-GET(pyawaitable_get_arb_impl, void *);
+SAVE(pyawaitable_save_arb);
+UNPACK(pyawaitable_unpack_arb);
+SET(pyawaitable_set_arb, void *);
+GET(pyawaitable_get_arb, void *);
 
 // Integer values
 
-SAVE(pyawaitable_save_int_impl);
-UNPACK(pyawaitable_unpack_int_impl);
-SET(pyawaitable_set_int_impl, long);
-GET(pyawaitable_get_int_impl, long);
+SAVE(pyawaitable_save_int);
+UNPACK(pyawaitable_unpack_int);
+SET(pyawaitable_set_int, long);
+GET(pyawaitable_get_int, long);
 
 #undef SAVE
 #undef UNPACK
@@ -501,7 +501,7 @@ GET(pyawaitable_get_int_impl, long);
 
 
 _PyAwaitable_API(int)
-pyawaitable_async_with_impl(
+pyawaitable_async_with(
     PyObject *aw,
     PyObject *ctx,
     awaitcallback cb,
@@ -517,10 +517,10 @@ __PyAwaitable_Static_async_with_inner(PyObject *aw, PyObject *res)
     awaitcallback cb;
     awaitcallback_err err;
     PyObject *exit;
-    if (pyawaitable_unpack_arb_impl(aw, &cb, &err) < 0)
+    if (pyawaitable_unpack_arb(aw, &cb, &err) < 0)
         return -1;
 
-    if (pyawaitable_unpack_impl(aw, &exit) < 0)
+    if (pyawaitable_unpack(aw, &exit) < 0)
         return -1;
 
     Py_INCREF(aw);
@@ -562,7 +562,7 @@ __PyAwaitable_Static_async_with_inner(PyObject *aw, PyObject *res)
             return -1;
         }
 
-        if (pyawaitable_await_impl(aw, coro, NULL, NULL) < 0)
+        if (pyawaitable_await(aw, coro, NULL, NULL) < 0)
         {
             Py_DECREF(coro);
             return -1;
@@ -584,7 +584,7 @@ __PyAwaitable_Static_async_with_inner(PyObject *aw, PyObject *res)
             return -1;
         }
 
-        if (pyawaitable_await_impl(aw, coro, NULL, NULL) < 0)
+        if (pyawaitable_await(aw, coro, NULL, NULL) < 0)
         {
             Py_DECREF(coro);
             return -1;
@@ -595,7 +595,7 @@ __PyAwaitable_Static_async_with_inner(PyObject *aw, PyObject *res)
 }
 
 _PyAwaitable_API(int)
-pyawaitable_async_with_impl(
+pyawaitable_async_with(
     PyObject *aw,
     PyObject *ctx,
     awaitcallback cb,
@@ -624,7 +624,7 @@ pyawaitable_async_with_impl(
         return -1;
     }
 
-    PyObject *inner_aw = pyawaitable_new_impl();
+    PyObject *inner_aw = pyawaitable_new();
 
     if (inner_aw == NULL)
     {
@@ -633,7 +633,7 @@ pyawaitable_async_with_impl(
         return -1;
     }
 
-    if (pyawaitable_save_arb_impl(inner_aw, 2, cb, err) < 0)
+    if (pyawaitable_save_arb(inner_aw, 2, cb, err) < 0)
     {
         Py_DECREF(inner_aw);
         Py_DECREF(with);
@@ -641,7 +641,7 @@ pyawaitable_async_with_impl(
         return -1;
     }
 
-    if (pyawaitable_save_impl(inner_aw, 1, exit) < 0)
+    if (pyawaitable_save(inner_aw, 1, exit) < 0)
     {
         Py_DECREF(inner_aw);
         Py_DECREF(exit);
@@ -662,7 +662,7 @@ pyawaitable_async_with_impl(
 
     // Note: Errors in __aenter__ are not sent to __aexit__
     if (
-        pyawaitable_await_impl(
+        pyawaitable_await(
             inner_aw,
             coro,
             __PyAwaitable_Static_async_with_inner,
@@ -677,7 +677,7 @@ pyawaitable_async_with_impl(
 
     Py_DECREF(coro);
 
-    if (pyawaitable_await_impl(aw, inner_aw, NULL, err) < 0)
+    if (pyawaitable_await(aw, inner_aw, NULL, err) < 0)
     {
         Py_DECREF(inner_aw);
         return -1;
@@ -970,7 +970,7 @@ __PyAwaitable_Static_awaitable_dealloc(PyObject *self)
 }
 
 _PyAwaitable_API(void)
-pyawaitable_cancel_impl(PyObject * self)
+pyawaitable_cancel(PyObject * self)
 {
     assert(self != NULL);
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
@@ -986,7 +986,7 @@ pyawaitable_cancel_impl(PyObject * self)
 }
 
 _PyAwaitable_API(int)
-pyawaitable_await_impl(
+pyawaitable_await(
     PyObject * self,
     PyObject * coro,
     awaitcallback cb,
@@ -1018,7 +1018,7 @@ pyawaitable_await_impl(
 }
 
 _PyAwaitable_API(int)
-pyawaitable_set_result_impl(PyObject * awaitable, PyObject * result)
+pyawaitable_set_result(PyObject * awaitable, PyObject * result)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
     aw->aw_result = Py_NewRef(result);
@@ -1026,14 +1026,14 @@ pyawaitable_set_result_impl(PyObject * awaitable, PyObject * result)
 }
 
 _PyAwaitable_API(PyObject *)
-pyawaitable_new_impl(void)
+pyawaitable_new(void)
 {
     // XXX Use a freelist?
     return __PyAwaitable_Static_awaitable_new_func(&PyAwaitableType, NULL, NULL);
 }
 
 _PyAwaitable_API(int)
-pyawaitable_await_function_impl(
+pyawaitable_await_function(
     PyObject * awaitable,
     PyObject * func,
     const char *fmt,
@@ -1074,7 +1074,7 @@ pyawaitable_await_function_impl(
     if (!coro)
         return -1;
 
-    if (pyawaitable_await_impl(awaitable, coro, cb, err) < 0)
+    if (pyawaitable_await(awaitable, coro, cb, err) < 0)
     {
         Py_DECREF(coro);
         return -1;
@@ -1134,7 +1134,7 @@ __PyAwaitable_Static_awaitable_send(PyObject *self, PyObject *args)
 static PyObject *
 __PyAwaitable_Static_awaitable_close(PyObject *self, PyObject *args)
 {
-    pyawaitable_cancel_impl(self);
+    pyawaitable_cancel(self);
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
     aw->aw_done = true;
     Py_RETURN_NONE;
@@ -1683,19 +1683,19 @@ __PyAwaitable_Static_check_index(Py_ssize_t index, __PyAwaitable_Mangled_pyawait
 }
 
 int
-pyawaitable_unpack_impl(PyObject *awaitable, ...)
+pyawaitable_unpack(PyObject *awaitable, ...)
 {
     UNPACK(aw_object_values, PyObject *);
 }
 
 int
-pyawaitable_save_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
+pyawaitable_save(PyObject *awaitable, Py_ssize_t nargs, ...)
 {
     SAVE(aw_object_values, PyObject *, Py_INCREF(ptr));
 }
 
 int
-pyawaitable_set_impl(
+pyawaitable_set(
     PyObject *awaitable,
     Py_ssize_t index,
     PyObject *new_value
@@ -1705,7 +1705,7 @@ pyawaitable_set_impl(
 }
 
 PyObject *
-pyawaitable_get_impl(
+pyawaitable_get(
     PyObject *awaitable,
     Py_ssize_t index
 )
@@ -1716,19 +1716,19 @@ pyawaitable_get_impl(
 /* Arbitrary Values */
 
 int
-pyawaitable_unpack_arb_impl(PyObject *awaitable, ...)
+pyawaitable_unpack_arb(PyObject *awaitable, ...)
 {
     UNPACK(aw_arbitrary_values, void *);
 }
 
 int
-pyawaitable_save_arb_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
+pyawaitable_save_arb(PyObject *awaitable, Py_ssize_t nargs, ...)
 {
     SAVE(aw_arbitrary_values, void *, NOTHING);
 }
 
 int
-pyawaitable_set_arb_impl(
+pyawaitable_set_arb(
     PyObject *awaitable,
     Py_ssize_t index,
     void *new_value
@@ -1738,7 +1738,7 @@ pyawaitable_set_arb_impl(
 }
 
 void *
-pyawaitable_get_arb_impl(
+pyawaitable_get_arb(
     PyObject *awaitable,
     Py_ssize_t index
 )
@@ -1749,19 +1749,19 @@ pyawaitable_get_arb_impl(
 /* Integer Values */
 
 int
-pyawaitable_unpack_int_impl(PyObject *awaitable, ...)
+pyawaitable_unpack_int(PyObject *awaitable, ...)
 {
     UNPACK(aw_integer_values, long);
 }
 
 int
-pyawaitable_save_int_impl(PyObject *awaitable, Py_ssize_t nargs, ...)
+pyawaitable_save_int(PyObject *awaitable, Py_ssize_t nargs, ...)
 {
     SAVE(aw_integer_values, long, NOTHING);
 }
 
 int
-pyawaitable_set_int_impl(
+pyawaitable_set_int(
     PyObject *awaitable,
     Py_ssize_t index,
     long new_value
@@ -1771,7 +1771,7 @@ pyawaitable_set_int_impl(
 }
 
 long
-pyawaitable_get_int_impl(
+pyawaitable_get_int(
     PyObject *awaitable,
     Py_ssize_t index
 )

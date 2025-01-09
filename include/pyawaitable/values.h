@@ -19,24 +19,24 @@
 
 // Normal values
 
-SAVE(pyawaitable_save_impl);
-UNPACK(pyawaitable_unpack_impl);
-SET(pyawaitable_set_impl, PyObject *);
-GET(pyawaitable_get_impl, PyObject *);
+SAVE(pyawaitable_save);
+UNPACK(pyawaitable_unpack);
+SET(pyawaitable_set, PyObject *);
+GET(pyawaitable_get, PyObject *);
 
 // Arbitrary values
 
-SAVE(pyawaitable_save_arb_impl);
-UNPACK(pyawaitable_unpack_arb_impl);
-SET(pyawaitable_set_arb_impl, void *);
-GET(pyawaitable_get_arb_impl, void *);
+SAVE(pyawaitable_save_arb);
+UNPACK(pyawaitable_unpack_arb);
+SET(pyawaitable_set_arb, void *);
+GET(pyawaitable_get_arb, void *);
 
 // Integer values
 
-SAVE(pyawaitable_save_int_impl);
-UNPACK(pyawaitable_unpack_int_impl);
-SET(pyawaitable_set_int_impl, long);
-GET(pyawaitable_get_int_impl, long);
+SAVE(pyawaitable_save_int);
+UNPACK(pyawaitable_unpack_int);
+SET(pyawaitable_set_int, long);
+GET(pyawaitable_get_int, long);
 
 #undef SAVE
 #undef UNPACK

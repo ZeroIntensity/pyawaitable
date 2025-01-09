@@ -45,10 +45,10 @@ typedef struct _PyAwaitableObject PyAwaitableObject;
 PyTypeObject PyAwaitableType;
 
 _PyAwaitable_API(int)
-pyawaitable_set_result_impl(PyObject * awaitable, PyObject * result);
+pyawaitable_set_result(PyObject * awaitable, PyObject * result);
 
 _PyAwaitable_API(int)
-pyawaitable_await_impl(
+pyawaitable_await(
     PyObject * aw,
     PyObject * coro,
     awaitcallback cb,
@@ -56,16 +56,16 @@ pyawaitable_await_impl(
 );
 
 _PyAwaitable_API(void)
-pyawaitable_cancel_impl(PyObject * aw);
+pyawaitable_cancel(PyObject * aw);
 
 _PyAwaitable_INTERNAL(PyObject *)
 awaitable_next(PyObject * self);
 
 _PyAwaitable_API(PyObject *)
-pyawaitable_new_impl(void);
+pyawaitable_new(void);
 
 _PyAwaitable_API(int)
-pyawaitable_await_function_impl(
+pyawaitable_await_function(
     PyObject * awaitable,
     PyObject * func,
     const char *fmt,
