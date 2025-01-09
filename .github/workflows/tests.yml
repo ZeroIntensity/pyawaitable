@@ -73,6 +73,7 @@ jobs:
       - run-tests
     if: ${{ needs.changes.outputs.csource == 'true' }}
     name: Check for memory errors
+    runs-on: ubuntu-latest
     env:
       PYTHONMALLOC: malloc
     steps:
