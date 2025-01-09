@@ -209,6 +209,52 @@ async def test_await_function():
 
 @limit_leaks
 @pytest.mark.asyncio
+async def test_await_function_keywords():
+    awaitable = abi.new()
+    called: bool = False
+
+    async def coro(value: int, suffix: str ="test") -> str:
+        await asyncio.sleep(0)
+        return str(value * 2) + suffix
+
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.PyAwaitable, result: str):
+        nonlocal called
+        called = True
+        assert result == "70hello"
+        return 0
+
+    abi.await_function_keywords(
+        awaitable, coro, (35), b"is", cb, awaitcallback_err(0), b"hello"
+    )
+    await awaitable
+    assert called is True
+
+
+@limit_leaks
+@pytest.mark.asyncio
+async def test_await_function_no_args():
+    awaitable = abi.new()
+    called: bool = False
+
+    async def coro() -> str:
+        await asyncio.sleep(0)
+        return "70Test"
+
+    @awaitcallback
+    def cb(awaitable_inner: pyawaitable.PyAwaitable, result: str):
+        nonlocal called
+        called = True
+        assert result == "70Test"
+        return 0
+
+    abi.await_function_no_args(awaitable, coro, cb, awaitcallback_err(0))
+    await awaitable
+    assert called is True
+
+
+@limit_leaks
+@pytest.mark.asyncio
 async def test_c_built_extension():
     async def hello():
         await asyncio.sleep(0)
