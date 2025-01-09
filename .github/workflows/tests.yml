@@ -31,11 +31,11 @@ jobs:
       - uses: dorny/paths-filter@v3
         id: filter
         with:
-        filters: |
-          source:
-            - 'src/**'
-          csource:
-            - 'src/_pyawaitable/**'
+          filters: |
+            source:
+              - 'src/**'
+            csource:
+              - 'src/_pyawaitable/**'
 
   run-tests:
     needs: changes
