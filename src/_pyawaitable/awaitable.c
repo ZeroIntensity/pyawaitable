@@ -249,9 +249,75 @@ pyawaitable_await_function_impl(
 
     if (!args)
         return -1;
-    PyObject *coro = PyObject_Call(func, args, NULL);
+    int result = pyawaitable_await_function_keywords_impl(awaitable, func, args, NULL, cb, err);
     Py_DECREF(args);
+    return result;
+}
 
+int pyawaitable_await_function_keywords_impl(
+    PyObject *awaitable,
+    PyObject *func,
+    PyObject *args,
+    const char *fmt,
+    awaitcallback cb,
+    awaitcallback_err err,
+    ...
+)
+{
+    PyObject *kwargs;
+    if (fmt == NULL)
+    {
+        kwargs = NULL;
+    }
+    else
+    {
+        size_t len = strlen(fmt);
+        size_t size = len + 3;
+        char *dic_format = PyMem_Malloc(size);
+        if (!dic_format)
+        {
+            PyErr_NoMemory();
+            return -1;
+        }
+
+        dic_format[0] = '{';
+        for (size_t i = 0; i < len; ++i)
+        {
+            dic_format[i + 1] = fmt[i];
+        }
+
+        dic_format[size - 2] = '}';
+        dic_format[size - 1] = '\0';
+
+        va_list vargs;
+        va_start(vargs, err);
+        kwargs = Py_VaBuildValue(dic_format, vargs);
+        va_end(vargs);
+        PyMem_Free(dic_format);
+    }
+
+    PyObject *coro = PyObject_Call(func, args, kwargs);
+    if (!coro)
+        return -1;
+
+    if (pyawaitable_await_impl(awaitable, coro, cb, err) < 0)
+    {
+        Py_DECREF(coro);
+        return -1;
+    }
+
+    Py_DECREF(coro);
+    return 0;
+}
+
+int pyawaitable_await_function_no_args_impl(
+    PyObject *awaitable,
+    PyObject *func,
+    awaitcallback cb,
+    awaitcallback_err err
+)
+{
+    PyObject *coro = PyObject_CallNoArgs(func);
     if (!coro)
         return -1;
 
