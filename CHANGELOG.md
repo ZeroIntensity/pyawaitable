@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Objects returned by a PyAwaitable object's `__await__` are now garbage collected (*i.e.*, they don't leak with rare circular references).
 - Removed limit on number of stored callbacks or values.
 - Switched some user-error messages to `RuntimeError` instead of `SystemError`.
+- Added `PyAwaitable_DeferAwait` for executing code when the awaitable object is called by the event loop.
 
 ## [1.3.0] - 2024-10-26
 
