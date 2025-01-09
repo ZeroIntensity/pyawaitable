@@ -125,7 +125,7 @@ awaitable_dealloc(PyObject *self)
 }
 
 _PyAwaitable_API(void)
-PyAwaitable_Cancel(PyObject * self)
+pyawaitable_cancel_impl(PyObject * self)
 {
     assert(self != NULL);
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
@@ -141,7 +141,7 @@ PyAwaitable_Cancel(PyObject * self)
 }
 
 _PyAwaitable_API(int)
-PyAwaitable_AddAwait(
+pyawaitable_await_impl(
     PyObject * self,
     PyObject * coro,
     awaitcallback cb,
@@ -173,7 +173,7 @@ PyAwaitable_AddAwait(
 }
 
 _PyAwaitable_API(int)
-PyAwaitable_SetResult(PyObject * awaitable, PyObject * result)
+pyawaitable_set_result_impl(PyObject * awaitable, PyObject * result)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
     aw->aw_result = Py_NewRef(result);
@@ -181,14 +181,14 @@ PyAwaitable_SetResult(PyObject * awaitable, PyObject * result)
 }
 
 _PyAwaitable_API(PyObject *)
-PyAwaitable_New(void)
+pyawaitable_new_impl(void)
 {
     // XXX Use a freelist?
     return awaitable_new_func(&PyAwaitableType, NULL, NULL);
 }
 
 _PyAwaitable_API(int)
-PyAwaitable_AwaitFunction(
+pyawaitable_await_function_impl(
     PyObject * awaitable,
     PyObject * func,
     const char *fmt,

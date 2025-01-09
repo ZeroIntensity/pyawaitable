@@ -5,10 +5,10 @@
 
 #ifndef PYAWAITABLE_VENDOR_H
 #define PYAWAITABLE_VENDOR_H
-#include <stdlib.h>
-#include <Python.h>
-#include <stdarg.h>
 #include <stdbool.h>
+#include <Python.h>
+#include <stdlib.h>
+#include <stdarg.h>
 #ifndef PYAWAITABLE_DIST_H
 #define PYAWAITABLE_DIST_H
 
@@ -44,9 +44,7 @@
  * Deallocator for items on a __PyAwaitable_Mangled_pyawaitable_array structure. A NULL pointer
  * will never be given to the deallocator.
  */
-typedef void (*_PyAwaitable_MANGLE(
-    __PyAwaitable_Mangled_pyawaitable_array_deallocator
-    ))(void *);
+typedef void (*_PyAwaitable_MANGLE(__PyAwaitable_Mangled_pyawaitable_array_deallocator))(void *);
 
 /*
  * Internal only dynamic array for CPython.
@@ -78,9 +76,7 @@ typedef struct
 
 /* Zero out the array */
 static inline void
-__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ZERO(
-    __PyAwaitable_Mangled_pyawaitable_array *array
-)
+__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ZERO(__PyAwaitable_Mangled_pyawaitable_array *array)
 {
     assert(array != NULL);
     array->deallocator = NULL;
@@ -90,19 +86,14 @@ __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ZERO(
 }
 
 static inline void
-__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(
-    __PyAwaitable_Mangled_pyawaitable_array *array
-)
+__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(__PyAwaitable_Mangled_pyawaitable_array *array)
 {
     assert(array != NULL);
     assert(array->items != NULL);
 }
 
 static inline void
-__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_INDEX(
-    __PyAwaitable_Mangled_pyawaitable_array *array,
-    Py_ssize_t index
-)
+__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_INDEX(__PyAwaitable_Mangled_pyawaitable_array *array, Py_ssize_t index)
 {
     // Ensure the index is valid
     assert(index < array->length);
@@ -131,10 +122,7 @@ __PyAwaitable_Mangled_pyawaitable_array_init_with_size(
  * If this fails, the deallocator is not ran on the item.
  */
 _PyAwaitable_INTERNAL(int)
-__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_append(
-    __PyAwaitable_Mangled_pyawaitable_array * array,
-    void *item
-);
+__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_append(__PyAwaitable_Mangled_pyawaitable_array * array, void *item);
 
 /*
  * Insert an item at the target index. The index
@@ -152,8 +140,7 @@ __PyAwaitable_Mangled_pyawaitable_array_insert(
 
 /* Remove all items from the array. */
 _PyAwaitable_INTERNAL(void)
-__PyAwaitable_Internal___PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear_items
-    (__PyAwaitable_Mangled_pyawaitable_array * array);
+__PyAwaitable_Internal___PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear_items(__PyAwaitable_Mangled_pyawaitable_array * array);
 
 /*
  * Clear all the fields on the array.
@@ -165,9 +152,7 @@ __PyAwaitable_Internal___PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_
  * on the array after calling this.
  */
 _PyAwaitable_INTERNAL(void)
-__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear(
-    __PyAwaitable_Mangled_pyawaitable_array * array
-);
+__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear(__PyAwaitable_Mangled_pyawaitable_array * array);
 
 /*
  * Set a value at index in the array.
@@ -178,11 +163,7 @@ __PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear(
  * This cannot fail.
  */
 _PyAwaitable_INTERNAL(void)
-__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_set(
-    __PyAwaitable_Mangled_pyawaitable_array * array,
-    Py_ssize_t index,
-    void *item
-);
+__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_set(__PyAwaitable_Mangled_pyawaitable_array * array, Py_ssize_t index, void *item);
 
 /*
  * Remove the item at the index, and call the deallocator on it (if the array
@@ -191,10 +172,7 @@ __PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_set(
  * This cannot fail.
  */
 _PyAwaitable_INTERNAL(void)
-__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_remove(
-    __PyAwaitable_Mangled_pyawaitable_array * array,
-    Py_ssize_t index
-);
+__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_remove(__PyAwaitable_Mangled_pyawaitable_array * array, Py_ssize_t index);
 
 /*
  * Remove the item at the index *without* deallocating it, and
@@ -203,10 +181,7 @@ __PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_remove(
  * This cannot fail.
  */
 _PyAwaitable_INTERNAL(void *)
-__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_pop(
-    __PyAwaitable_Mangled_pyawaitable_array * array,
-    Py_ssize_t index
-);
+__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_pop(__PyAwaitable_Mangled_pyawaitable_array * array, Py_ssize_t index);
 
 /*
  * Clear all the fields on a dynamic array, and then
@@ -215,16 +190,10 @@ __PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_pop(
  * The array must have been created by __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_new()
  */
 static inline void
-__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_free(
-    __PyAwaitable_Mangled_pyawaitable_array *array
-)
+__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_free(__PyAwaitable_Mangled_pyawaitable_array *array)
 {
-    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(
-        array
-    );
-    __PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear(
-        array
-    );
+    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(array);
+    __PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear(array);
     PyMem_RawFree(array);
 }
 
@@ -258,26 +227,19 @@ __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_new_with_size(
     Py_ssize_t initial
 )
 {
-    __PyAwaitable_Mangled_pyawaitable_array *array =
-        PyMem_Malloc(sizeof(__PyAwaitable_Mangled_pyawaitable_array));
+    __PyAwaitable_Mangled_pyawaitable_array *array = PyMem_Malloc(sizeof(__PyAwaitable_Mangled_pyawaitable_array));
     if (array == NULL)
     {
         return NULL;
     }
 
-    if (__PyAwaitable_Mangled_pyawaitable_array_init_with_size(
-        array,
-        deallocator,
-        initial
-        ) < 0)
+    if (__PyAwaitable_Mangled_pyawaitable_array_init_with_size(array, deallocator, initial) < 0)
     {
         PyMem_Free(array);
         return NULL;
     }
 
-    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(
-        array
-    );                                                                                // Sanity check
+    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(array); // Sanity check
     return array;
 }
 
@@ -288,16 +250,12 @@ __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_new_with_size(
  * Returns NULL on failure.
  */
 static inline __PyAwaitable_Mangled_pyawaitable_array *
-__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_new(
-    __PyAwaitable_Mangled_pyawaitable_array_deallocator deallocator
-)
+__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_new(__PyAwaitable_Mangled_pyawaitable_array_deallocator deallocator)
 {
-    return
-        __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_new_with_size
-        (
+    return __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_new_with_size(
         deallocator,
         ___PyAwaitable_Mangled_pyawaitable_array_DEFAULT_SIZE
-        );
+    );
 }
 
 /*
@@ -306,18 +264,10 @@ __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_new(
  * If the index is not valid, this is undefined behavior.
  */
 static inline void *
-__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_GET_ITEM(
-    __PyAwaitable_Mangled_pyawaitable_array *array,
-    Py_ssize_t index
-)
+__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_GET_ITEM(__PyAwaitable_Mangled_pyawaitable_array *array, Py_ssize_t index)
 {
-    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(
-        array
-    );
-    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_INDEX(
-        array,
-        index
-    );
+    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(array);
+    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_INDEX(array, index);
     return array->items[index];
 }
 
@@ -325,13 +275,9 @@ __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_GET_ITEM(
  * Get the length of the array. This cannot fail.
  */
 static inline Py_ssize_t
-__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_LENGTH(
-    __PyAwaitable_Mangled_pyawaitable_array *array
-)
+__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_LENGTH(__PyAwaitable_Mangled_pyawaitable_array *array)
 {
-    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(
-        array
-    );
+    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(array);
     return array->length;
 }
 
@@ -340,14 +286,9 @@ __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_LENGTH(
  * This function cannot fail.
  */
 static inline void *
-__PyAwaitable_Static___PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_pop_top
-    (__PyAwaitable_Mangled_pyawaitable_array *array)
+__PyAwaitable_Static___PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_pop_top(__PyAwaitable_Mangled_pyawaitable_array *array)
 {
-    return __PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_pop(
-        array,
-        __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_LENGTH(
-            array) - 1
-    );
+    return __PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_pop(array, __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_LENGTH(array) - 1);
 }
 
 #endif
@@ -403,12 +344,8 @@ _PyAwaitable_NO_MANGLE(Py_XNewRef)(PyObject *o)
 #define PYAWAITABLE_CORO_H
 
 
-extern PyMethodDef _PyAwaitable_MANGLE(
-    __PyAwaitable_Mangled_pyawaitable_methods
-)[];
-extern PyAsyncMethods _PyAwaitable_MANGLE(
-    __PyAwaitable_Mangled_pyawaitable_async_methods
-);
+extern PyMethodDef _PyAwaitable_MANGLE(__PyAwaitable_Mangled_pyawaitable_methods)[];
+extern PyAsyncMethods _PyAwaitable_MANGLE(__PyAwaitable_Mangled_pyawaitable_async_methods);
 
 #endif
 
@@ -490,9 +427,7 @@ pyawaitable_await_function_impl(
 #define PYAWAITABLE_GENWRAPPER_H
 
 
-PyTypeObject _PyAwaitable_MANGLE(
-    __PyAwaitable_Mangled__PyAwaitableGenWrapperType
-);
+PyTypeObject _PyAwaitable_MANGLE(__PyAwaitable_Mangled__PyAwaitableGenWrapperType);
 
 typedef struct ___PyAwaitable_Mangled_GenWrapperObject
 {
@@ -567,10 +502,9 @@ GET(pyawaitable_get_int_impl, long);
 
 _PyAwaitable_API(int)
 pyawaitable_async_with_impl(
-    PyObject * aw,
-    PyObject * ctx,
-    func_def = FUNCTION_REGEX.match(lines[index + 1])
-               awaitcallback cb,
+    PyObject *aw,
+    PyObject *ctx,
+    awaitcallback cb,
     awaitcallback_err err
 );
 
@@ -662,8 +596,8 @@ __PyAwaitable_Static_async_with_inner(PyObject *aw, PyObject *res)
 
 _PyAwaitable_API(int)
 pyawaitable_async_with_impl(
-    PyObject * aw,
-    PyObject * ctx,
+    PyObject *aw,
+    PyObject *ctx,
     awaitcallback cb,
     awaitcallback_err err
 )
@@ -755,10 +689,7 @@ pyawaitable_async_with_impl(
 
 
 static inline void
-__PyAwaitable_Static_call_deallocator_maybe(
-    __PyAwaitable_Mangled_pyawaitable_array *array,
-    Py_ssize_t index
-)
+__PyAwaitable_Static_call_deallocator_maybe(__PyAwaitable_Mangled_pyawaitable_array *array, Py_ssize_t index)
 {
     if (array->deallocator != NULL && array->items[index] != NULL)
     {
@@ -791,9 +722,7 @@ __PyAwaitable_Mangled_pyawaitable_array_init_with_size(
 }
 
 static int
-__PyAwaitable_Static_resize_if_needed(
-    __PyAwaitable_Mangled_pyawaitable_array *array
-)
+__PyAwaitable_Static_resize_if_needed(__PyAwaitable_Mangled_pyawaitable_array *array)
 {
     if (array->length == array->capacity)
     {
@@ -815,14 +744,9 @@ __PyAwaitable_Static_resize_if_needed(
 }
 
 _PyAwaitable_INTERNAL(int)
-__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_append(
-    __PyAwaitable_Mangled_pyawaitable_array * array,
-    void *item
-)
+__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_append(__PyAwaitable_Mangled_pyawaitable_array * array, void *item)
 {
-    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(
-        array
-    );
+    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(array);
     array->items[array->length++] = item;
     if (__PyAwaitable_Static_resize_if_needed(array) < 0)
     {
@@ -839,13 +763,8 @@ __PyAwaitable_Mangled_pyawaitable_array_insert(
     void *item
 )
 {
-    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(
-        array
-    );
-    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_INDEX(
-        array,
-        index
-    );
+    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(array);
+    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_INDEX(array, index);
     ++array->length;
     if (__PyAwaitable_Static_resize_if_needed(array) < 0)
     {
@@ -866,28 +785,16 @@ __PyAwaitable_Mangled_pyawaitable_array_insert(
 }
 
 _PyAwaitable_INTERNAL(void)
-__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_set(
-    __PyAwaitable_Mangled_pyawaitable_array * array,
-    Py_ssize_t index,
-    void *item
-)
+__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_set(__PyAwaitable_Mangled_pyawaitable_array * array, Py_ssize_t index, void *item)
 {
-    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(
-        array
-    );
-    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_INDEX(
-        array,
-        index
-    );
+    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(array);
+    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_INDEX(array, index);
     __PyAwaitable_Static_call_deallocator_maybe(array, index);
     array->items[index] = item;
 }
 
 static void
-__PyAwaitable_Static_remove_no_dealloc(
-    __PyAwaitable_Mangled_pyawaitable_array *array,
-    Py_ssize_t index
-)
+__PyAwaitable_Static_remove_no_dealloc(__PyAwaitable_Mangled_pyawaitable_array *array, Py_ssize_t index)
 {
     for (Py_ssize_t i = index; i < array->length - 1; ++i)
     {
@@ -897,47 +804,28 @@ __PyAwaitable_Static_remove_no_dealloc(
 }
 
 _PyAwaitable_INTERNAL(void)
-__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_remove(
-    __PyAwaitable_Mangled_pyawaitable_array * array,
-    Py_ssize_t index
-)
+__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_remove(__PyAwaitable_Mangled_pyawaitable_array * array, Py_ssize_t index)
 {
-    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(
-        array
-    );
-    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_INDEX(
-        array,
-        index
-    );
+    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(array);
+    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_INDEX(array, index);
     __PyAwaitable_Static_call_deallocator_maybe(array, index);
     __PyAwaitable_Static_remove_no_dealloc(array, index);
 }
 
 _PyAwaitable_INTERNAL(void *)
-__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_pop(
-    __PyAwaitable_Mangled_pyawaitable_array * array,
-    Py_ssize_t index
-)
+__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_pop(__PyAwaitable_Mangled_pyawaitable_array * array, Py_ssize_t index)
 {
-    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(
-        array
-    );
-    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_INDEX(
-        array,
-        index
-    );
+    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(array);
+    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_INDEX(array, index);
     void *item = array->items[index];
     __PyAwaitable_Static_remove_no_dealloc(array, index);
     return item;
 }
 
 _PyAwaitable_INTERNAL(void)
-__PyAwaitable_Internal___PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear_items
-    (__PyAwaitable_Mangled_pyawaitable_array * array)
+__PyAwaitable_Internal___PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear_items(__PyAwaitable_Mangled_pyawaitable_array * array)
 {
-    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(
-        array
-    );
+    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(array);
     for (Py_ssize_t i = 0; i < array->length; ++i)
     {
         __PyAwaitable_Static_call_deallocator_maybe(array, i);
@@ -948,15 +836,10 @@ __PyAwaitable_Internal___PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_
 }
 
 _PyAwaitable_INTERNAL(void)
-__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear(
-    __PyAwaitable_Mangled_pyawaitable_array * array
-)
+__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear(__PyAwaitable_Mangled_pyawaitable_array * array)
 {
-    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(
-        array
-    );
-    __PyAwaitable_Internal___PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear_items
-        (array);
+    __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_ASSERT_VALID(array);
+    __PyAwaitable_Internal___PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear_items(array);
     PyMem_Free(array->items);
 
     // It would be nice if others could reuse the allocation for another
@@ -978,18 +861,13 @@ static void
 __PyAwaitable_Static_callback_dealloc(void *ptr)
 {
     assert(ptr != NULL);
-    __PyAwaitable_Mangled_pyawaitable_callback *cb =
-        (__PyAwaitable_Mangled_pyawaitable_callback *) ptr;
+    __PyAwaitable_Mangled_pyawaitable_callback *cb = (__PyAwaitable_Mangled_pyawaitable_callback *) ptr;
     Py_CLEAR(cb->coro);
     PyMem_Free(cb);
 }
 
 static PyObject *
-__PyAwaitable_Static_awaitable_new_func(
-    PyTypeObject *tp,
-    PyObject *args,
-    PyObject *kwds
-)
+__PyAwaitable_Static_awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
 {
     assert(tp != NULL);
     assert(tp->tp_alloc != NULL);
@@ -1007,10 +885,7 @@ __PyAwaitable_Static_awaitable_new_func(
     aw->aw_result = NULL;
     aw->aw_recently_cancelled = 0;
 
-    if (__PyAwaitable_Mangled_pyawaitable_array_init(
-        &aw->aw_callbacks,
-        __PyAwaitable_Static_callback_dealloc
-        ) < 0)
+    if (__PyAwaitable_Mangled_pyawaitable_array_init(&aw->aw_callbacks, __PyAwaitable_Static_callback_dealloc) < 0)
     {
         goto error;
     }
@@ -1025,18 +900,12 @@ __PyAwaitable_Static_awaitable_new_func(
         goto error;
     }
 
-    if (__PyAwaitable_Mangled_pyawaitable_array_init(
-        &aw->aw_arbitrary_values,
-        NULL
-        ) < 0)
+    if (__PyAwaitable_Mangled_pyawaitable_array_init(&aw->aw_arbitrary_values, NULL) < 0)
     {
         goto error;
     }
 
-    if (__PyAwaitable_Mangled_pyawaitable_array_init(
-        &aw->aw_integer_values,
-        NULL
-        ) < 0)
+    if (__PyAwaitable_Mangled_pyawaitable_array_init(&aw->aw_integer_values, NULL) < 0)
     {
         goto error;
     }
@@ -1070,10 +939,9 @@ static void
 __PyAwaitable_Static_awaitable_dealloc(PyObject *self)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *)self;
-#define CLEAR_IF_NON_NULL(array)                                                 \
-        if (array.items != NULL) {                                               \
-            __PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear \
-                (&array);                                                        \
+#define CLEAR_IF_NON_NULL(array)             \
+        if (array.items != NULL) {           \
+            __PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear(&array); \
         }
     CLEAR_IF_NON_NULL(aw->aw_callbacks);
     CLEAR_IF_NON_NULL(aw->aw_object_values);
@@ -1102,17 +970,15 @@ __PyAwaitable_Static_awaitable_dealloc(PyObject *self)
 }
 
 _PyAwaitable_API(void)
-PyAwaitable_Cancel(PyObject * self)
+pyawaitable_cancel_impl(PyObject * self)
 {
     assert(self != NULL);
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
-    __PyAwaitable_Internal___PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear_items
-        (&aw->aw_callbacks);
+    __PyAwaitable_Internal___PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_clear_items(&aw->aw_callbacks);
     aw->aw_state = 0;
     if (aw->aw_gen != NULL)
     {
-        __PyAwaitable_Mangled_GenWrapperObject *gw =
-            (__PyAwaitable_Mangled_GenWrapperObject *)aw->aw_gen;
+        __PyAwaitable_Mangled_GenWrapperObject *gw = (__PyAwaitable_Mangled_GenWrapperObject *)aw->aw_gen;
         Py_CLEAR(gw->gw_current_await);
     }
 
@@ -1120,7 +986,7 @@ PyAwaitable_Cancel(PyObject * self)
 }
 
 _PyAwaitable_API(int)
-PyAwaitable_AddAwait(
+pyawaitable_await_impl(
     PyObject * self,
     PyObject * coro,
     awaitcallback cb,
@@ -1129,8 +995,7 @@ PyAwaitable_AddAwait(
 {
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
 
-    __PyAwaitable_Mangled_pyawaitable_callback *aw_c =
-        PyMem_Malloc(sizeof(__PyAwaitable_Mangled_pyawaitable_callback));
+    __PyAwaitable_Mangled_pyawaitable_callback *aw_c = PyMem_Malloc(sizeof(__PyAwaitable_Mangled_pyawaitable_callback));
     if (aw_c == NULL)
     {
         PyErr_NoMemory();
@@ -1142,10 +1007,7 @@ PyAwaitable_AddAwait(
     aw_c->err_callback = err;
     aw_c->done = false;
 
-    if (__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_append(
-        &aw->aw_callbacks,
-        aw_c
-        ) < 0)
+    if (__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_append(&aw->aw_callbacks, aw_c) < 0)
     {
         PyMem_Free(aw_c);
         PyErr_NoMemory();
@@ -1156,7 +1018,7 @@ PyAwaitable_AddAwait(
 }
 
 _PyAwaitable_API(int)
-PyAwaitable_SetResult(PyObject * awaitable, PyObject * result)
+pyawaitable_set_result_impl(PyObject * awaitable, PyObject * result)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
     aw->aw_result = Py_NewRef(result);
@@ -1164,18 +1026,14 @@ PyAwaitable_SetResult(PyObject * awaitable, PyObject * result)
 }
 
 _PyAwaitable_API(PyObject *)
-PyAwaitable_New(void)
+pyawaitable_new_impl(void)
 {
     // XXX Use a freelist?
-    return __PyAwaitable_Static_awaitable_new_func(
-        &PyAwaitableType,
-        NULL,
-        NULL
-    );
+    return __PyAwaitable_Static_awaitable_new_func(&PyAwaitableType, NULL, NULL);
 }
 
 _PyAwaitable_API(int)
-PyAwaitable_AwaitFunction(
+pyawaitable_await_function_impl(
     PyObject * awaitable,
     PyObject * func,
     const char *fmt,
@@ -1242,10 +1100,7 @@ PyTypeObject PyAwaitableType =
 
 
 static PyObject *
-__PyAwaitable_Static___PyAwaitable_Static_awaitable_send_with_arg(
-    PyObject *self,
-    PyObject *value
-)
+__PyAwaitable_Static___PyAwaitable_Static_awaitable_send_with_arg(PyObject *self, PyObject *value)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
     if (aw->aw_gen == NULL)
@@ -1273,10 +1128,7 @@ __PyAwaitable_Static_awaitable_send(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    return __PyAwaitable_Static___PyAwaitable_Static_awaitable_send_with_arg(
-        self,
-        value
-    );
+    return __PyAwaitable_Static___PyAwaitable_Static_awaitable_send_with_arg(self, value);
 }
 
 static PyObject *
@@ -1330,11 +1182,9 @@ __PyAwaitable_Static_awaitable_throw(PyObject *self, PyObject *args)
     PyAwaitableObject *aw = (PyAwaitableObject *)self;
     if ((aw->aw_gen != NULL) && (aw->aw_state != 0))
     {
-        __PyAwaitable_Mangled_GenWrapperObject *gw =
-            (__PyAwaitable_Mangled_GenWrapperObject *)aw->aw_gen;
+        __PyAwaitable_Mangled_GenWrapperObject *gw = (__PyAwaitable_Mangled_GenWrapperObject *)aw->aw_gen;
         __PyAwaitable_Mangled_pyawaitable_callback *cb =
-            __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_GET_ITEM
-                (&aw->aw_callbacks, aw->aw_state - 1);
+            __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_GET_ITEM(&aw->aw_callbacks, aw->aw_state - 1);
         if (cb == NULL)
         {
             return NULL;
@@ -1355,15 +1205,9 @@ __PyAwaitable_Static_awaitable_throw(PyObject *self, PyObject *args)
 
 #if PY_MINOR_VERSION > 9
 static PySendResult
-__PyAwaitable_Static_awaitable_am_send(
-    PyObject *self,
-    PyObject *arg,
-    PyObject **presult
-)
+__PyAwaitable_Static_awaitable_am_send(PyObject *self, PyObject *arg, PyObject **presult)
 {
-    PyObject *send_res =
-        __PyAwaitable_Static___PyAwaitable_Static_awaitable_send_with_arg(self,
-            arg);
+    PyObject *send_res = __PyAwaitable_Static___PyAwaitable_Static_awaitable_send_with_arg(self, arg);
     if (send_res == NULL)
     {
         if (PyErr_ExceptionMatches(PyExc_StopIteration))
@@ -1434,8 +1278,7 @@ __PyAwaitable_Static_gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    __PyAwaitable_Mangled_GenWrapperObject *g =
-        (__PyAwaitable_Mangled_GenWrapperObject *) self;
+    __PyAwaitable_Mangled_GenWrapperObject *g = (__PyAwaitable_Mangled_GenWrapperObject *) self;
     g->gw_aw = NULL;
     g->gw_current_await = NULL;
 
@@ -1443,14 +1286,9 @@ __PyAwaitable_Static_gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
 }
 
 static int
-__PyAwaitable_Static_genwrapper_traverse(
-    PyObject *self,
-    visitproc visit,
-    void *arg
-)
+__PyAwaitable_Static_genwrapper_traverse(PyObject *self, visitproc visit, void *arg)
 {
-    __PyAwaitable_Mangled_GenWrapperObject *gw =
-        (__PyAwaitable_Mangled_GenWrapperObject *) self;
+    __PyAwaitable_Mangled_GenWrapperObject *gw = (__PyAwaitable_Mangled_GenWrapperObject *) self;
     Py_VISIT(gw->gw_current_await);
     Py_VISIT(gw->gw_aw);
     return 0;
@@ -1459,8 +1297,7 @@ __PyAwaitable_Static_genwrapper_traverse(
 static int
 __PyAwaitable_Static_genwrapper_clear(PyObject *self)
 {
-    __PyAwaitable_Mangled_GenWrapperObject *gw =
-        (__PyAwaitable_Mangled_GenWrapperObject *) self;
+    __PyAwaitable_Mangled_GenWrapperObject *gw = (__PyAwaitable_Mangled_GenWrapperObject *) self;
     Py_CLEAR(gw->gw_current_await);
     Py_CLEAR(gw->gw_aw);
     return 0;
@@ -1475,16 +1312,14 @@ __PyAwaitable_Static_gen_dealloc(PyObject *self)
 }
 
 _PyAwaitable_INTERNAL(PyObject *)
-__PyAwaitable_Internal_genwrapper_new(PyAwaitableObject * aw)
+__PyAwaitable_Internal_genwrapper_new(PyAwaitableObject *aw)
 {
     assert(aw != NULL);
-    __PyAwaitable_Mangled_GenWrapperObject *g =
-        (__PyAwaitable_Mangled_GenWrapperObject *) __PyAwaitable_Static_gen_new
-        (
-            &__PyAwaitable_Mangled__PyAwaitableGenWrapperType,
-            NULL,
-            NULL
-        );
+    __PyAwaitable_Mangled_GenWrapperObject *g = (__PyAwaitable_Mangled_GenWrapperObject *) __PyAwaitable_Static_gen_new(
+        &__PyAwaitable_Mangled__PyAwaitableGenWrapperType,
+        NULL,
+        NULL
+    );
 
     if (!g)
         return NULL;
@@ -1495,7 +1330,7 @@ __PyAwaitable_Internal_genwrapper_new(PyAwaitableObject * aw)
 
 _PyAwaitable_INTERNAL(int)
 genwrapper_fire_err_callback(
-    PyObject * self,
+    PyObject *self,
     awaitcallback_err err_callback
 )
 {
@@ -1530,22 +1365,18 @@ genwrapper_fire_err_callback(
 }
 
 static inline __PyAwaitable_Mangled_pyawaitable_callback *
-__PyAwaitable_Static_genwrapper_advance(
-    __PyAwaitable_Mangled_GenWrapperObject *gw
-)
+__PyAwaitable_Static_genwrapper_advance(__PyAwaitable_Mangled_GenWrapperObject *gw)
 {
-    return
-        __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_GET_ITEM(
+    return __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_GET_ITEM(
         &gw->gw_aw->aw_callbacks,
         gw->gw_aw->aw_state++
-        );
+    );
 }
 
 _PyAwaitable_INTERNAL(PyObject *)
-__PyAwaitable_Internal_genwrapper_next(PyObject * self)
+__PyAwaitable_Internal_genwrapper_next(PyObject *self)
 {
-    __PyAwaitable_Mangled_GenWrapperObject *g =
-        (__PyAwaitable_Mangled_GenWrapperObject *)self;
+    __PyAwaitable_Mangled_GenWrapperObject *g = (__PyAwaitable_Mangled_GenWrapperObject *)self;
     PyAwaitableObject *aw = g->gw_aw;
 
     if (!aw)
@@ -1561,8 +1392,7 @@ __PyAwaitable_Internal_genwrapper_next(PyObject * self)
 
     if (g->gw_current_await == NULL)
     {
-        if (__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_LENGTH
-                (&aw->aw_callbacks) == aw->aw_state)
+        if (__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_LENGTH(&aw->aw_callbacks) == aw->aw_state)
         {
             PyErr_SetObject(
                 PyExc_StopIteration,
@@ -1581,8 +1411,7 @@ __PyAwaitable_Internal_genwrapper_next(PyObject * self)
         {
             printf(
                 "len: %ld, state: %ld\n",
-                __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_LENGTH
-                    (&aw->aw_callbacks),
+                __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_LENGTH(&aw->aw_callbacks),
                 aw->aw_state
             );
         }
@@ -1624,9 +1453,7 @@ __PyAwaitable_Internal_genwrapper_next(PyObject * self)
         }
     } else
     {
-        cb =
-            __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_GET_ITEM
-                (&aw->aw_callbacks, aw->aw_state - 1);
+        cb = __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_GET_ITEM(&aw->aw_callbacks, aw->aw_state - 1);
     }
 
     PyObject *result = Py_TYPE(
@@ -1754,8 +1581,7 @@ __PyAwaitable_Internal_genwrapper_next(PyObject * self)
     return __PyAwaitable_Internal_genwrapper_next(self);
 }
 
-PyTypeObject
-_PyAwaitable_MANGLE(__PyAwaitable_Mangled__PyAwaitableGenWrapperType) =
+PyTypeObject _PyAwaitable_MANGLE(__PyAwaitable_Mangled__PyAwaitableGenWrapperType) =
 {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "_genwrapper",
@@ -1773,84 +1599,66 @@ _PyAwaitable_MANGLE(__PyAwaitable_Mangled__PyAwaitableGenWrapperType) =
 
 #define NOTHING
 
-#define SAVE(field, type, extra)                                           \
+#define SAVE(field, type, extra)                                    \
+        PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;    \
+        __PyAwaitable_Mangled_pyawaitable_array *array = &aw->field;                      \
+        va_list vargs;                                              \
+        va_start(vargs, nargs);                                     \
+        for (Py_ssize_t i = 0; i < nargs; ++i) {                    \
+            type ptr = va_arg(vargs, type);                         \
+            assert((void *)ptr != NULL);                            \
+            if (__PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_append(array, (void *)ptr) < 0) { \
+                PyErr_NoMemory();                                   \
+                return -1;                                          \
+            }                                                       \
+            extra;                                                  \
+        }                                                           \
+        va_end(vargs);                                              \
+        return 0
+
+#define UNPACK(field, type)                                                \
         PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;           \
-        __PyAwaitable_Mangled_pyawaitable_array *array = &aw->field;       \
+        __PyAwaitable_Mangled_pyawaitable_array *array = &aw->field;                             \
+        if (__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_LENGTH(array) == 0) {                        \
+            PyErr_SetString(                                               \
+    PyExc_RuntimeError,                                                    \
+    "pyawaitable: object has no stored values"                             \
+            );                                                             \
+            return -1;                                                     \
+        }                                                                  \
         va_list vargs;                                                     \
-        va_start(vargs, nargs);                                            \
-        for (Py_ssize_t i = 0; i < nargs; ++i) {                           \
-            type ptr = va_arg(vargs, type);                                \
-            assert((void *)ptr != NULL);                                   \
-            if (                                                           \
-    __PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_append( \
-    array, (void *)ptr) < 0) {                                             \
-                PyErr_NoMemory();                                          \
-                return -1;                                                 \
+        va_start(vargs, awaitable);                                        \
+        for (Py_ssize_t i = 0; i < __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_LENGTH(array); ++i) { \
+            type *ptr = va_arg(vargs, type *);                             \
+            if (ptr == NULL) {                                             \
+                continue;                                                  \
             }                                                              \
-            extra;                                                         \
+            *ptr = (type)__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_GET_ITEM(array, i);             \
         }                                                                  \
         va_end(vargs);                                                     \
         return 0
 
-#define UNPACK(field, type)                                                           \
-        PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;                      \
-        __PyAwaitable_Mangled_pyawaitable_array *array = &aw->field;                  \
-        if (__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_LENGTH       \
-                (array) == 0) {                                                       \
-            PyErr_SetString(                                                          \
-    PyExc_RuntimeError,                                                               \
-    "pyawaitable: object has no stored values"                                        \
-            );                                                                        \
-            return -1;                                                                \
-        }                                                                             \
-        va_list vargs;                                                                \
-        va_start(vargs, awaitable);                                                   \
-        for (Py_ssize_t i = 0;                                                        \
-             i <                                                                      \
-             __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_LENGTH      \
-                 (array); ++i) {                                                      \
-            type *ptr = va_arg(vargs, type *);                                        \
-            if (ptr == NULL) {                                                        \
-                continue;                                                             \
-            }                                                                         \
-            *ptr =                                                                    \
-                (type)                                                                \
-                __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_GET_ITEM \
-                    (array, i);                                                       \
-        }                                                                             \
-        va_end(vargs);                                                                \
+#define SET(field, type)                                          \
+        assert(awaitable != NULL);                                \
+        PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;  \
+        __PyAwaitable_Mangled_pyawaitable_array *array = &aw->field;                    \
+        if (__PyAwaitable_Static_check_index(index, array) < 0) {                      \
+            return -1;                                            \
+        }                                                         \
+        __PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_set(array, index, (void *)(new_value)); \
         return 0
 
-#define SET(field, type)                                                    \
-        assert(awaitable != NULL);                                          \
-        PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;            \
-        __PyAwaitable_Mangled_pyawaitable_array *array = &aw->field;        \
-        if (__PyAwaitable_Static_check_index(index, array) < 0) {           \
-            return -1;                                                      \
-        }                                                                   \
-        __PyAwaitable_Internal___PyAwaitable_Mangled_pyawaitable_array_set( \
-    array,                                                                  \
-    index,                                                                  \
-    (void *)(new_value)                                                     \
-        );                                                                  \
-        return 0
-
-#define GET(field, type)                                                             \
-        assert(awaitable != NULL);                                                   \
-        PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;                     \
-        __PyAwaitable_Mangled_pyawaitable_array *array = &aw->field;                 \
-        if (__PyAwaitable_Static_check_index(index, array) < 0) {                    \
-            return (type)NULL;                                                       \
-        }                                                                            \
-        return (type)                                                                \
-               __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_GET_ITEM \
-                   (array, index)
+#define GET(field, type)                                         \
+        assert(awaitable != NULL);                               \
+        PyAwaitableObject *aw = (PyAwaitableObject *) awaitable; \
+        __PyAwaitable_Mangled_pyawaitable_array *array = &aw->field;                   \
+        if (__PyAwaitable_Static_check_index(index, array) < 0) {                     \
+            return (type)NULL;                                   \
+        }                                                        \
+        return (type)__PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_GET_ITEM(array, index)
 
 static int
-__PyAwaitable_Static_check_index(
-    Py_ssize_t index,
-    __PyAwaitable_Mangled_pyawaitable_array *array
-)
+__PyAwaitable_Static_check_index(Py_ssize_t index, __PyAwaitable_Mangled_pyawaitable_array *array)
 {
     assert(array != NULL);
     if (index < 0)
@@ -1862,9 +1670,7 @@ __PyAwaitable_Static_check_index(
         return -1;
     }
 
-    if (index >=
-        __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_LENGTH(
-            array))
+    if (index >= __PyAwaitable_Static___PyAwaitable_Mangled_pyawaitable_array_LENGTH(array))
     {
         PyErr_SetString(
             PyExc_IndexError,
