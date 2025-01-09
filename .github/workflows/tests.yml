@@ -1,57 +1,142 @@
 name: Tests
 
 on:
-    push:
-        branches:
-            - master
-        paths:
-            - 'tests/**'
-            - 'src/**'
-            - '.github/workflows/tests.yml'
-    pull_request:
-        branches:
-            - master
-        paths:
-            - 'tests/**'
-            - 'src/**'
-            - '.github/workflows/tests.yml'
+  push:
+    branches:
+      - master
+  pull_request:
+    types:
+      - "opened"
+      - "reopened"
+      - "synchronize"
 
 concurrency:
-    group: test-${{ github.head_ref }}
-    cancel-in-progress: true
+  group: test-${{ github.head_ref }}
+  cancel-in-progress: true
 
 env:
-    PYTHONUNBUFFERED: "1"
-    FORCE_COLOR: "1"
-    PYTHONIOENCODING: "utf8"
-    PYAWAITABLE_OPTIMIZED: 1
+  PYTHONUNBUFFERED: "1"
+  FORCE_COLOR: "1"
+  PYTHONIOENCODING: "utf8"
+  PYAWAITABLE_OPTIMIZED: 1
 
 jobs:
-    run-tests:
-        name: Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
-        runs-on: ${{ matrix.os }}
-        strategy:
-            fail-fast: false
-            matrix:
-                os: [ubuntu-latest, windows-latest, macos-latest]
-                python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      source: ${{ steps.filter.outputs.source }}
+      csource: ${{ steps.filter.outputs.csource }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+        filters: |
+          source:
+            - 'src/**'
+          csource:
+            - 'src/_pyawaitable/**'
 
-        steps:
-            - uses: actions/checkout@v2
+  run-tests:
+    needs: changes
+    if: ${{ needs.changes.outputs.source == 'true' }}
+    name: Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v2
 
-            - name: Set up Python ${{ matrix.python-version }}
-              uses: actions/setup-python@v2
-              with:
-                  python-version: ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
 
-            - name: Install Pytest
-              run: pip install pytest pytest-asyncio typing_extensions
+      - name: Install Pytest
+        run: pip install pytest pytest-asyncio typing_extensions
 
-            - name: Build PyAwaitable
-              run: pip install .
+      - name: Build PyAwaitable
+        run: pip install .
 
-            - name: Build PyAwaitable Test Package
-              run: pip install setuptools wheel && pip install ./tests/extension/ --no-build-isolation
+      - name: Build PyAwaitable Test Package
+        run: pip install setuptools wheel && pip install ./tests/extension/ --no-build-isolation
 
-            - name: Run tests
-              run: pytest -W error
+      - name: Run tests
+        run: pytest -W error
+
+  memory-errors:
+    needs:
+      - changes
+      - run-tests
+    if: ${{ needs.changes.outputs.csource == 'true' }}
+    name: Check for memory errors
+    env:
+      PYTHONMALLOC: malloc
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12            
+      - name: Build PyAwaitable
+        run: pip install .
+
+      - name: Build PyAwaitable Test Package
+        run: pip install setuptools wheel && pip install tests/extension/ --no-build-isolation
+
+      - name: Install Valgrind
+        run: sudo apt-get update && sudo apt-get -y install valgrind
+
+      - name: Run tests with Valgrind
+        run: valgrind --suppressions=valgrind-python.supp --error-exitcode=1 pytest -x
+
+  memory-leaks:
+    needs:
+      - changes
+      - memory-errors
+    if: ${{ needs.changes.outputs.csource == 'true' }}
+    name: Check for memory leaks
+    runs-on: ubuntu-latest
+    env:
+      PYTHONMALLOC: malloc
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+
+      - name: Install Pytest
+        run: |
+            pip install pytest pytest-asyncio pytest-memray typing_extensions
+        shell: bash
+
+      - name: Build PyAwaitable
+        run: pip install .
+
+      - name: Build PyAwaitable Test Package
+        run: pip install setuptools wheel && pip install tests/extension/ --no-build-isolation
+
+      - name: Run tests with Memray tracking
+        run: pytest --enable-leak-tracking -W error --stacks=50 --native
+
+  tests-pass:
+    runs-on: ubuntu-latest
+    name: All tests passed
+    if: always()
+
+    needs:
+      - run-tests
+      - memory-errors
+      - memory-leaks
+
+    steps:
+      - name: Check whether all tests passed
+        uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}
