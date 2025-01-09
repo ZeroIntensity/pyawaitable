@@ -167,6 +167,32 @@ genwrapper_next(PyObject *self)
             );
         }
 
+        if (cb->callback != NULL && cb->coro == NULL)
+        {
+            int def_res = ((defer_callback)cb->callback)((PyObject*)aw, NULL);
+            if (def_res < -1)
+            {
+                // -2 or lower denotes that the error should be deferred,
+                // regardless of whether a handler is present.
+                DONE(cb);
+                return NULL;
+            }
+
+            if (def_res < 0 && !PyErr_Occurred())
+            {
+                PyErr_SetString(
+                    PyExc_SystemError,
+                    "pyawaitable: callback returned -1 without exception set"
+                );
+                DONE(cb);
+                return NULL;
+            }
+
+            // Callback is done.
+            DONE(cb);
+            return genwrapper_next(self);
+        }
+
         if (
             Py_TYPE(cb->coro)->tp_as_async == NULL ||
             Py_TYPE(cb->coro)->tp_as_async->am_await == NULL
