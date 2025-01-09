@@ -13,7 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Check for changelog updates
     steps:
-      - uses: dorny/paths-filter@v3
+      - name: "Check if the source directory was changed"
+        uses: dorny/paths-filter@v3
         id: changes
         with:
           filters: |
@@ -33,7 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Check for updated tests
     steps:
-      - uses: dorny/paths-filter@v3
+      - name: "Check if the source directory was changed"
+        uses: dorny/paths-filter@v3
         id: changes
         with:
           filters: |
@@ -49,3 +51,15 @@ jobs:
           skip-label: "skip tests"
           failure-message: "Missing unit tests; please add some or apply the ${skip-label} label to the pull request"
 
+  all_green:
+    runs-on: ubuntu-latest
+    name: PR has no missing information
+    if: always()
+
+    needs:
+      - changelog_check
+      - tests_check
+
+    steps:
+      - name: Check whether jobs passed
+        uses: re-actors/alls-green@v1
