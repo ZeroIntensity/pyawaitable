@@ -166,6 +166,32 @@ pyawaitable_await_impl(
 }
 
 int
+pyawaitable_defer_await_impl(PyObject *awaitable, defer_callback cb)
+{
+    PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
+    pyawaitable_callback *aw_c = PyMem_Malloc(sizeof(pyawaitable_callback));
+    if (aw_c == NULL)
+    {
+        PyErr_NoMemory();
+        return -1;
+    }
+
+    aw_c->coro = NULL;
+    aw_c->callback = (awaitcallback)cb;
+    aw_c->err_callback = NULL;
+    aw_c->done = false;
+
+    if (pyawaitable_array_append(&aw->aw_callbacks, aw_c) < 0)
+    {
+        PyMem_Free(aw_c);
+        PyErr_NoMemory();
+        return -1;
+    }
+
+    return 0;
+}
+
+int
 pyawaitable_set_result_impl(PyObject *awaitable, PyObject *result)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
