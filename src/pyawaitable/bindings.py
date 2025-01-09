@@ -6,7 +6,7 @@ from typing_extensions import Self
 
 from . import abi
 
-__all__ = ["abi", "add_await", "awaitcallback", "awaitcallback_err", "defer_callback"]
+__all__ = ["abi", "add_await", "awaitcallback", "awaitcallback_err", "defer_callback", "defer_await"]
 
 get_pointer = pythonapi.PyCapsule_GetPointer
 get_pointer.argtypes = (ctypes.py_object, ctypes.c_void_p)
@@ -178,3 +178,4 @@ class AwaitableABI(PyABI):
 
 abi = AwaitableABI.from_capsule(abi.v1)
 add_await = getattr(abi, "await")
+defer_await = getattr(abi, "defer_await")
