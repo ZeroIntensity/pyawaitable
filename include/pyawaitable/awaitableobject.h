@@ -73,4 +73,21 @@ pyawaitable_await_function_impl(
     ...
 );
 
+int pyawaitable_await_function_keywords_impl(
+    PyObject *awaitable,
+    PyObject *func,
+    PyObject *args,
+    const char *fmt,
+    awaitcallback cb,
+    awaitcallback_err err,
+    ...
+);
+
+int pyawaitable_await_function_no_args_impl(
+    PyObject *awaitable,
+    PyObject *func,
+    awaitcallback cb,
+    awaitcallback_err err
+);
+
 #endif

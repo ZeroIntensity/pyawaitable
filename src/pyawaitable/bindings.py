@@ -173,6 +173,28 @@ class AwaitableABI(PyABI):
                 defer_callback
             ),
         ),
+        (
+            "await_function_keywords",
+            ctypes.PYFUNCTYPE(
+                ctypes.c_int,
+                ctypes.py_object,
+                ctypes.py_object,
+                ctypes.py_object,
+                ctypes.c_char_p,
+                awaitcallback,
+                awaitcallback_err,
+            ),
+        ),
+        (
+            "await_function_no_args",
+            ctypes.PYFUNCTYPE(
+                ctypes.c_int,
+                ctypes.py_object,
+                ctypes.py_object,
+                awaitcallback,
+                awaitcallback_err
+            ),
+        ),
     ]
 
 

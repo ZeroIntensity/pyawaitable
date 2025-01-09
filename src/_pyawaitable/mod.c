@@ -56,7 +56,9 @@ static PyAwaitableABI _abi_interface =
     pyawaitable_get_arb_impl,
     pyawaitable_get_int_impl,
     pyawaitable_async_with_impl,
-    pyawaitable_defer_await_impl
+    pyawaitable_defer_await_impl,
+    pyawaitable_await_function_keywords_impl,
+    pyawaitable_await_function_no_args_impl
 };
 
 PyMODINIT_FUNC

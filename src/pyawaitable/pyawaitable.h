@@ -56,6 +56,21 @@ typedef struct _pyawaitable_abi
     int (*defer_await)(
         PyObject *aw,
         defer_callback cb);
+    int (*await_function_keywords)(
+        PyObject *,
+        PyObject *,
+        PyObject *,
+        const char *fmt,
+        awaitcallback,
+        awaitcallback_err,
+        ...
+    );
+    int (*await_function_no_args)(
+        PyObject *,
+        PyObject *,
+        awaitcallback cb,
+        awaitcallback_err err
+    );
 } PyAwaitableABI;
 
 #ifdef PYAWAITABLE_THIS_FILE_INIT
@@ -70,6 +85,8 @@ extern PyAwaitableABI *pyawaitable_abi;
 
 #define pyawaitable_await pyawaitable_abi->await
 #define pyawaitable_await_function pyawaitable_abi->await_function
+#define pyawaitable_await_function_keywords pyawaitable_abi->await_function_keywords
+#define pyawaitable_await_function_no_args pyawaitable_abi->await_function_no_args
 #define pyawaitable_async_with pyawaitable_abi->async_with
 #define pyawaitable_defer_await pyawaitable_abi->defer_await
 
@@ -131,6 +148,8 @@ pyawaitable_init()
 
 #define PyAwaitable_AddAwait pyawaitable_await
 #define PyAwaitable_AwaitFunction pyawaitable_await_function
+#define PyAwaitable_AwaitFunctionKeywords pyawaitable_await_function_keywords
+#define PyAwaitable_AwaitFunctionNoArgs pyawaitable_await_function_no_args
 #define PyAwaitable_AsyncWith pyawaitable_async_with
 #define PyAwaitable_DeferAwait pyawaitable_defer_await
 
