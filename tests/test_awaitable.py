@@ -225,7 +225,7 @@ async def test_await_function_keywords():
         return 0
 
     abi.await_function_keywords(
-        awaitable, coro, (35), b"is", cb, awaitcallback_err(0), b"hello"
+        awaitable, coro, (35,), b"s:s", cb, awaitcallback_err(0), b"suffix", b"hello"
     )
     await awaitable
     assert called is True
