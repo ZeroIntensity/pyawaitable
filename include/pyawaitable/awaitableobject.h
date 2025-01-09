@@ -8,7 +8,7 @@
 
 typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *);
-typedef int (*defer_callback)(PyObject *, PyObject *);
+typedef int (*defer_callback)(PyObject *);
 
 typedef struct _pyawaitable_callback
 {

@@ -169,7 +169,7 @@ genwrapper_next(PyObject *self)
 
         if (cb->callback != NULL && cb->coro == NULL)
         {
-            int def_res = ((defer_callback)cb->callback)((PyObject*)aw, NULL);
+            int def_res = ((defer_callback)cb->callback)((PyObject*)aw);
             if (def_res < -1)
             {
                 // -2 or lower denotes that the error should be deferred,
