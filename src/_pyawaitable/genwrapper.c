@@ -174,7 +174,7 @@ genwrapper_next(PyObject *self)
             {
                 // -2 or lower denotes that the error should be deferred,
                 // regardless of whether a handler is present.
-                DONE(cb);
+                DONE_IF_OK(cb);
                 return NULL;
             }
 
@@ -184,12 +184,12 @@ genwrapper_next(PyObject *self)
                     PyExc_SystemError,
                     "pyawaitable: callback returned -1 without exception set"
                 );
-                DONE(cb);
+                DONE_IF_OK(cb);
                 return NULL;
             }
 
             // Callback is done.
-            DONE(cb);
+            DONE_IF_OK(cb);
             return genwrapper_next(self);
         }
 
