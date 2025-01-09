@@ -297,6 +297,7 @@ int pyawaitable_await_function_keywords_impl(
     }
 
     PyObject *coro = PyObject_Call(func, args, kwargs);
+    Py_XDECREF(kwargs);
     if (!coro)
         return -1;
 
