@@ -62,7 +62,7 @@ gen_dealloc(PyObject *self)
     Py_TYPE(self)->tp_free(self);
 }
 
-PyObject *
+_PyAwaitable_INTERNAL(PyObject *)
 genwrapper_new(PyAwaitableObject *aw)
 {
     assert(aw != NULL);
@@ -79,7 +79,7 @@ genwrapper_new(PyAwaitableObject *aw)
     return (PyObject *) g;
 }
 
-int
+_PyAwaitable_INTERNAL(int)
 genwrapper_fire_err_callback(
     PyObject *self,
     awaitcallback_err err_callback
@@ -124,7 +124,7 @@ genwrapper_advance(GenWrapperObject *gw)
     );
 }
 
-PyObject *
+_PyAwaitable_INTERNAL(PyObject *)
 genwrapper_next(PyObject *self)
 {
     GenWrapperObject *g = (GenWrapperObject *)self;
@@ -332,7 +332,7 @@ genwrapper_next(PyObject *self)
     return genwrapper_next(self);
 }
 
-PyTypeObject _PyAwaitableGenWrapperType =
+PyTypeObject _PyAwaitable_MANGLE(_PyAwaitableGenWrapperType) =
 {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "_genwrapper",

@@ -4,7 +4,7 @@
 #include <Python.h> // PyObject
 #include <pyawaitable//awaitableobject.h> // awaitcallback, awaitcallback_err
 
-int
+_PyAwaitable_API(int)
 pyawaitable_async_with_impl(
     PyObject *aw,
     PyObject *ctx,

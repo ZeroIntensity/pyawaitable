@@ -3,25 +3,27 @@
 
 #include <Python.h>
 #include <pyawaitable/awaitableobject.h>
+#include <pyawaitable/dist.h>
 
-extern PyTypeObject _PyAwaitableGenWrapperType;
+PyTypeObject _PyAwaitable_MANGLE(_PyAwaitableGenWrapperType);
 
 typedef struct _GenWrapperObject
 {
     PyObject_HEAD
     PyAwaitableObject *gw_aw;
     PyObject *gw_current_await;
-} GenWrapperObject;
+} _PyAwaitable_MANGLE(GenWrapperObject);
 
-PyObject *
-genwrapper_next(PyObject *self);
+_PyAwaitable_INTERNAL(PyObject *)
+genwrapper_next(PyObject * self);
 
-int genwrapper_fire_err_callback(
-    PyObject *self,
+_PyAwaitable_INTERNAL(int)
+genwrapper_fire_err_callback(
+    PyObject * self,
     awaitcallback_err err_callback
 );
 
-PyObject *
-genwrapper_new(PyAwaitableObject *aw);
+_PyAwaitable_INTERNAL(PyObject *)
+genwrapper_new(PyAwaitableObject * aw);
 
 #endif

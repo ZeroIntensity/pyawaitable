@@ -10,9 +10,9 @@ call_deallocator_maybe(pyawaitable_array *array, Py_ssize_t index)
     }
 }
 
-int
+_PyAwaitable_INTERNAL(int)
 pyawaitable_array_init_with_size(
-    pyawaitable_array *array,
+    pyawaitable_array * array,
     pyawaitable_array_deallocator deallocator,
     Py_ssize_t initial
 )
@@ -55,8 +55,8 @@ resize_if_needed(pyawaitable_array *array)
     return 0;
 }
 
-int
-pyawaitable_array_append(pyawaitable_array *array, void *item)
+_PyAwaitable_INTERNAL(int)
+pyawaitable_array_append(pyawaitable_array * array, void *item)
 {
     pyawaitable_array_ASSERT_VALID(array);
     array->items[array->length++] = item;
@@ -68,9 +68,9 @@ pyawaitable_array_append(pyawaitable_array *array, void *item)
     return 0;
 }
 
-int
+_PyAwaitable_INTERNAL(int)
 pyawaitable_array_insert(
-    pyawaitable_array *array,
+    pyawaitable_array * array,
     Py_ssize_t index,
     void *item
 )
@@ -96,8 +96,8 @@ pyawaitable_array_insert(
     return 0;
 }
 
-void
-pyawaitable_array_set(pyawaitable_array *array, Py_ssize_t index, void *item)
+_PyAwaitable_INTERNAL(void)
+pyawaitable_array_set(pyawaitable_array * array, Py_ssize_t index, void *item)
 {
     pyawaitable_array_ASSERT_VALID(array);
     pyawaitable_array_ASSERT_INDEX(array, index);
@@ -115,8 +115,8 @@ remove_no_dealloc(pyawaitable_array *array, Py_ssize_t index)
     --array->length;
 }
 
-void
-pyawaitable_array_remove(pyawaitable_array *array, Py_ssize_t index)
+_PyAwaitable_INTERNAL(void)
+pyawaitable_array_remove(pyawaitable_array * array, Py_ssize_t index)
 {
     pyawaitable_array_ASSERT_VALID(array);
     pyawaitable_array_ASSERT_INDEX(array, index);
@@ -124,8 +124,8 @@ pyawaitable_array_remove(pyawaitable_array *array, Py_ssize_t index)
     remove_no_dealloc(array, index);
 }
 
-void *
-pyawaitable_array_pop(pyawaitable_array *array, Py_ssize_t index)
+_PyAwaitable_INTERNAL(void *)
+pyawaitable_array_pop(pyawaitable_array * array, Py_ssize_t index)
 {
     pyawaitable_array_ASSERT_VALID(array);
     pyawaitable_array_ASSERT_INDEX(array, index);
@@ -134,8 +134,8 @@ pyawaitable_array_pop(pyawaitable_array *array, Py_ssize_t index)
     return item;
 }
 
-void
-pyawaitable_array_clear_items(pyawaitable_array *array)
+_PyAwaitable_INTERNAL(void)
+pyawaitable_array_clear_items(pyawaitable_array * array)
 {
     pyawaitable_array_ASSERT_VALID(array);
     for (Py_ssize_t i = 0; i < array->length; ++i)
@@ -147,8 +147,8 @@ pyawaitable_array_clear_items(pyawaitable_array *array)
     array->length = 0;
 }
 
-void
-pyawaitable_array_clear(pyawaitable_array *array)
+_PyAwaitable_INTERNAL(void)
+pyawaitable_array_clear(pyawaitable_array * array)
 {
     pyawaitable_array_ASSERT_VALID(array);
     pyawaitable_array_clear_items(array);

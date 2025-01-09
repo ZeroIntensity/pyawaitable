@@ -86,7 +86,7 @@ async_with_inner(PyObject *aw, PyObject *res)
     }
 }
 
-int
+_PyAwaitable_API(int)
 pyawaitable_async_with_impl(
     PyObject *aw,
     PyObject *ctx,

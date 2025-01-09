@@ -12,7 +12,7 @@ if __name__ == "__main__":
     setup(
         name="pyawaitable",
         license="MIT",
-        version="1.4.0-dev",
+        version="2.0.0-dev",
         ext_modules=[
             Extension(
                 "_pyawaitable",
