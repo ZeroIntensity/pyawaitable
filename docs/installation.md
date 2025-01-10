@@ -191,6 +191,30 @@ The complete mapping of names to their Python API counterparts are:
 | `pyawaitable_abi`            | `PyAwaitable_ABI`             |
 | `PyAwaitableType`            | `PyAwaitable_Type`            |
 
+## Using Precompiled Headers with PyAwaitable
+
+Using precompiled headers in a large C extension project is supported, just replace `PYAWAITABLE_THIS_FILE_INIT` with `PYAWAITABLE_USE_PCH` **BEFORE** including your precompiled header file in every source file.
+
+After that inside of the precompiled header file right after including `pyawaitable.h` add this line:
+
+```c
+DECLARE_PYAWAITABLE_ABI;
+```
+
+In the source file with the module initialization code:
+
+```c
+PYAWAITABLE_INIT_DEF;
+```
+
+And then finally after the include of `pch.h` inside of `pch.c` (`pch` is placeholder name for the precompiled header):
+
+```c
+DECLARE_PYAWAITABLE_ABI = NULL;
+```
+
+After that, all logic from the example code in `test.c` still applies.
+
 ## Vendored Copies
 
 PyAwaitable ships a vendorable version of each release, containing both a `pyawaitable.c` and `pyawaitable.h` file. For many users, it's much easier to vendor PyAwaitable than use it off PyPI. You can download the zip file containing a vendorable version [from the releases page](https://github.com/ZeroIntensity/pyawaitable/releases).

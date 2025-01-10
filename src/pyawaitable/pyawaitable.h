@@ -58,10 +58,24 @@ typedef struct _pyawaitable_abi
         defer_callback cb);
 } PyAwaitableABI;
 
+#ifdef PYAWAITABLE_USE_PCH
+/*
+ * Applications using Precompiled Headers must use this
+ * define to declare the abi pointer before using
+ * pyawaitable at all in any file.
+ * For the main file of a C that contains the module
+ * initialization code it is the user's responsibility
+ * to set this to null right after using the macro, but
+ * before they terminate the current line of code.
+ */
+#define DECLARE_PYAWAITABLE_ABI \
+extern PyAwaitableABI *pyawaitable_abi
+#else
 #ifdef PYAWAITABLE_THIS_FILE_INIT
 PyAwaitableABI *pyawaitable_abi = NULL;
 #else
 extern PyAwaitableABI *pyawaitable_abi;
+#endif
 #endif
 
 #define pyawaitable_new pyawaitable_abi->new
@@ -92,6 +106,22 @@ extern PyAwaitableABI *pyawaitable_abi;
 #define PyAwaitableType pyawaitable_abi->PyAwaitableType
 
 
+#ifdef PYAWAITABLE_USE_PCH
+#define PYAWAITABLE_INIT_DEF \
+static int \
+pyawaitable_init() \
+{ \
+    if (pyawaitable_abi != NULL) \
+        return 0; \
+\
+    PyAwaitableABI *capsule = PyCapsule_Import("_pyawaitable.abi_v1", 0); \
+    if (capsule == NULL) \
+        return -1; \
+\
+    pyawaitable_abi = capsule; \
+    return 0; \
+}
+#else
 #ifdef PYAWAITABLE_THIS_FILE_INIT
 static int
 pyawaitable_init()
@@ -118,6 +148,7 @@ pyawaitable_init()
     return -1;
 }
 
+#endif
 #endif
 
 #ifdef PYAWAITABLE_PYAPI
