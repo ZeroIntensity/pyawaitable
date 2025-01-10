@@ -22,3 +22,5 @@ build/
 test.py
 a.py
 vgcore*
+pyawaitable.h
+pcbuild/

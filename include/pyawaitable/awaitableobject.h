@@ -42,13 +42,13 @@ struct _PyAwaitableObject
 };
 
 typedef struct _PyAwaitableObject PyAwaitableObject;
-PyTypeObject PyAwaitableType;
+PyTypeObject PyAwaitable_Type;
 
 _PyAwaitable_API(int)
-pyawaitable_set_result(PyObject * awaitable, PyObject * result);
+PyAwaitable_SetResult(PyObject * awaitable, PyObject * result);
 
 _PyAwaitable_API(int)
-pyawaitable_await(
+PyAwaitable_AddAwait(
     PyObject * aw,
     PyObject * coro,
     awaitcallback cb,
@@ -56,16 +56,16 @@ pyawaitable_await(
 );
 
 _PyAwaitable_API(void)
-pyawaitable_cancel(PyObject * aw);
+PyAwaitable_Cancel(PyObject * aw);
 
 _PyAwaitable_INTERNAL(PyObject *)
 awaitable_next(PyObject * self);
 
 _PyAwaitable_API(PyObject *)
-pyawaitable_new(void);
+PyAwaitable_New(void);
 
 _PyAwaitable_API(int)
-pyawaitable_await_function(
+PyAwaitable_AwaitFunction(
     PyObject * awaitable,
     PyObject * func,
     const char *fmt,

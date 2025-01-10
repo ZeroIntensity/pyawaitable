@@ -125,7 +125,7 @@ awaitable_dealloc(PyObject *self)
 }
 
 _PyAwaitable_API(void)
-pyawaitable_cancel(PyObject * self)
+PyAwaitable_Cancel(PyObject * self)
 {
     assert(self != NULL);
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
@@ -141,7 +141,7 @@ pyawaitable_cancel(PyObject * self)
 }
 
 _PyAwaitable_API(int)
-pyawaitable_await(
+PyAwaitable_AddAwait(
     PyObject * self,
     PyObject * coro,
     awaitcallback cb,
@@ -173,7 +173,7 @@ pyawaitable_await(
 }
 
 _PyAwaitable_API(int)
-pyawaitable_set_result(PyObject * awaitable, PyObject * result)
+PyAwaitable_SetResult(PyObject * awaitable, PyObject * result)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
     aw->aw_result = Py_NewRef(result);
@@ -181,14 +181,14 @@ pyawaitable_set_result(PyObject * awaitable, PyObject * result)
 }
 
 _PyAwaitable_API(PyObject *)
-pyawaitable_new(void)
+PyAwaitable_New(void)
 {
     // XXX Use a freelist?
-    return awaitable_new_func(&PyAwaitableType, NULL, NULL);
+    return awaitable_new_func(&PyAwaitable_Type, NULL, NULL);
 }
 
 _PyAwaitable_API(int)
-pyawaitable_await_function(
+PyAwaitable_AwaitFunction(
     PyObject * awaitable,
     PyObject * func,
     const char *fmt,
@@ -229,7 +229,7 @@ pyawaitable_await_function(
     if (!coro)
         return -1;
 
-    if (pyawaitable_await(awaitable, coro, cb, err) < 0)
+    if (PyAwaitable_AddAwait(awaitable, coro, cb, err) < 0)
     {
         Py_DECREF(coro);
         return -1;
@@ -239,7 +239,7 @@ pyawaitable_await_function(
     return 0;
 }
 
-PyTypeObject PyAwaitableType =
+PyTypeObject PyAwaitable_Type =
 {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "_PyAwaitableType",

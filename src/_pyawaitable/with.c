@@ -9,10 +9,10 @@ async_with_inner(PyObject *aw, PyObject *res)
     awaitcallback cb;
     awaitcallback_err err;
     PyObject *exit;
-    if (pyawaitable_unpack_arb(aw, &cb, &err) < 0)
+    if (PyAwaitable_UnpackArbValues(aw, &cb, &err) < 0)
         return -1;
 
-    if (pyawaitable_unpack(aw, &exit) < 0)
+    if (PyAwaitable_UnpackValues(aw, &exit) < 0)
         return -1;
 
     Py_INCREF(aw);
@@ -54,7 +54,7 @@ async_with_inner(PyObject *aw, PyObject *res)
             return -1;
         }
 
-        if (pyawaitable_await(aw, coro, NULL, NULL) < 0)
+        if (PyAwaitable_AddAwait(aw, coro, NULL, NULL) < 0)
         {
             Py_DECREF(coro);
             return -1;
@@ -76,7 +76,7 @@ async_with_inner(PyObject *aw, PyObject *res)
             return -1;
         }
 
-        if (pyawaitable_await(aw, coro, NULL, NULL) < 0)
+        if (PyAwaitable_AddAwait(aw, coro, NULL, NULL) < 0)
         {
             Py_DECREF(coro);
             return -1;
@@ -87,7 +87,7 @@ async_with_inner(PyObject *aw, PyObject *res)
 }
 
 _PyAwaitable_API(int)
-pyawaitable_async_with(
+PyAwaitable_AsyncWith(
     PyObject *aw,
     PyObject *ctx,
     awaitcallback cb,
@@ -116,7 +116,7 @@ pyawaitable_async_with(
         return -1;
     }
 
-    PyObject *inner_aw = pyawaitable_new();
+    PyObject *inner_aw = PyAwaitable_New();
 
     if (inner_aw == NULL)
     {
@@ -125,7 +125,7 @@ pyawaitable_async_with(
         return -1;
     }
 
-    if (pyawaitable_save_arb(inner_aw, 2, cb, err) < 0)
+    if (PyAwaitable_SaveArbValues(inner_aw, 2, cb, err) < 0)
     {
         Py_DECREF(inner_aw);
         Py_DECREF(with);
@@ -133,7 +133,7 @@ pyawaitable_async_with(
         return -1;
     }
 
-    if (pyawaitable_save(inner_aw, 1, exit) < 0)
+    if (PyAwaitable_SaveValues(inner_aw, 1, exit) < 0)
     {
         Py_DECREF(inner_aw);
         Py_DECREF(exit);
@@ -154,7 +154,7 @@ pyawaitable_async_with(
 
     // Note: Errors in __aenter__ are not sent to __aexit__
     if (
-        pyawaitable_await(
+        PyAwaitable_AddAwait(
             inner_aw,
             coro,
             async_with_inner,
@@ -169,7 +169,7 @@ pyawaitable_async_with(
 
     Py_DECREF(coro);
 
-    if (pyawaitable_await(aw, inner_aw, NULL, err) < 0)
+    if (PyAwaitable_AddAwait(aw, inner_aw, NULL, err) < 0)
     {
         Py_DECREF(inner_aw);
         return -1;

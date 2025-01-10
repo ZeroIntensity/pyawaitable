@@ -2,10 +2,10 @@
 #define PYAWAITABLE_WITH_H
 
 #include <Python.h> // PyObject
-#include <pyawaitable//awaitableobject.h> // awaitcallback, awaitcallback_err
+#include <pyawaitable/awaitableobject.h> // awaitcallback, awaitcallback_err
 
 _PyAwaitable_API(int)
-pyawaitable_async_with(
+PyAwaitable_AsyncWith(
     PyObject *aw,
     PyObject *ctx,
     awaitcallback cb,

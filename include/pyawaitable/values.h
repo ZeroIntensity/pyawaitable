@@ -3,44 +3,25 @@
 
 #include <Python.h> // PyObject, Py_ssize_t
 
-#define SAVE(name) int name(PyObject * awaitable, Py_ssize_t nargs, ...)
-#define UNPACK(name) int name(PyObject * awaitable, ...)
-#define SET(name, tp)     \
-        int name(         \
-    PyObject * awaitable, \
-    Py_ssize_t index,     \
-    tp new_value          \
-        )
-#define GET(name, tp)     \
-        tp name(          \
-    PyObject * awaitable, \
-    Py_ssize_t index      \
-        )
-
 // Normal values
 
-SAVE(pyawaitable_save);
-UNPACK(pyawaitable_unpack);
-SET(pyawaitable_set, PyObject *);
-GET(pyawaitable_get, PyObject *);
+_PyAwaitable_API(int) PyAwaitable_SaveValues(PyObject * awaitable, Py_ssize_t nargs, ...);
+_PyAwaitable_API(int) PyAwaitable_UnpackValues(PyObject * awaitable, ...);
+_PyAwaitable_API(int) PyAwaitable_SetValue(PyObject * awaitable, Py_ssize_t index, PyObject * new_value);
+_PyAwaitable_API(PyObject *) PyAwaitable_GetValue(PyObject * awaitable, Py_ssize_t index);
 
 // Arbitrary values
 
-SAVE(pyawaitable_save_arb);
-UNPACK(pyawaitable_unpack_arb);
-SET(pyawaitable_set_arb, void *);
-GET(pyawaitable_get_arb, void *);
+_PyAwaitable_API(int) PyAwaitable_SaveArbValues(PyObject * awaitable, Py_ssize_t nargs, ...);
+_PyAwaitable_API(int) PyAwaitable_UnpackArbValues(PyObject * awaitable, ...);
+_PyAwaitable_API(int) PyAwaitable_SetArbValue(PyObject * awaitable, Py_ssize_t index, void * new_value);
+_PyAwaitable_API(void *) PyAwaitable_GetArbValue(PyObject * awaitable, Py_ssize_t index);
 
 // Integer values
 
-SAVE(pyawaitable_save_int);
-UNPACK(pyawaitable_unpack_int);
-SET(pyawaitable_set_int, long);
-GET(pyawaitable_get_int, long);
-
-#undef SAVE
-#undef UNPACK
-#undef GET
-#undef SET
+_PyAwaitable_API(int) PyAwaitable_SaveIntValues(PyObject * awaitable, Py_ssize_t nargs, ...);
+_PyAwaitable_API(int) PyAwaitable_UnpackIntValues(PyObject * awaitable, ...);
+_PyAwaitable_API(int) PyAwaitable_SetIntValue(PyObject * awaitable, Py_ssize_t index, long new_value);
+_PyAwaitable_API(long) PyAwaitable_GetIntValue(PyObject * awaitable, Py_ssize_t index);
 
 #endif
