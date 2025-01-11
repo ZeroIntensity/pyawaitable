@@ -139,7 +139,7 @@ awaitable_am_send(PyObject *self, PyObject *arg, PyObject **presult)
 
 #endif
 
-PyMethodDef pyawaitable_methods[] =
+_PyAwaitable_INTERNAL_DATA_DEF(PyMethodDef) pyawaitable_methods[] =
 {
     {"send", awaitable_send, METH_VARARGS, NULL},
     {"close", awaitable_close, METH_VARARGS, NULL},
@@ -147,7 +147,7 @@ PyMethodDef pyawaitable_methods[] =
     {NULL, NULL, 0, NULL}
 };
 
-PyAsyncMethods pyawaitable_async_methods =
+_PyAwaitable_INTERNAL_DATA_DEF(PyAsyncMethods) pyawaitable_async_methods =
 {
 #if PY_MINOR_VERSION > 9
     .am_await = awaitable_next,

@@ -6,8 +6,8 @@
 
 _PyAwaitable_API(int)
 PyAwaitable_AsyncWith(
-    PyObject *aw,
-    PyObject *ctx,
+    PyObject * aw,
+    PyObject * ctx,
     awaitcallback cb,
     awaitcallback_err err
 );

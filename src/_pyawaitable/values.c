@@ -187,3 +187,9 @@ PyAwaitable_GetIntValue(
 {
     GET(aw_integer_values, long);
 }
+
+#undef NOTHING
+#undef UNPACK
+#undef SAVE
+#undef SET
+#undef GET
