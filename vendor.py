@@ -212,7 +212,7 @@ def process_files(fp: TextIO) -> None:
         write(fp, line)
 
 def main():
-    dist = Path("./pyawaitable.h")
+    dist = Path("./src/pyawaitable/pyawaitable.h")
     if dist.exists():
         log(f"{dist} already exists, removing it...")
         os.remove(dist)
