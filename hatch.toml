@@ -1,0 +1,11 @@
+[version]
+path = "src/pyawaitable/__init__.py"
+
+[build.targets.wheel]
+packages = ["src/pyawaitable"]
+
+[build.targets.sdist]
+only-include = ["src/pyawaitable"]
+
+[build.hooks.custom]
+enable-by-default = true

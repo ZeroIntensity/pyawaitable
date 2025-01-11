@@ -16,9 +16,4 @@
 #define _PyAwaitable_MANGLE(name) name
 #define _PyAwaitable_NO_MANGLE(name) name
 
-#define PyAwaitable_MAJOR_VERSION 2
-#define PyAwaitable_MINOR_VERSION 0
-#define PyAwaitable_MICRO_VERSION 0
-#define PyAwaitable_PATCH_VERSION PyAwaitable_MINOR_VERSION
-
 #endif
