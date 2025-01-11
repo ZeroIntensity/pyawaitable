@@ -158,6 +158,31 @@ genwrapper_next(PyObject * self)
         assert(cb->done == false);
         assert(cb->coro != NULL);
 
+        if (cb->callback != NULL && cb->coro == NULL)
+        {
+            int def_res = ((defer_callback)cb->callback)((PyObject*)aw);
+
+            // If we recently cancelled, then cb is no longer valid
+            if (aw->aw_recently_cancelled)
+            {
+              cb = NULL;
+            }
+
+            if (def_res < 0 && !PyErr_Occurred())
+            {
+                PyErr_SetString(
+                    PyExc_SystemError,
+                    "pyawaitable: callback returned -1 without exception set"
+                );
+                DONE_IF_OK(cb);
+                return NULL;
+            }
+
+            // Callback is done.
+            DONE_IF_OK(cb);
+            return genwrapper_next(self);
+        }
+
         if (
             Py_TYPE(cb->coro)->tp_as_async == NULL ||
             Py_TYPE(cb->coro)->tp_as_async->am_await == NULL
@@ -302,7 +327,7 @@ genwrapper_next(PyObject * self)
                 PyExc_RuntimeError,
                 "pyawaitable: user callback returned -1 without exception set"
             );
-            DONE(cb);
+            DONE_IF_OK(cb);
             AW_DONE();
             return NULL;
         }

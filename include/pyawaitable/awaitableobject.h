@@ -9,6 +9,7 @@
 
 typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *);
+typedef int (*defer_callback)(PyObject *);
 
 typedef struct _pyawaitable_callback
 {
@@ -54,6 +55,9 @@ PyAwaitable_AddAwait(
     awaitcallback cb,
     awaitcallback_err err
 );
+
+_PyAwaitable_API(int)
+PyAwaitable_DeferAwait(PyObject *aw, defer_callback cb);
 
 _PyAwaitable_API(void)
 PyAwaitable_Cancel(PyObject * aw);
