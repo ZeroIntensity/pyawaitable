@@ -1,13 +1,16 @@
 import asyncio
 from collections.abc import Coroutine
 
-import _pyawaitable_test
 import pytest
 from conftest import limit_leaks
 
 import pyawaitable
-from pyawaitable.bindings import (abi, add_await, awaitcallback,
-                                  awaitcallback_err)
+from pyawaitable.bindings import (
+    abi,
+    add_await,
+    awaitcallback,
+    awaitcallback_err,
+)
 
 
 @limit_leaks

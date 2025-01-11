@@ -7,5 +7,29 @@ packages = ["src/pyawaitable"]
 [build.targets.sdist]
 only-include = ["src/pyawaitable"]
 
+[build.targets.wheel.hooks.autorun]
+dependencies = ["hatch-autorun"]
+code = """
+import pyawaitable
+import os
+
+os.environ['PYAWAITABLE_INCLUDE'] = pyawaitable.include(suppress_error=True)
+"""
+
 [build.hooks.custom]
 enable-by-default = true
+
+[envs.hatch-test]
+extra-dependencies = [
+    "pytest-asyncio",
+    "pytest-memray"
+]
+
+[envs.hatch-test.overrides.platform.windows]
+extra-dependencies = ["pytest-asyncio"]
+
+[[envs.hatch-test.matrix]]
+python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
+
+[envs.hatch-test.scripts]
+leaks = "pytest{env:HATCH_TEST_ARGS:} {args} --enable-leak-tracking"

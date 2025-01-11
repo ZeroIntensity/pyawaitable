@@ -48,20 +48,8 @@ It's highly recommended to do this inside of a [virtual environment](https://doc
 
 ## Running Tests
 
-PyAwaitable uses three libraries for unit testing:
-
--   [pytest](https://docs.pytest.org/en/8.2.x/), as the general testing framework.
--   [pytest-asyncio](https://pytest-asyncio.readthedocs.io/en/latest/), for asynchronous tests.
--   [pytest-memray](https://pytest-memray.readthedocs.io/en/latest/), for detection of memory leaks. Note this isn't available for Windows, so simply omit this in your installation.
-
-Installation is trivial:
+PyAwaitable uses [Hatch](https://hatch.pypa.io), so that will handle everything for you:
 
 ```
-$ pip install pytest pytest-asyncio pytest-memray
-```
-
-Tests generally access the PyAwaitable API functions using [ctypes](https://docs.python.org/3/library/ctypes.html), but there's also an extension module solely built for tests called `_pyawaitable_test`. You can install this with the following command:
-
-```
-$ pip install setuptools wheel && pip install ./test/extension/ --no-build-isolation
+$ hatch test
 ```

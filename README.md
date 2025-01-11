@@ -24,10 +24,6 @@ Add it to your project's build process:
 [build-system]
 requires = ["setuptools", "pyawaitable"]
 build-backend = "setuptools.build_meta"
-
-[project]
-# ...
-dependencies = ["pyawaitable"]
 ```
 
 Include it in your extension:
@@ -46,38 +42,20 @@ if __name__ == "__main__":
 ## Example
 
 ```c
-#define PYAWAITABLE_PYAPI
 #include <pyawaitable.h>
 
-// Assuming that this is using METH_O
+/* Usage from Python: await my_async_function(coro()) */
 static PyObject *
-hello(PyObject *self, PyObject *coro) {
-    // Make our awaitable object
+my_async_function(PyObject *self, PyObject *coro) {
+    /* Make our awaitable object */
     PyObject *awaitable = PyAwaitable_New();
 
-    if (awaitable == NULL) {
-        return NULL;
-    }
+    /* Mark the coroutine for being awaited */
+    PyAwaitable_AddAwait(awaitable, coro, NULL, NULL);
 
-    // Mark the coroutine for being awaited
-    if (PyAwaitable_AddAwait(awaitable, coro, NULL, NULL) < 0) {
-        Py_DECREF(awaitable);
-        return NULL;
-    }
-
-    // Return the awaitable object to yield to the event loop
+    /* Return the awaitable object to yield to the event loop */
     return awaitable;
 }
-```
-
-```py
-# Assuming top-level await
-async def coro():
-    await asyncio.sleep(1)
-    print("awaited from C!")
-
-# Use our C function to await it
-await hello(coro())
 ```
 
 ## Copyright
