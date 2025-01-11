@@ -5,7 +5,7 @@
 #include <pyawaitable/awaitableobject.h>
 #include <pyawaitable/dist.h>
 
-PyTypeObject _PyAwaitable_MANGLE(_PyAwaitableGenWrapperType);
+_PyAwaitable_INTERNAL_DATA(PyTypeObject) _PyAwaitableGenWrapperType;
 
 typedef struct _GenWrapperObject
 {

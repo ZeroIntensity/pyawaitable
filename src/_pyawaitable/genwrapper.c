@@ -332,8 +332,7 @@ genwrapper_next(PyObject * self)
     return genwrapper_next(self);
 }
 
-PyTypeObject
-_PyAwaitable_MANGLE(_PyAwaitableGenWrapperType) =
+_PyAwaitable_INTERNAL_DATA_DEF(PyTypeObject) _PyAwaitableGenWrapperType =
 {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "_genwrapper",
