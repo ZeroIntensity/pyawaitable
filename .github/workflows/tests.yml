@@ -76,18 +76,16 @@ jobs:
       - name: Set up Python 3.12
         uses: actions/setup-python@v2
         with:
-          python-version: 3.12            
-      - name: Build PyAwaitable
-        run: pip install .
-
-      - name: Build PyAwaitable Test Package
-        run: pip install setuptools wheel && pip install tests/extension/ --no-build-isolation
+          python-version: 3.12
 
       - name: Install Valgrind
         run: sudo apt-get update && sudo apt-get -y install valgrind
 
-      - name: Run tests with Valgrind
-        run: valgrind --suppressions=valgrind-python.supp --error-exitcode=1 pytest -x
+      - name: Install Hatch
+        uses: pypa/hatch@install
+
+      - name: Run tests
+        run: valgrind --suppressions=valgrind-python.supp --exit-errorcode=1 hatch test
 
   memory-leaks:
     needs:
@@ -106,19 +104,11 @@ jobs:
         with:
           python-version: 3.12
 
-      - name: Install Pytest
-        run: |
-            pip install pytest pytest-asyncio pytest-memray typing_extensions
-        shell: bash
-
-      - name: Build PyAwaitable
-        run: pip install .
-
-      - name: Build PyAwaitable Test Package
-        run: pip install setuptools wheel && pip install tests/extension/ --no-build-isolation
+      - name: Install Hatch
+        uses: pypa/hatch@install
 
       - name: Run tests with Memray tracking
-        run: pytest --enable-leak-tracking -W error --stacks=50 --native
+        run: hatch test --enable-leak-tracking
 
   tests-pass:
     runs-on: ubuntu-latest

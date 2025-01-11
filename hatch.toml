@@ -32,4 +32,4 @@ extra-dependencies = ["pytest-asyncio"]
 python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
 [envs.hatch-test.scripts]
-leaks = "pytest{env:HATCH_TEST_ARGS:} {args} --enable-leak-tracking"
+run = "pytest{env:HATCH_TEST_ARGS:} {args} -x -vv"
