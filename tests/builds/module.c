@@ -9,7 +9,7 @@ mod_exec(PyObject *mod)
 PyModuleDef_Slot slots[] =
 {
     {Py_mod_exec, mod_exec},
-    {NULL, 0}
+    {0, NULL}
 };
 
 static int

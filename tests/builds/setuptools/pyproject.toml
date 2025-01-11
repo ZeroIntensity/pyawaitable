@@ -3,6 +3,5 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "_pyawaitable_setuptools"
+name = "pyawaitable_setuptools"
 version = "0.0.0"
-license = { file = "../../../LICENSE" }

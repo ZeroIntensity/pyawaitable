@@ -30,6 +30,7 @@ HEADER_FILES = [
     "genwrapper.h",
     "values.h",
     "with.h",
+    "init.h",
 ]
 
 INCLUDE_REGEX = re.compile(r"#include <(.+)>")
