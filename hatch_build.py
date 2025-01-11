@@ -32,6 +32,14 @@ HEADER_FILES = [
     "with.h",
     "init.h",
 ]
+SOURCE_FILES = [
+    Path("./src/_pyawaitable/array.c"),
+    Path("./src/_pyawaitable/coro.c"),
+    Path("./src/_pyawaitable/awaitable.c"),
+    Path("./src/_pyawaitable/genwrapper.c"),
+    Path("./src/_pyawaitable/values.c"),
+    Path("./src/_pyawaitable/with.c")
+]
 
 INCLUDE_REGEX = re.compile(r"#include <(.+)>")
 FUNCTION_REGEX = re.compile(r"(.+)\(.*\).*")
@@ -257,7 +265,7 @@ def process_files(fp: TextIO) -> None:
 
     log("Processing source files...")
     with logging_context():
-        for source_file in Path("./src/_pyawaitable").iterdir():
+        for source_file in SOURCE_FILES:
             lines: list[str] = source_file.read_text(encoding="utf-8").split(
                 "\n"
             )
