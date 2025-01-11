@@ -64,14 +64,4 @@ awaitable_next(PyObject * self);
 _PyAwaitable_API(PyObject *)
 PyAwaitable_New(void);
 
-_PyAwaitable_API(int)
-PyAwaitable_AwaitFunction(
-    PyObject * awaitable,
-    PyObject * func,
-    const char *fmt,
-    awaitcallback cb,
-    awaitcallback_err err,
-    ...
-);
-
 #endif

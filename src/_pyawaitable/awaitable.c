@@ -182,58 +182,6 @@ PyAwaitable_New(void)
     return awaitable_new_func(&PyAwaitable_Type, NULL, NULL);
 }
 
-_PyAwaitable_API(int)
-PyAwaitable_AwaitFunction(
-    PyObject * awaitable,
-    PyObject * func,
-    const char *fmt,
-    awaitcallback cb,
-    awaitcallback_err err,
-    ...
-)
-{
-    size_t len = strlen(fmt);
-    size_t size = len + 3;
-    char *tup_format = PyMem_Malloc(size);
-    if (!tup_format)
-    {
-        PyErr_NoMemory();
-        return -1;
-    }
-
-    tup_format[0] = '(';
-    for (size_t i = 0; i < len; ++i)
-    {
-        tup_format[i + 1] = fmt[i];
-    }
-
-    tup_format[size - 2] = ')';
-    tup_format[size - 1] = '\0';
-
-    va_list vargs;
-    va_start(vargs, err);
-    PyObject *args = Py_VaBuildValue(tup_format, vargs);
-    va_end(vargs);
-    PyMem_Free(tup_format);
-
-    if (!args)
-        return -1;
-    PyObject *coro = PyObject_Call(func, args, NULL);
-    Py_DECREF(args);
-
-    if (!coro)
-        return -1;
-
-    if (PyAwaitable_AddAwait(awaitable, coro, cb, err) < 0)
-    {
-        Py_DECREF(coro);
-        return -1;
-    }
-
-    Py_DECREF(coro);
-    return 0;
-}
-
 PyTypeObject PyAwaitable_Type =
 {
     PyVarObject_HEAD_INIT(NULL, 0)
