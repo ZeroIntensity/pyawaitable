@@ -1,22 +1,16 @@
 """
 PyAwaitable - Call asynchronous code from an extension module.
 
+It's unlikely that you want to import this module from Python, other than
+for use in setuptools
+
 Docs: https://awaitable.zintensity.dev/
 Source: https://github.com/ZeroIntensity/pyawaitable
 """
 
-from typing import Type
-
-from _pyawaitable import _PyAwaitableType  # type: ignore
-
-from . import abi
-
-__all__ = "PyAwaitable", "include", "abi"
+__all__ = "include",
 __version__ = "2.0.0"
 __author__ = "Peter Bierma"
-
-PyAwaitable: Type = _PyAwaitableType
-
 
 def include() -> str:
     """
