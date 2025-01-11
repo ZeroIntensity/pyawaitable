@@ -10,10 +10,14 @@ async_with_inner(PyObject *aw, PyObject *res)
     awaitcallback_err err;
     PyObject *exit;
     if (PyAwaitable_UnpackArbValues(aw, &cb, &err) < 0)
+    {
         return -1;
+    }
 
     if (PyAwaitable_UnpackValues(aw, &exit) < 0)
+    {
         return -1;
+    }
 
     Py_INCREF(aw);
     Py_INCREF(res);
@@ -88,8 +92,8 @@ async_with_inner(PyObject *aw, PyObject *res)
 
 _PyAwaitable_API(int)
 PyAwaitable_AsyncWith(
-    PyObject *aw,
-    PyObject *ctx,
+    PyObject * aw,
+    PyObject * ctx,
     awaitcallback cb,
     awaitcallback_err err
 )

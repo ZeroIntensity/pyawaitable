@@ -92,22 +92,22 @@ check_index(Py_ssize_t index, pyawaitable_array *array)
 }
 
 _PyAwaitable_API(int)
-PyAwaitable_UnpackValues(PyObject *awaitable, ...)
+PyAwaitable_UnpackValues(PyObject * awaitable, ...)
 {
     UNPACK(aw_object_values, PyObject *);
 }
 
 _PyAwaitable_API(int)
-PyAwaitable_SaveValues(PyObject *awaitable, Py_ssize_t nargs, ...)
+PyAwaitable_SaveValues(PyObject * awaitable, Py_ssize_t nargs, ...)
 {
     SAVE(aw_object_values, PyObject *, Py_INCREF(ptr));
 }
 
 _PyAwaitable_API(int)
 PyAwaitable_SetValue(
-    PyObject *awaitable,
+    PyObject * awaitable,
     Py_ssize_t index,
-    PyObject *new_value
+    PyObject * new_value
 )
 {
     SET(aw_object_values, Py_NewRef);
@@ -115,7 +115,7 @@ PyAwaitable_SetValue(
 
 _PyAwaitable_API(PyObject *)
 PyAwaitable_GetValue(
-    PyObject *awaitable,
+    PyObject * awaitable,
     Py_ssize_t index
 )
 {
@@ -125,20 +125,20 @@ PyAwaitable_GetValue(
 /* Arbitrary Values */
 
 _PyAwaitable_API(int)
-PyAwaitable_UnpackArbValues(PyObject *awaitable, ...)
+PyAwaitable_UnpackArbValues(PyObject * awaitable, ...)
 {
     UNPACK(aw_arbitrary_values, void *);
 }
 
 _PyAwaitable_API(int)
-PyAwaitable_SaveArbValues(PyObject *awaitable, Py_ssize_t nargs, ...)
+PyAwaitable_SaveArbValues(PyObject * awaitable, Py_ssize_t nargs, ...)
 {
     SAVE(aw_arbitrary_values, void *, NOTHING);
 }
 
 _PyAwaitable_API(int)
 PyAwaitable_SetArbValue(
-    PyObject *awaitable,
+    PyObject * awaitable,
     Py_ssize_t index,
     void *new_value
 )
@@ -148,7 +148,7 @@ PyAwaitable_SetArbValue(
 
 _PyAwaitable_API(void *)
 PyAwaitable_GetArbValue(
-    PyObject *awaitable,
+    PyObject * awaitable,
     Py_ssize_t index
 )
 {
@@ -158,20 +158,20 @@ PyAwaitable_GetArbValue(
 /* Integer Values */
 
 _PyAwaitable_API(int)
-PyAwaitable_UnpackIntValues(PyObject *awaitable, ...)
+PyAwaitable_UnpackIntValues(PyObject * awaitable, ...)
 {
     UNPACK(aw_integer_values, long);
 }
 
 _PyAwaitable_API(int)
-PyAwaitable_SaveIntValues(PyObject *awaitable, Py_ssize_t nargs, ...)
+PyAwaitable_SaveIntValues(PyObject * awaitable, Py_ssize_t nargs, ...)
 {
     SAVE(aw_integer_values, long, NOTHING);
 }
 
 _PyAwaitable_API(int)
 PyAwaitable_SetIntValue(
-    PyObject *awaitable,
+    PyObject * awaitable,
     Py_ssize_t index,
     long new_value
 )
@@ -181,7 +181,7 @@ PyAwaitable_SetIntValue(
 
 _PyAwaitable_API(long)
 PyAwaitable_GetIntValue(
-    PyObject *awaitable,
+    PyObject * awaitable,
     Py_ssize_t index
 )
 {

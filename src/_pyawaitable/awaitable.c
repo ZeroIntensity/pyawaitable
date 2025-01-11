@@ -7,11 +7,6 @@
 #include <pyawaitable/coro.h>
 #include <pyawaitable/genwrapper.h>
 
-PyDoc_STRVAR(
-    awaitable_doc,
-    "Awaitable transport utility for the C API."
-);
-
 static void
 callback_dealloc(void *ptr)
 {
@@ -247,7 +242,7 @@ PyTypeObject PyAwaitable_Type =
     .tp_dealloc = awaitable_dealloc,
     .tp_as_async = &pyawaitable_async_methods,
     .tp_flags = Py_TPFLAGS_DEFAULT,
-    .tp_doc = awaitable_doc,
+    .tp_doc = PyDoc_STR("Awaitable transport utility for the C API."),
     .tp_iternext = awaitable_next,
     .tp_new = awaitable_new_func,
     .tp_methods = pyawaitable_methods

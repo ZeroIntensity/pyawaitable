@@ -17,5 +17,10 @@ def include() -> str:
     Get the directory containing the `pyawaitable.h` file.
     """
     import os
+    from pathlib import Path
 
-    return os.path.dirname(__file__)
+    directory = Path(__file__).parent
+    if "pyawaitable.h" not in os.listdir(directory):
+        raise RuntimeError("pyawaitable.h wasn't found! Are you sure your installation is correct?")
+
+    return str(directory.absolute())

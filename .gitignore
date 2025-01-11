@@ -6,8 +6,9 @@ __pycache__/
 *.egg-info
 test/
 dist/
-pyawaitable-vendor/
 *.so
+pyawaitable.h
+pcbuild/
 
 # LSP
 compile_flags.txt
@@ -17,10 +18,9 @@ build/
 *.sln
 *.user
 *.vcxproj*
+.clang-format
 
 # Misc
 test.py
 a.py
 vgcore*
-pyawaitable.h
-pcbuild/
