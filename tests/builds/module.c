@@ -32,19 +32,27 @@ test(PyObject *self, PyObject *coro)
         return NULL;
     }
 
-    PyObject *awaitable = PyAwaitable_New();
+    /* Make sure that the structure is exposed correctly */
+    PyAwaitableObject *awaitable = (PyAwaitableObject *)PyAwaitable_New();
     if (awaitable == NULL)
     {
         return NULL;
     }
 
-    if (PyAwaitable_AddAwait(awaitable, coro, test_callback, NULL) < 0)
+    if (
+        PyAwaitable_AddAwait(
+            (PyObject *)awaitable,
+            coro,
+            test_callback,
+            NULL
+        ) < 0
+    )
     {
         Py_DECREF(awaitable);
         return NULL;
     }
 
-    return awaitable;
+    return (PyObject *)awaitable;
 }
 
 PyMethodDef methods[] =

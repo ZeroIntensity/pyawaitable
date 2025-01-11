@@ -158,15 +158,6 @@ genwrapper_next(PyObject * self)
         assert(cb->done == false);
         assert(cb->coro != NULL);
 
-        if (cb->coro == NULL)
-        {
-            printf(
-                "len: %ld, state: %ld\n",
-                pyawaitable_array_LENGTH(&aw->aw_callbacks),
-                aw->aw_state
-            );
-        }
-
         if (
             Py_TYPE(cb->coro)->tp_as_async == NULL ||
             Py_TYPE(cb->coro)->tp_as_async->am_await == NULL
