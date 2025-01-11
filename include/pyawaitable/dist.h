@@ -1,6 +1,10 @@
 #ifndef PYAWAITABLE_DIST_H
 #define PYAWAITABLE_DIST_H
 
+#if PY_MINOR_VERSION < 9
+#error "Python 3.8 and older have reached End of Life, please use Python 3.9 or newer."
+#endif
+
 #ifdef Py_LIMITED_API
 #error "the limited API cannot be used with pyawaitable"
 #endif
