@@ -50,7 +50,7 @@ INTERNAL_DATA_REGEX = re.compile(r"_PyAwaitable_INTERNAL_DATA\(.+\) (.+)")
 EXPLICIT_REGEX = re.compile(r".*_PyAwaitable_MANGLE\((.+)\).*")
 NO_EXPLICIT_REGEX = re.compile(r".*_PyAwaitable_NO_MANGLE\((.+)\).*")
 HEADER_GUARD = """
-#ifndef PYAWAITABLE_VENDOR_H
+#if !defined(PYAWAITABLE_VENDOR_H) && !defined(Py_LIMITED_API)
 #define PYAWAITABLE_VENDOR_H
 #define _PYAWAITABLE_VENDOR
 """
@@ -312,7 +312,10 @@ def main(version: str) -> None:
         with logging_context():
             write(f, HEADER(version) + HEADER_GUARD + version_text)
             process_files(f)
-            write(f, "#endif /* PYAWAITABLE_VENDOR_H */")
+            write(f, """#else
+#error "the limited API cannot be used with pyawaitable"
+#endif /* PYAWAITABLE_VENDOR_H */
+""")
 
     log(f"Created PyAwaitable distribution at {dist}")
 
