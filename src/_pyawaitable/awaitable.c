@@ -201,11 +201,36 @@ PyAwaitable_SetResult(PyObject * awaitable, PyObject * result)
     return 0;
 }
 
+_PyAwaitable_INTERNAL(PyObject *)
+_PyAwaitable_GetType(PyObject * mod, const char * type)
+{
+    PyObject *_type = PyObject_GetAttrString(mod, type);
+    if (!PyCallable_Check(_type))
+    {
+        Py_XDECREF(_type);
+        return NULL;
+    }
+
+    return _type;
+}
+
 _PyAwaitable_API(PyObject *)
-PyAwaitable_New(void)
+PyAwaitable_GetType(PyObject * mod)
+{
+    return _PyAwaitable_GetType(mod, "_PyAwaitableType");
+}
+
+_PyAwaitable_API(PyObject *)
+PyAwaitable_New(PyObject * mod)
 {
     // XXX Use a freelist?
-    return awaitable_new_func(&PyAwaitable_Type, NULL, NULL);
+    PyObject *type = PyAwaitable_GetType(mod);
+    PyObject *result = awaitable_new_func((PyTypeObject *)type, NULL, NULL);
+
+    // TODO: Store Weak Reference here.
+    ((PyAwaitableObject *)result)->aw_mod = mod;
+    Py_DECREF(type);
+    return result;
 }
 
 _PyAwaitable_API(PyTypeObject) PyAwaitable_Type =

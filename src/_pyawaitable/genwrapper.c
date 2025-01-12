@@ -66,11 +66,13 @@ _PyAwaitable_INTERNAL(PyObject *)
 genwrapper_new(PyAwaitableObject * aw)
 {
     assert(aw != NULL);
+    PyObject *type = _PyAwaitable_GetType(aw->aw_mod, "_genwrapper");
     GenWrapperObject *g = (GenWrapperObject *) gen_new(
-        &_PyAwaitableGenWrapperType,
+        (PyTypeObject *)type,
         NULL,
         NULL
     );
+    Py_DECREF(type);
 
     if (!g)
         return NULL;
