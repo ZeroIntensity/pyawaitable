@@ -43,7 +43,7 @@ struct _PyAwaitableObject
 };
 
 typedef struct _PyAwaitableObject PyAwaitableObject;
-PyTypeObject PyAwaitable_Type;
+_PyAwaitable_API(PyTypeObject) PyAwaitable_Type;
 
 _PyAwaitable_API(int)
 PyAwaitable_SetResult(PyObject * awaitable, PyObject * result);

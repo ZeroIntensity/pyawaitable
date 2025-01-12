@@ -208,7 +208,7 @@ PyAwaitable_New(void)
     return awaitable_new_func(&PyAwaitable_Type, NULL, NULL);
 }
 
-PyTypeObject PyAwaitable_Type =
+_PyAwaitable_API(PyTypeObject) PyAwaitable_Type =
 {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "_PyAwaitableType",

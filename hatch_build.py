@@ -314,8 +314,7 @@ def main(version: str) -> None:
             process_files(f)
             write(f, """#else
 #error "the limited API cannot be used with pyawaitable"
-#endif /* PYAWAITABLE_VENDOR_H */
-""")
+#endif /* PYAWAITABLE_VENDOR_H */""")
 
     log(f"Created PyAwaitable distribution at {dist}")
 
