@@ -38,7 +38,8 @@ SOURCE_FILES = [
     Path("./src/_pyawaitable/awaitable.c"),
     Path("./src/_pyawaitable/genwrapper.c"),
     Path("./src/_pyawaitable/values.c"),
-    Path("./src/_pyawaitable/with.c")
+    Path("./src/_pyawaitable/with.c"),
+    Path("./src/_pyawaitable/init.c")
 ]
 
 INCLUDE_REGEX = re.compile(r"#include <(.+)>")

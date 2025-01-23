@@ -6,6 +6,7 @@
 #include <pyawaitable/backport.h>
 #include <pyawaitable/coro.h>
 #include <pyawaitable/genwrapper.h>
+#include <pyawaitable/init.h>
 
 static void
 callback_dealloc(void *ptr)
@@ -215,20 +216,11 @@ _PyAwaitable_GetType(PyObject * mod, const char * type)
 }
 
 _PyAwaitable_API(PyObject *)
-PyAwaitable_GetType(PyObject * mod)
-{
-    return _PyAwaitable_GetType(mod, "_PyAwaitableType");
-}
-
-_PyAwaitable_API(PyObject *)
-PyAwaitable_New(PyObject * mod)
+PyAwaitable_New(void)
 {
     // XXX Use a freelist?
-    PyObject *type = PyAwaitable_GetType(mod);
+    PyObject *type = _PyAwaitable_GetType(pyawaitableModule, "_PyAwaitableType");
     PyObject *result = awaitable_new_func((PyTypeObject *)type, NULL, NULL);
-
-    // TODO: Store Weak Reference here.
-    ((PyAwaitableObject *)result)->aw_mod = mod;
     Py_DECREF(type);
     return result;
 }

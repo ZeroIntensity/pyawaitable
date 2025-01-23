@@ -4,7 +4,7 @@
 #include <Python.h>
 #include <pyawaitable/dist.h>
 
-#ifndef MS_WIN32
+#ifndef _PYAWAITABLE_VENDOR
 _PyAwaitable_INTERNAL_DATA(PyMethodDef) pyawaitable_methods[];
 #endif
 _PyAwaitable_INTERNAL_DATA(PyAsyncMethods) pyawaitable_async_methods;

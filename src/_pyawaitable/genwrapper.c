@@ -2,6 +2,7 @@
 #include <pyawaitable/backport.h>
 #include <pyawaitable/awaitableobject.h>
 #include <pyawaitable/genwrapper.h>
+#include <pyawaitable/init.h>
 #include <stdlib.h>
 #define DONE(cb)                 \
         do { cb->done = true;    \
@@ -66,7 +67,7 @@ _PyAwaitable_INTERNAL(PyObject *)
 genwrapper_new(PyAwaitableObject * aw)
 {
     assert(aw != NULL);
-    PyObject *type = _PyAwaitable_GetType(aw->aw_mod, "_genwrapper");
+    PyObject *type = _PyAwaitable_GetType(pyawaitableModule, "_genwrapper");
     GenWrapperObject *g = (GenWrapperObject *) gen_new(
         (PyTypeObject *)type,
         NULL,
@@ -158,7 +159,6 @@ genwrapper_next(PyObject * self)
         cb = genwrapper_advance(g);
         assert(cb != NULL);
         assert(cb->done == false);
-        assert(cb->coro != NULL);
 
         if (cb->callback != NULL && cb->coro == NULL)
         {
@@ -185,6 +185,7 @@ genwrapper_next(PyObject * self)
             return genwrapper_next(self);
         }
 
+        assert(cb->coro != NULL);
         if (
             Py_TYPE(cb->coro)->tp_as_async == NULL ||
             Py_TYPE(cb->coro)->tp_as_async->am_await == NULL

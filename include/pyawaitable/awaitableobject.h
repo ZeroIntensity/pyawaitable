@@ -40,8 +40,6 @@ struct _PyAwaitableObject
     PyObject *aw_gen;
     /* Set to 1 if the object was cancelled, for introspection against callbacks */
     int aw_recently_cancelled;
-    /* For internal use only, weak reference to the module object itself. */
-    PyObject *aw_mod;
 };
 
 typedef struct _PyAwaitableObject PyAwaitableObject;
@@ -71,9 +69,6 @@ _PyAwaitable_INTERNAL(PyObject *)
 _PyAwaitable_GetType(PyObject * mod, const char * type);
 
 _PyAwaitable_API(PyObject *)
-PyAwaitable_GetType(PyObject * mod);
-
-_PyAwaitable_API(PyObject *)
-PyAwaitable_New(PyObject * mod);
+PyAwaitable_New(void);
 
 #endif
