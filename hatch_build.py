@@ -296,7 +296,7 @@ def process_files(fp: TextIO) -> None:
 
     log("Writing macro cleanup...")
     with logging_context():
-        for define in defines:
+        for define in source_macros:
             write(fp, f"#undef {define}")
 
 
