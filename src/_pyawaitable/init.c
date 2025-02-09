@@ -118,14 +118,13 @@ get_module_version(PyObject *mod)
 static PyObject *
 find_module_for_version(PyObject *interp_dict, long version)
 {
-    PyObject *list = PyDict_GetItemString(interp_dict, "_pyawaitable_list");
+    PyObject *list = PyDict_GetItemString(interp_dict, "_pyawaitable_modules");
     if (list == NULL) {
-        puts("a");
         return not_initialized();
     }
 
     if (!PyList_CheckExact(list)) {
-        module_corrupted("_pyawaitable_list is not a list", list);
+        module_corrupted("_pyawaitable_modules is not a list", list);
         return NULL;
     }
 
@@ -142,7 +141,6 @@ find_module_for_version(PyObject *interp_dict, long version)
         }
     }
 
-    puts("b");
     return not_initialized();
 }
 
@@ -162,7 +160,6 @@ _PyAwaitable_GetModule(void)
 
     PyObject *mod = PyDict_GetItemString(dict, "_pyawaitable_mod");
     if (mod == NULL) {
-        puts("c");
         return not_initialized();
     }
 
