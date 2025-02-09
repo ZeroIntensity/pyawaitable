@@ -16,7 +16,7 @@
 typedef void (*_PyAwaitable_MANGLE(pyawaitable_array_deallocator))(void *);
 
 /*
- * Internal only dynamic array for CPython.
+ * Internal only dynamic array for PyAwaitable.
  */
 typedef struct
 {

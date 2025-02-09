@@ -13,7 +13,7 @@ __version__ = "2.0.0"
 __author__ = "Peter Bierma"
 
 
-def include(*, suppress_error=False) -> str:
+def include(*, suppress_error: bool = False) -> str:
     """
     Get the directory containing the `pyawaitable.h` file.
     """

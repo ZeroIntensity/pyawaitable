@@ -17,6 +17,12 @@ awaitable_send_with_arg(PyObject *self, PyObject *value)
             return NULL;
         }
 
+        if (PyAwaitable_UNLIKELY(value != Py_None)) {
+            PyErr_SetNone(PyExc_RuntimeError,
+                          "can't send non-None value to a just-started awaitable")
+            return NULL;
+        }
+
         Py_DECREF(gen);
         Py_RETURN_NONE;
     }
@@ -25,15 +31,8 @@ awaitable_send_with_arg(PyObject *self, PyObject *value)
 }
 
 static PyObject *
-awaitable_send(PyObject *self, PyObject *args)
+awaitable_send(PyObject *self, PyObject *value)
 {
-    PyObject *value;
-
-    if (!PyArg_ParseTuple(args, "O", &value))
-    {
-        return NULL;
-    }
-
     return awaitable_send_with_arg(self, value);
 }
 
@@ -142,8 +141,8 @@ awaitable_am_send(PyObject *self, PyObject *arg, PyObject **presult)
 
 _PyAwaitable_INTERNAL_DATA_DEF(PyMethodDef) pyawaitable_methods[] =
 {
-    {"send", awaitable_send, METH_VARARGS, NULL},
-    {"close", awaitable_close, METH_VARARGS, NULL},
+    {"send", awaitable_send, METH_O, NULL},
+    {"close", awaitable_close, METH_NOARGS, NULL},
     {"throw", awaitable_throw, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };

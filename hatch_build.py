@@ -1,3 +1,7 @@
+"""
+PyAwaitable Vendoring Script
+"""
+
 import os
 from pathlib import Path
 from typing import Callable, TextIO, ParamSpec, TypeVar
@@ -9,11 +13,13 @@ import textwrap
 try:
     from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 except ImportError:
+
     class BuildHookInterface:
         pass
 
-DIST_PATH = "src/pyawaitable/pyawaitable.h"
-HEADER_FILES = [
+
+DIST_PATH: str = "src/pyawaitable/pyawaitable.h"
+HEADER_FILES: list[str] = [
     "optimize.h",
     "dist.h",
     "array.h",
@@ -25,24 +31,24 @@ HEADER_FILES = [
     "with.h",
     "init.h",
 ]
-SOURCE_FILES = [
+SOURCE_FILES: list[Path] = [
     Path("./src/_pyawaitable/array.c"),
     Path("./src/_pyawaitable/coro.c"),
     Path("./src/_pyawaitable/awaitable.c"),
     Path("./src/_pyawaitable/genwrapper.c"),
     Path("./src/_pyawaitable/values.c"),
     Path("./src/_pyawaitable/with.c"),
-    Path("./src/_pyawaitable/init.c")
+    Path("./src/_pyawaitable/init.c"),
 ]
 
 INCLUDE_REGEX = re.compile(r"#include <(.+)>")
 FUNCTION_REGEX = re.compile(r"(.+)\(.*\).*")
-INTERNAL_FUNCTION_REGEX = re.compile(
-    r"_PyAwaitable_INTERNAL\(.+\)\n(.+)\(.*\).*"
-)
+INTERNAL_FUNCTION_REGEX = re.compile(r"_PyAwaitable_INTERNAL\(.+\)\n(.+)\(.*\).*")
 INTERNAL_DATA_REGEX = re.compile(r"_PyAwaitable_INTERNAL_DATA\(.+\) (.+)")
 EXPLICIT_REGEX = re.compile(r".*_PyAwaitable_MANGLE\((.+)\).*")
 NO_EXPLICIT_REGEX = re.compile(r".*_PyAwaitable_NO_MANGLE\((.+)\).*")
+DEFINE_REGEX = re.compile(r" *# *define *(\w+)(\(.*\))?.*")
+
 HEADER_GUARD = """
 #if !defined(PYAWAITABLE_VENDOR_H) && !defined(Py_LIMITED_API)
 #define PYAWAITABLE_VENDOR_H
@@ -115,6 +121,16 @@ def find_includes(lines: list[str], includes: set[str]) -> None:
             includes.add(include)
 
 
+@new_context("Finding source file macros...")
+def find_defines(lines: list[str], defines: set[str]) -> None:
+    for line in lines:
+        match = DEFINE_REGEX.match(line)
+        if not match:
+            continue
+
+        defines.add(match.group(1))
+
+
 def filter_name(name: str) -> bool:
     return name.startswith("__")
 
@@ -123,9 +139,7 @@ def filter_name(name: str) -> bool:
 def mangle_explicit(changed_names: dict[str, str], line: str) -> None:
     explicit = EXPLICIT_REGEX.match(line)
     if explicit is None:
-        raise RuntimeError(
-            f"{line} does not follow _PyAwaitable_MANGLE correctly"
-        )
+        raise RuntimeError(f"{line} does not follow _PyAwaitable_MANGLE correctly")
 
     name = explicit.group(1)
     if filter_name(name):
@@ -139,9 +153,7 @@ def mangle_internal(
     changed_names: dict[str, str], lines: list[str], index: int
 ) -> None:
     try:
-        func_def = INTERNAL_FUNCTION_REGEX.match(
-            lines[index] + "\n" + lines[index + 1]
-        )
+        func_def = INTERNAL_FUNCTION_REGEX.match(lines[index] + "\n" + lines[index + 1])
     except IndexError:
         return
 
@@ -169,9 +181,7 @@ def mangle_internal_data(changed_names: dict[str, str], line: str) -> None:
 
 
 @new_context("Processing static function...")
-def mangle_static(
-    changed_names: dict[str, str], lines: list[str], index: int
-) -> None:
+def mangle_static(changed_names: dict[str, str], lines: list[str], index: int) -> None:
     try:
         line = lines[index + 1]
     except IndexError:
@@ -246,13 +256,13 @@ def process_files(fp: TextIO) -> None:
     to_write: list[str] = []
     log("Processing header files...")
     changed_names: dict[str, str] = {}
+    source_macros: set[str] = set()
+
     with logging_context():
         for header_file in HEADER_FILES:
             header_file = "include/pyawaitable" / Path(header_file)
             log(f"Processing {header_file}")
-            lines: list[str] = header_file.read_text(encoding="utf-8").split(
-                "\n"
-            )
+            lines: list[str] = header_file.read_text(encoding="utf-8").split("\n")
             find_includes(lines, includes)
             mangle_names(changed_names, lines)
             to_write.append("\n".join(lines))
@@ -260,12 +270,11 @@ def process_files(fp: TextIO) -> None:
     log("Processing source files...")
     with logging_context():
         for source_file in SOURCE_FILES:
-            lines: list[str] = source_file.read_text(encoding="utf-8").split(
-                "\n"
-            )
+            lines: list[str] = source_file.read_text(encoding="utf-8").split("\n")
             log(f"Processing {source_file}")
             find_includes(lines, includes)
             mangle_names(changed_names, lines)
+            find_defines(lines, source_macros)
             to_write.append("\n".join(lines))
 
     log("Writing macros...")
@@ -277,12 +286,18 @@ def process_files(fp: TextIO) -> None:
             write(fp, f"#include <{include}>")
 
     log("Writing mangled names...")
-    for name, new_name in orderize_mangled(changed_names).items():
-        for index, line in enumerate(to_write):
-            to_write[index] = clean_mangled(line.replace(name, new_name))
+    with logging_context():
+        for name, new_name in orderize_mangled(changed_names).items():
+            for index, line in enumerate(to_write):
+                to_write[index] = clean_mangled(line.replace(name, new_name))
 
-    for line in to_write:
-        write(fp, line)
+        for line in to_write:
+            write(fp, line)
+
+    log("Writing macro cleanup...")
+    with logging_context():
+        for define in defines:
+            write(fp, f"#undef {define}")
 
 
 def main(version: str) -> None:
@@ -307,9 +322,12 @@ def main(version: str) -> None:
         with logging_context():
             write(f, HEADER(version) + HEADER_GUARD + version_text)
             process_files(f)
-            write(f, """#else
+            write(
+                f,
+                """#else
 #error "the limited API cannot be used with pyawaitable"
-#endif /* PYAWAITABLE_VENDOR_H */""")
+#endif /* PYAWAITABLE_VENDOR_H */""",
+            )
 
     log(f"Created PyAwaitable distribution at {dist}")
 
@@ -330,4 +348,5 @@ class CustomBuildHook(BuildHookInterface):
 
 if __name__ == "__main__":
     from src.pyawaitable import __version__
+
     main(__version__)
