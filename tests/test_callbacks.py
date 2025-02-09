@@ -11,7 +11,7 @@ from pyawaitable.bindings import (abi, add_await, awaitcallback,
 
 @limit_leaks
 @pytest.mark.asyncio
-async def test_await_cb():
+async def test_await_callback_gets_value():
     awaitable = abi.new()
 
     async def coro(value: int):
@@ -30,7 +30,7 @@ async def test_await_cb():
 
 @limit_leaks
 @pytest.mark.asyncio
-async def test_await_cb_err():
+async def test_error_callback_used_instead():
     awaitable = abi.new()
 
     async def coro_raise() -> float:
@@ -55,7 +55,7 @@ async def test_await_cb_err():
 
 @limit_leaks
 @pytest.mark.asyncio
-async def test_await_cb_err_cb():
+async def test_callback_exception_given_to_error_callback():
     awaitable = abi.new()
 
     async def coro() -> int:
@@ -82,7 +82,7 @@ async def test_await_cb_err_cb():
 
 @limit_leaks
 @pytest.mark.asyncio
-async def test_await_cb_noerr():
+async def test_callback_error_propagates():
     awaitable = abi.new()
 
     async def coro() -> int:
@@ -101,7 +101,7 @@ async def test_await_cb_noerr():
 
 @limit_leaks
 @pytest.mark.asyncio
-async def test_await_cb_err_restore():
+async def test_error_callback_gets_exception():
     awaitable = abi.new()
     called = False
 
@@ -129,7 +129,7 @@ async def test_await_cb_err_restore():
 
 @limit_leaks
 @pytest.mark.asyncio
-async def test_await_cb_err_norestore():
+async def test_error_callback_with_error_propagates():
     awaitable = abi.new()
     called = False
 

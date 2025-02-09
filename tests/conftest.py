@@ -9,14 +9,6 @@ import pytest
 
 from pyawaitable.bindings import awaitcallback, awaitcallback_err
 
-try:
-    import _pyawaitable_test
-except ImportError:
-    pytest.exit(
-        "PyAwaitable testing package has not been build! (Hint: pip install tests/extension --no-build-isolation)",  # noqa
-        returncode=-1,
-    )
-
 ITERATIONS: int = 1000
 LEAK_LIMIT: str = "100 KB"
 
