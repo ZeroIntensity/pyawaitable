@@ -25,8 +25,7 @@ awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     assert(tp->tp_alloc != NULL);
 
     PyObject *self = tp->tp_alloc(tp, 0);
-    if (PyAwaitable_UNLIKELY(self == NULL))
-    {
+    if (PyAwaitable_UNLIKELY(self == NULL)) {
         return NULL;
     }
 
@@ -37,8 +36,7 @@ awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     aw->aw_result = NULL;
     aw->aw_recently_cancelled = 0;
 
-    if (pyawaitable_array_init(&aw->aw_callbacks, callback_dealloc) < 0)
-    {
+    if (pyawaitable_array_init(&aw->aw_callbacks, callback_dealloc) < 0) {
         goto error;
     }
 
@@ -47,18 +45,15 @@ awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
             &aw->aw_object_values,
             (pyawaitable_array_deallocator) Py_DecRef
         ) < 0
-    )
-    {
+    ) {
         goto error;
     }
 
-    if (pyawaitable_array_init(&aw->aw_arbitrary_values, NULL) < 0)
-    {
+    if (pyawaitable_array_init(&aw->aw_arbitrary_values, NULL) < 0) {
         goto error;
     }
 
-    if (pyawaitable_array_init(&aw->aw_integer_values, NULL) < 0)
-    {
+    if (pyawaitable_array_init(&aw->aw_integer_values, NULL) < 0) {
         goto error;
     }
 
@@ -73,8 +68,7 @@ _PyAwaitable_INTERNAL(PyObject *)
 awaitable_next(PyObject * self)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *)self;
-    if (aw->aw_awaited)
-    {
+    if (aw->aw_awaited) {
         PyErr_SetString(
             PyExc_RuntimeError,
             "pyawaitable: cannot reuse awaitable"
@@ -104,16 +98,14 @@ awaitable_dealloc(PyObject *self)
     Py_XDECREF(aw->aw_gen);
     Py_XDECREF(aw->aw_result);
 
-    if (!aw->aw_done)
-    {
+    if (!aw->aw_done) {
         if (
             PyErr_WarnEx(
                 PyExc_RuntimeWarning,
                 "pyawaitable object was never awaited",
                 1
             ) < 0
-        )
-        {
+        ) {
             PyErr_WriteUnraisable(self);
         }
     }
@@ -128,8 +120,7 @@ PyAwaitable_Cancel(PyObject * self)
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
     pyawaitable_array_clear_items(&aw->aw_callbacks);
     aw->aw_state = 0;
-    if (aw->aw_gen != NULL)
-    {
+    if (aw->aw_gen != NULL) {
         GenWrapperObject *gw = (GenWrapperObject *)aw->aw_gen;
         Py_CLEAR(gw->gw_current_await);
     }
@@ -148,8 +139,7 @@ PyAwaitable_AddAwait(
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
 
     pyawaitable_callback *aw_c = PyMem_Malloc(sizeof(pyawaitable_callback));
-    if (aw_c == NULL)
-    {
+    if (aw_c == NULL) {
         PyErr_NoMemory();
         return -1;
     }
@@ -159,8 +149,7 @@ PyAwaitable_AddAwait(
     aw_c->err_callback = err;
     aw_c->done = false;
 
-    if (pyawaitable_array_append(&aw->aw_callbacks, aw_c) < 0)
-    {
+    if (pyawaitable_array_append(&aw->aw_callbacks, aw_c) < 0) {
         PyMem_Free(aw_c);
         PyErr_NoMemory();
         return -1;
@@ -174,8 +163,7 @@ PyAwaitable_DeferAwait(PyObject * awaitable, defer_callback cb)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
     pyawaitable_callback *aw_c = PyMem_Malloc(sizeof(pyawaitable_callback));
-    if (aw_c == NULL)
-    {
+    if (aw_c == NULL) {
         PyErr_NoMemory();
         return -1;
     }
@@ -185,8 +173,7 @@ PyAwaitable_DeferAwait(PyObject * awaitable, defer_callback cb)
     aw_c->err_callback = NULL;
     aw_c->done = false;
 
-    if (pyawaitable_array_append(&aw->aw_callbacks, aw_c) < 0)
-    {
+    if (pyawaitable_array_append(&aw->aw_callbacks, aw_c) < 0) {
         PyMem_Free(aw_c);
         PyErr_NoMemory();
         return -1;
@@ -207,8 +194,7 @@ _PyAwaitable_INTERNAL(PyObject *)
 _PyAwaitable_GetType(PyObject * mod, const char *type)
 {
     PyObject *_type = PyObject_GetAttrString(mod, type);
-    if (!PyCallable_Check(_type))
-    {
+    if (!PyCallable_Check(_type)) {
         Py_XDECREF(_type);
         return NULL;
     }
@@ -221,16 +207,14 @@ PyAwaitable_New(void)
 {
     // XXX Use a freelist?
     PyTypeObject *type = _PyAwaitable_GetAwaitableType();
-    if (PyAwaitable_UNLIKELY(type == NULL))
-    {
+    if (PyAwaitable_UNLIKELY(type == NULL)) {
         return NULL;
     }
     PyObject *result = awaitable_new_func(type, NULL, NULL);
     return result;
 }
 
-_PyAwaitable_API(PyTypeObject) PyAwaitable_Type =
-{
+_PyAwaitable_API(PyTypeObject) PyAwaitable_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "_PyAwaitableType",
     .tp_basicsize = sizeof(PyAwaitableObject),

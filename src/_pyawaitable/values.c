@@ -71,8 +71,7 @@ static int
 check_index(Py_ssize_t index, pyawaitable_array *array)
 {
     assert(array != NULL);
-    if (PyAwaitable_UNLIKELY(index < 0))
-    {
+    if (PyAwaitable_UNLIKELY(index < 0)) {
         PyErr_SetString(
             PyExc_IndexError,
             "PyAwaitable: Cannot set negative index"
@@ -80,8 +79,7 @@ check_index(Py_ssize_t index, pyawaitable_array *array)
         return -1;
     }
 
-    if (PyAwaitable_UNLIKELY(index >= pyawaitable_array_LENGTH(array)))
-    {
+    if (PyAwaitable_UNLIKELY(index >= pyawaitable_array_LENGTH(array))) {
         PyErr_SetString(
             PyExc_IndexError,
             "PyAwaitable: Cannot set index that is out of bounds"

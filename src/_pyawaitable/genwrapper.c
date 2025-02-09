@@ -21,7 +21,8 @@
 #define DONE_IF_OK_AND_CHECK(cb)                               \
         if (PyAwaitable_UNLIKELY(aw->aw_recently_cancelled)) { \
             cb = NULL;                                         \
-        } else {                                               \
+        }                                                      \
+        else {                                                 \
             DONE(cb);                                          \
         }
 /* If we recently cancelled, then cb is no longer valid */
@@ -54,8 +55,7 @@ gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     assert(tp->tp_alloc != NULL);
 
     PyObject *self = tp->tp_alloc(tp, 0);
-    if (PyAwaitable_UNLIKELY(self == NULL))
-    {
+    if (PyAwaitable_UNLIKELY(self == NULL)) {
         return NULL;
     }
 
@@ -97,8 +97,7 @@ genwrapper_new(PyAwaitableObject * aw)
 {
     assert(aw != NULL);
     PyTypeObject *type = _PyAwaitable_GetGenWrapperType();
-    if (PyAwaitable_UNLIKELY(type == NULL))
-    {
+    if (PyAwaitable_UNLIKELY(type == NULL)) {
         return NULL;
     }
     GenWrapperObject *g = (GenWrapperObject *) gen_new(
@@ -107,8 +106,7 @@ genwrapper_new(PyAwaitableObject * aw)
         NULL
     );
 
-    if (PyAwaitable_UNLIKELY(g == NULL))
-    {
+    if (PyAwaitable_UNLIKELY(g == NULL)) {
         return NULL;
     }
 
@@ -123,8 +121,7 @@ genwrapper_fire_err_callback(
 )
 {
     assert(PyErr_Occurred() != NULL);
-    if (err_callback == NULL)
-    {
+    if (err_callback == NULL) {
         return -1;
     }
 
@@ -134,15 +131,13 @@ genwrapper_fire_err_callback(
     int e_res = err_callback(self, err);
     Py_DECREF(self);
 
-    if (e_res < 0)
-    {
+    if (e_res < 0) {
         // If the res is -1, the error is restored.
         // Otherwise, it is not.
-        if (e_res == -1)
-        {
+        if (e_res == -1) {
             PyErr_SetRaisedException(err);
-        } else
-        {
+        }
+        else {
             Py_DECREF(err);
         }
         return -1;
@@ -165,21 +160,19 @@ static PyObject *
 get_generator_return_value(void)
 {
     PyObject *value;
-    if (PyErr_Occurred())
-    {
+    if (PyErr_Occurred()) {
         value = PyErr_GetRaisedException();
         assert(value != NULL);
         assert(PyObject_IsInstance(value, PyExc_StopIteration));
         PyObject *tmp = PyObject_GetAttrString(value, "value");
-        if (PyAwaitable_UNLIKELY(tmp == NULL))
-        {
+        if (PyAwaitable_UNLIKELY(tmp == NULL)) {
             Py_DECREF(value);
             return NULL;
         }
         Py_DECREF(value);
         value = tmp;
-    } else
-    {
+    }
+    else {
         value = Py_NewRef(Py_None);
     }
 
@@ -189,8 +182,7 @@ get_generator_return_value(void)
 static int
 maybe_set_result(PyAwaitableObject *aw)
 {
-    if (pyawaitable_array_LENGTH(&aw->aw_callbacks) == aw->aw_state)
-    {
+    if (pyawaitable_array_LENGTH(&aw->aw_callbacks) == aw->aw_state) {
         PyErr_SetObject(
             PyExc_StopIteration,
             aw->aw_result ? aw->aw_result : Py_None
@@ -219,12 +211,10 @@ get_awaitable_iterator(PyObject *op)
             Py_TYPE(op)->tp_as_async == NULL ||
             Py_TYPE(op)->tp_as_async->am_await == NULL
         )
-    )
-    {
+    ) {
         // Fall back to the dunder
         PyObject *__await__ = PyObject_GetAttrString(op, "__await__");
-        if (__await__ == NULL)
-        {
+        if (__await__ == NULL) {
             return NULL;
         }
 
@@ -242,8 +232,7 @@ genwrapper_next(PyObject *self)
     GenWrapperObject *g = (GenWrapperObject *)self;
     PyAwaitableObject *aw = g->gw_aw;
 
-    if (PyAwaitable_UNLIKELY(aw == NULL))
-    {
+    if (PyAwaitable_UNLIKELY(aw == NULL)) {
         PyErr_SetString(
             PyExc_RuntimeError,
             "PyAwaitable: Generator cannot be awaited after returning"
@@ -253,10 +242,8 @@ genwrapper_next(PyObject *self)
 
     pyawaitable_callback *cb;
 
-    if (g->gw_current_await == NULL)
-    {
-        if (maybe_set_result(aw))
-        {
+    if (g->gw_current_await == NULL) {
+        if (maybe_set_result(aw)) {
             // Coroutine is done, woohoo!
             AW_DONE();
             return NULL;
@@ -266,12 +253,10 @@ genwrapper_next(PyObject *self)
         assert(cb != NULL);
         assert(cb->done == false);
 
-        if (cb->callback != NULL && cb->coro == NULL)
-        {
+        if (cb->callback != NULL && cb->coro == NULL) {
             int def_res = ((defer_callback)cb->callback)((PyObject *)aw);
             CLEAR_CALLBACK_IF_CANCELLED();
-            if (def_res < 0)
-            {
+            if (def_res < 0) {
                 DONE_IF_OK(cb);
                 AW_DONE();
                 return NULL;
@@ -284,12 +269,11 @@ genwrapper_next(PyObject *self)
 
         assert(cb->coro != NULL);
         g->gw_current_await = get_awaitable_iterator(cb->coro);
-        if (g->gw_current_await == NULL)
-        {
+        if (g->gw_current_await == NULL) {
             FIRE_ERROR_CALLBACK_AND_NEXT();
         }
-    } else
-    {
+    }
+    else {
         cb = pyawaitable_array_GET_ITEM(&aw->aw_callbacks, aw->aw_state - 1);
     }
 
@@ -297,8 +281,7 @@ genwrapper_next(PyObject *self)
         g->gw_current_await
     )->tp_iternext(g->gw_current_await);
 
-    if (result != NULL)
-    {
+    if (result != NULL) {
         // Yield!
         return result;
     }
@@ -307,25 +290,21 @@ genwrapper_next(PyObject *self)
     CLEAR_CALLBACK_IF_CANCELLED();
 
     PyObject *occurred = PyErr_Occurred();
-    if (!occurred)
-    {
+    if (!occurred) {
         // Coro is done, no result.
-        if (cb == NULL || !cb->callback)
-        {
+        if (cb == NULL || !cb->callback) {
             // No callback, skip trying to handle anything
             RETURN_ADVANCE_GENERATOR();
         }
     }
 
-    if (occurred && !PyErr_ExceptionMatches(PyExc_StopIteration))
-    {
+    if (occurred && !PyErr_ExceptionMatches(PyExc_StopIteration)) {
         // An error occurred!
         FIRE_ERROR_CALLBACK_AND_NEXT();
     }
 
     /* Coroutine is done, but with a result. */
-    if (cb == NULL && cb->callback == NULL)
-    {
+    if (cb == NULL && cb->callback == NULL) {
         // We can disregard the result if there's no callback.
         PyErr_Clear();
         RETURN_ADVANCE_GENERATOR();
@@ -334,8 +313,7 @@ genwrapper_next(PyObject *self)
     assert(cb != NULL);
     // Deduce the return value of the coroutine
     PyObject *value = get_generator_return_value();
-    if (value == NULL)
-    {
+    if (value == NULL) {
         DONE(cb);
         AW_DONE();
         return NULL;
@@ -350,8 +328,7 @@ genwrapper_next(PyObject *self)
 
     CLEAR_CALLBACK_IF_CANCELLED();
 
-    if (res < -1)
-    {
+    if (res < -1) {
         // -2 or lower denotes that the error should be deferred,
         // regardless of whether a handler is present.
         DONE_IF_OK(cb);
@@ -359,16 +336,14 @@ genwrapper_next(PyObject *self)
         return NULL;
     }
 
-    if (res < 0)
-    {
+    if (res < 0) {
         FIRE_ERROR_CALLBACK_AND_NEXT();
     }
 
     RETURN_ADVANCE_GENERATOR();
 }
 
-_PyAwaitable_INTERNAL_DATA_DEF(PyTypeObject) _PyAwaitableGenWrapperType =
-{
+_PyAwaitable_INTERNAL_DATA_DEF(PyTypeObject) _PyAwaitableGenWrapperType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "_genwrapper",
     .tp_basicsize = sizeof(GenWrapperObject),
