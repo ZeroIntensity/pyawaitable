@@ -9,40 +9,6 @@ hide:
 
 So far, it might seem like this is a lot of boilerplate. That's unfortunately decently common for the C API, but you get used to it. With that being said, how can we help eliminate at least _some_ of this boilerplate?
 
-## Calling
-
-In general, calling functions in the C API is a lot of work--is there any way to make it prettier in PyAwaitable? CPython has `PyObject_CallFunction`, which allows you to call a function with a format string similar to `Py_BuildValue`. For example:
-
-```c
-static PyObject *
-test(PyObject *self, PyObject *my_func)
-{
-    // Equivalent to my_func(42, -10)
-    PyObject *result = PyObject_CallFunction(my_func, "ii", 42, -10);
-    /* ... */
-}
-```
-
-For convenience, PyAwaitable has an analogue of this function, called `pyawaitable_await_function`, which calls a function with a format string _and_ marks the result (as in, the returned coroutine) for execution via `pyawaitable_await`. For example, if `my_func` from above was asynchronous:
-
-```c
-static PyObject *
-test(PyObject *self, PyObject *my_func)
-{
-    PyObject *awaitable = pyawaitable_new();
-
-    // Equivalent to await my_func(42, -10)
-    if (pyawaitable_await_function(awaitable, my_func, "ii", NULL, NULL, 42, -10) < 0)
-    {
-        Py_DECREF(awaitable);
-        return NULL;
-    }
-    /* ... */
-}
-```
-
-Much nicer, right?
-
 ## Asynchronous Contexts
 
 What about using `async with` from C? Well, asynchronous context managers are sort of simple, you just have to deal with calling `__aenter__` and `__aexit__`. But that's no fun--can we do it automatically? Yes you can!
