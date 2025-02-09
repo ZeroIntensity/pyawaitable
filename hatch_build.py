@@ -6,19 +6,11 @@ from contextlib import contextmanager
 import functools
 import textwrap
 
-MISSING_HATCHLING = f"""\
-Hatchling is not installed. You probably executed {__file__} manually.
-If you did--that's wrong. This script is intended to be ran by Hatch during
-the build process.
-
-Try the following instead:
-$ pip install .
-"""
-
 try:
     from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 except ImportError as err:
-    raise RuntimeError(MISSING_HATCHLING) from err
+    class BuildHookInterface:
+        pass
 
 DIST_PATH = "src/pyawaitable/pyawaitable.h"
 HEADER_FILES = [
@@ -335,4 +327,5 @@ class CustomBuildHook(BuildHookInterface):
 
 
 if __name__ == "__main__":
-    print("Don't execute this script manually! Use `pip install .`")
+    from src.pyawaitable import __version__
+    main(__version__)
