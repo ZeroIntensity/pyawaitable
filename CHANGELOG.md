@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Switched some user-error messages to `RuntimeError` instead of `SystemError`.
 - Added `PyAwaitable_DeferAwait` for executing code when the awaitable object is called by the event loop.
 - Moved away from function pointer tables for loading PyAwaitable--everything is now vendored upon installation.
+- `PyAwaitable_` prefixes are now required, and the old `pyawaitable_*` functions have been removed.
 
 ## [1.3.0] - 2024-10-26
 

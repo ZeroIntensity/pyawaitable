@@ -17,6 +17,34 @@
         if (cb != NULL) { \
             DONE(cb);     \
         }
+#define DONE_IF_OK_AND_CHECK(cb)         \
+        if (aw->aw_recently_cancelled) { \
+            cb = NULL;                   \
+        } else {                         \
+            DONE(cb);                    \
+        }
+/* If we recently cancelled, then cb is no longer valid */
+#define CLEAR_CALLBACK_IF_CANCELLED()    \
+        if (aw->aw_recently_cancelled) { \
+            cb = NULL;                   \
+        }                                \
+
+#define FIRE_ERROR_CALLBACK_AND_NEXT() \
+        if (                           \
+    genwrapper_fire_err_callback(      \
+    (PyObject *) aw,                   \
+    cb->err_callback                   \
+    ) < 0                              \
+        ) {                            \
+            DONE_IF_OK_AND_CHECK(cb);  \
+            AW_DONE();                 \
+            return NULL;               \
+        }                              \
+        DONE_IF_OK_AND_CHECK(cb);      \
+        return genwrapper_next(self);
+#define RETURN_ADVANCE_GENERATOR() \
+        DONE(cb);                  \
+        return genwrapper_next(self);
 
 static PyObject *
 gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
@@ -132,6 +160,79 @@ genwrapper_advance(GenWrapperObject *gw)
     );
 }
 
+static PyObject *
+get_generator_return_value(void)
+{
+    PyObject *value;
+    if (PyErr_Occurred())
+    {
+        value = PyErr_GetRaisedException();
+        assert(value != NULL);
+        assert(PyObject_IsInstance(value, PyExc_StopIteration));
+        PyObject *tmp = PyObject_GetAttrString(value, "value");
+        if (tmp == NULL)
+        {
+            Py_DECREF(value);
+            return NULL;
+        }
+        Py_DECREF(value);
+        value = tmp;
+    } else
+    {
+        value = Py_NewRef(Py_None);
+    }
+
+    return value;
+}
+
+static int
+maybe_set_result(PyAwaitableObject *aw)
+{
+    if (pyawaitable_array_LENGTH(&aw->aw_callbacks) == aw->aw_state)
+    {
+        PyErr_SetObject(
+            PyExc_StopIteration,
+            aw->aw_result ? aw->aw_result : Py_None
+        );
+        return 1;
+    }
+
+    return 0;
+}
+
+static inline PyObject *
+bad_callback(void)
+{
+    PyErr_SetString(
+        PyExc_SystemError,
+        "PyAwaitable: User callback returned -1 without exception set"
+    );
+    return NULL;
+}
+
+static inline PyObject *
+get_awaitable_iterator(PyObject *op)
+{
+    if (
+        Py_TYPE(op)->tp_as_async == NULL ||
+        Py_TYPE(op)->tp_as_async->am_await == NULL
+    )
+    {
+        // Fall back to the dunder
+        PyObject *__await__ = PyObject_GetAttrString(op, "__await__");
+        if (__await__ == NULL)
+        {
+            return NULL;
+        }
+
+        PyObject *res = PyObject_CallNoArgs(__await__);
+        Py_DECREF(__await__);
+        return res;
+    }
+
+    return Py_TYPE(op)->tp_as_async->am_await(op);
+}
+
 _PyAwaitable_INTERNAL(PyObject *)
 genwrapper_next(PyObject * self)
 {
@@ -142,7 +243,7 @@ genwrapper_next(PyObject * self)
     {
         PyErr_SetString(
             PyExc_RuntimeError,
-            "pyawaitable: genwrapper used after return"
+            "PyAwaitable: Generator cannot be awaited after returning"
         );
         return NULL;
     }
@@ -151,12 +252,9 @@ genwrapper_next(PyObject * self)
 
     if (g->gw_current_await == NULL)
     {
-        if (pyawaitable_array_LENGTH(&aw->aw_callbacks) == aw->aw_state)
+        if (maybe_set_result(aw))
         {
-            PyErr_SetObject(
-                PyExc_StopIteration,
-                aw->aw_result ? aw->aw_result : Py_None
-            );
+            // Coroutine is done, woohoo!
             AW_DONE();
             return NULL;
         }
@@ -168,20 +266,11 @@ genwrapper_next(PyObject * self)
         if (cb->callback != NULL && cb->coro == NULL)
         {
             int def_res = ((defer_callback)cb->callback)((PyObject *)aw);
-
-            // If we recently cancelled, then cb is no longer valid
-            if (aw->aw_recently_cancelled)
+            CLEAR_CALLBACK_IF_CANCELLED();
+            if (def_res < 0)
             {
-                cb = NULL;
-            }
-
-            if (def_res < 0 && !PyErr_Occurred())
-            {
-                PyErr_SetString(
-                    PyExc_SystemError,
-                    "pyawaitable: callback returned -1 without exception set"
-                );
                 DONE_IF_OK(cb);
+                AW_DONE();
                 return NULL;
             }
 
@@ -191,40 +280,10 @@ genwrapper_next(PyObject * self)
         }
 
         assert(cb->coro != NULL);
-        if (
-            Py_TYPE(cb->coro)->tp_as_async == NULL ||
-            Py_TYPE(cb->coro)->tp_as_async->am_await == NULL
-        )
-        {
-            PyErr_Format(
-                PyExc_TypeError,
-                "pyawaitable: %R is not awaitable",
-                cb->coro
-            );
-            DONE(cb);
-            AW_DONE();
-            return NULL;
-        }
-
-        g->gw_current_await = Py_TYPE(cb->coro)->tp_as_async->am_await(
-            cb->coro
-        );
+        g->gw_current_await = get_awaitable_iterator(cb->coro);
         if (g->gw_current_await == NULL)
         {
-            if (
-                genwrapper_fire_err_callback(
-                    (PyObject *)aw,
-                    cb->err_callback
-                ) < 0
-            )
-            {
-                DONE_IF_OK(cb);
-                AW_DONE();
-                return NULL;
-            }
-
-            DONE_IF_OK(cb);
-            return genwrapper_next(self);
+            FIRE_ERROR_CALLBACK_AND_NEXT();
         }
     } else
     {
@@ -241,68 +300,44 @@ genwrapper_next(PyObject * self)
         return result;
     }
 
+    // Rare, but it's possible that the generator cancelled us
+    CLEAR_CALLBACK_IF_CANCELLED();
+
     PyObject *occurred = PyErr_Occurred();
     if (!occurred)
     {
         // Coro is done, no result.
-        if (!cb->callback)
+        if (cb == NULL || !cb->callback)
         {
-            // No callback, skip that step.
-            DONE(cb);
-            return genwrapper_next(self);
+            // No callback, skip trying to handle anything
+            RETURN_ADVANCE_GENERATOR();
         }
     }
 
-    // TODO: I wonder if the occurred check is needed here.
     if (
         occurred && !PyErr_ExceptionMatches(PyExc_StopIteration)
     )
     {
-        if (
-            genwrapper_fire_err_callback(
-                (PyObject *) aw,
-                cb->err_callback
-            ) < 0
-        )
-        {
-            DONE(cb);
-            AW_DONE();
-            return NULL;
-        }
-
-        DONE(cb);
-        return genwrapper_next(self);
+        // An error occurred!
+        FIRE_ERROR_CALLBACK_AND_NEXT();
     }
 
-    if (cb->callback == NULL)
+    /* Coroutine is done, but with a result. */
+    if (cb == NULL && cb->callback == NULL)
     {
-        // Coroutine is done, but with a result.
-        // We can disregard the result if theres no callback.
-        DONE(cb);
+        // We can disregard the result if there's no callback.
         PyErr_Clear();
-        return genwrapper_next(self);
+        RETURN_ADVANCE_GENERATOR();
     }
 
+    assert(cb != NULL);
     // Deduce the return value of the coroutine
-    PyObject *value;
-    if (occurred)
+    PyObject *value = get_generator_return_value();
+    if (value == NULL)
     {
-        value = PyErr_GetRaisedException();
-        assert(value != NULL);
-        assert(PyObject_IsInstance(value, PyExc_StopIteration));
-        PyObject *tmp = PyObject_GetAttrString(value, "value");
-        if (tmp == NULL)
-        {
-            Py_DECREF(value);
-            DONE(cb);
-            AW_DONE();
-            return NULL;
-        }
-        Py_DECREF(value);
-        value = tmp;
-    } else
-    {
-        value = Py_NewRef(Py_None);
+        DONE(cb);
+        AW_DONE();
+        return NULL;
     }
 
     // Preserve the error callback in case we get cancelled
@@ -312,11 +347,7 @@ genwrapper_next(PyObject * self)
     Py_DECREF(aw);
     Py_DECREF(value);
 
-    // If we recently cancelled, then cb is no longer valid
-    if (aw->aw_recently_cancelled)
-    {
-        cb = NULL;
-    }
+    CLEAR_CALLBACK_IF_CANCELLED();
 
     if (res < -1)
     {
@@ -329,31 +360,10 @@ genwrapper_next(PyObject * self)
 
     if (res < 0)
     {
-        if (!PyErr_Occurred())
-        {
-            PyErr_SetString(
-                PyExc_RuntimeError,
-                "pyawaitable: user callback returned -1 without exception set"
-            );
-            DONE_IF_OK(cb);
-            AW_DONE();
-            return NULL;
-        }
-        if (
-            genwrapper_fire_err_callback(
-                (PyObject *) aw,
-                err_callback
-            ) < 0
-        )
-        {
-            DONE_IF_OK(cb);
-            AW_DONE();
-            return NULL;
-        }
+        FIRE_ERROR_CALLBACK_AND_NEXT();
     }
 
-    DONE_IF_OK(cb);
-    return genwrapper_next(self);
+    RETURN_ADVANCE_GENERATOR();
 }
 
 _PyAwaitable_INTERNAL_DATA_DEF(PyTypeObject) _PyAwaitableGenWrapperType =
