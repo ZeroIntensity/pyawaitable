@@ -3,7 +3,7 @@
 static int
 mod_exec(PyObject *mod)
 {
-    return PyAwaitable_Init(mod);
+    return PyAwaitable_Init();
 }
 
 PyModuleDef_Slot slots[] =
