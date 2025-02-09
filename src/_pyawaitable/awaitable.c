@@ -169,7 +169,7 @@ PyAwaitable_AddAwait(
 }
 
 _PyAwaitable_API(int)
-PyAwaitable_DeferAwait(PyObject *awaitable, defer_callback cb)
+PyAwaitable_DeferAwait(PyObject * awaitable, defer_callback cb)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
     pyawaitable_callback *aw_c = PyMem_Malloc(sizeof(pyawaitable_callback));
@@ -203,7 +203,7 @@ PyAwaitable_SetResult(PyObject * awaitable, PyObject * result)
 }
 
 _PyAwaitable_INTERNAL(PyObject *)
-_PyAwaitable_GetType(PyObject * mod, const char * type)
+_PyAwaitable_GetType(PyObject * mod, const char *type)
 {
     PyObject *_type = PyObject_GetAttrString(mod, type);
     if (!PyCallable_Check(_type))
@@ -219,9 +219,12 @@ _PyAwaitable_API(PyObject *)
 PyAwaitable_New(void)
 {
     // XXX Use a freelist?
-    PyObject *type = _PyAwaitable_GetType(pyawaitableModule, "_PyAwaitableType");
-    PyObject *result = awaitable_new_func((PyTypeObject *)type, NULL, NULL);
-    Py_DECREF(type);
+    PyTypeObject *type = _PyAwaitable_GetAwaitableType();
+    if (type == NULL)
+    {
+        return NULL;
+    }
+    PyObject *result = awaitable_new_func(type, NULL, NULL);
     return result;
 }
 

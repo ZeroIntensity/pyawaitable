@@ -4,7 +4,14 @@
 #include <Python.h>
 #include <pyawaitable/dist.h>
 
-_PyAwaitable_INTERNAL_DATA(PyObject *) pyawaitableModule;
+_PyAwaitable_INTERNAL(PyObject *)
+_PyAwaitable_GetModule(void);
+
+_PyAwaitable_INTERNAL(PyTypeObject *)
+_PyAwaitable_GetAwaitableType(void);
+
+_PyAwaitable_INTERNAL(PyTypeObject *)
+_PyAwaitable_GetGenWrapperType(void);
 
 _PyAwaitable_API(int)
 PyAwaitable_Init(void);

@@ -298,6 +298,7 @@ def main(version: str) -> None:
     #define PyAwaitable_MINOR_VERSION {minor}
     #define PyAwaitable_MICRO_VERSION {micro}
     #define PyAwaitable_PATCH_VERSION PyAwaitable_MICRO_VERSION
+    #define PyAwaitable_MAGIC_NUMBER {major}{minor}{micro}
     """
     )
 

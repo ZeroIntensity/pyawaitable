@@ -67,16 +67,21 @@ _PyAwaitable_INTERNAL(PyObject *)
 genwrapper_new(PyAwaitableObject * aw)
 {
     assert(aw != NULL);
-    PyObject *type = _PyAwaitable_GetType(pyawaitableModule, "_genwrapper");
+    PyTypeObject *type = _PyAwaitable_GetGenWrapperType();
+    if (type == NULL)
+    {
+        return NULL;
+    }
     GenWrapperObject *g = (GenWrapperObject *) gen_new(
-        (PyTypeObject *)type,
+        type,
         NULL,
         NULL
     );
-    Py_DECREF(type);
 
     if (!g)
+    {
         return NULL;
+    }
 
     g->gw_aw = (PyAwaitableObject *) Py_NewRef((PyObject *) aw);
     return (PyObject *) g;
@@ -162,12 +167,12 @@ genwrapper_next(PyObject * self)
 
         if (cb->callback != NULL && cb->coro == NULL)
         {
-            int def_res = ((defer_callback)cb->callback)((PyObject*)aw);
+            int def_res = ((defer_callback)cb->callback)((PyObject *)aw);
 
             // If we recently cancelled, then cb is no longer valid
             if (aw->aw_recently_cancelled)
             {
-              cb = NULL;
+                cb = NULL;
             }
 
             if (def_res < 0 && !PyErr_Occurred())

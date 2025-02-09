@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed limit on number of stored callbacks or values.
 - Switched some user-error messages to `RuntimeError` instead of `SystemError`.
 - Added `PyAwaitable_DeferAwait` for executing code when the awaitable object is called by the event loop.
+- Moved away from function pointer tables for loading PyAwaitable--everything is now vendored upon installation.
 
 ## [1.3.0] - 2024-10-26
 

@@ -2,7 +2,8 @@
 #define PYAWAITABLE_DIST_H
 
 #if PY_MINOR_VERSION < 9
-#error "Python 3.8 and older have reached End of Life, please use Python 3.9 or newer."
+#error \
+    "Python 3.8 and older are no longer supported, please use Python 3.9 or newer."
 #endif
 
 #ifdef _PYAWAITABLE_VENDOR
@@ -16,6 +17,7 @@
 #define _PyAwaitable_INTERNAL(ret) ret
 #define _PyAwaitable_INTERNAL_DATA(tp) extern tp
 #define _PyAwaitable_INTERNAL_DATA_DEF(tp) tp
+#define PyAwaitable_MAGIC_NUMBER 0
 #endif
 
 #define _PyAwaitable_MANGLE(name) name

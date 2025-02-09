@@ -57,16 +57,13 @@ PyAwaitable_AddAwait(
 );
 
 _PyAwaitable_API(int)
-PyAwaitable_DeferAwait(PyObject *aw, defer_callback cb);
+PyAwaitable_DeferAwait(PyObject * aw, defer_callback cb);
 
 _PyAwaitable_API(void)
 PyAwaitable_Cancel(PyObject * aw);
 
 _PyAwaitable_INTERNAL(PyObject *)
 awaitable_next(PyObject * self);
-
-_PyAwaitable_INTERNAL(PyObject *)
-_PyAwaitable_GetType(PyObject * mod, const char * type);
 
 _PyAwaitable_API(PyObject *)
 PyAwaitable_New(void);
