@@ -1,7 +1,8 @@
 #ifndef PYAWAITABLE_OPTIMIZE_H
 #define PYAWAITABLE_OPTIMIZE_H
 
-#if (defined(__GNUC__) && __GNUC__ >= 15) || defined(__clang__) && __clang__ >= 13
+#if (defined(__GNUC__) && __GNUC__ >= 15) || defined(__clang__) && \
+    __clang__ >= 13
 #define PyAwaitable_MUSTTAIL [[clang::musttail]]
 #else
 #define PyAwaitable_MUSTTAIL
@@ -24,14 +25,16 @@
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
-#define PyAwaitable_UNLIKELY(x)     (__builtin_expect(!!(x),false))
-#define PyAwaitable_LIKELY(x)       (__builtin_expect(!!(x),true))
-#elif (defined(__cplusplus) && (__cplusplus >= 202002L)) || (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L)
-#define PyAwaitable_UNLIKELY(x)     (x) [[unlikely]]
-#define PyAwaitable_LIKELY(x)       (x) [[likely]]
+#include <stdbool.h>
+#define PyAwaitable_UNLIKELY(x) (__builtin_expect(!!(x), false))
+#define PyAwaitable_LIKELY(x) (__builtin_expect(!!(x), true))
+#elif (defined(__cplusplus) && (__cplusplus >= 202002L)) || \
+    (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L)
+#define PyAwaitable_UNLIKELY(x) (x)[[unlikely]]
+#define PyAwaitable_LIKELY(x) (x)[[likely]]
 #else
-#define PyAwaitable_UNLIKELY(x)     (x)
-#define PyAwaitable_LIKELY(x)       (x)
+#define PyAwaitable_UNLIKELY(x) (x)
+#define PyAwaitable_LIKELY(x) (x)
 #endif
 
 #endif

@@ -5,6 +5,7 @@
 #include <pyawaitable/backport.h>
 #include <pyawaitable/array.h>
 #include <pyawaitable/values.h>
+#include <pyawaitable/optimize.h>
 
 #define NOTHING
 
@@ -31,7 +32,7 @@
         if (pyawaitable_array_LENGTH(array) == 0) {                        \
             PyErr_SetString(                                               \
     PyExc_RuntimeError,                                                    \
-    "pyawaitable: object has no stored values"                             \
+    "PyAwaitable: Object has no stored values"                             \
             );                                                             \
             return -1;                                                     \
         }                                                                  \
@@ -70,20 +71,20 @@ static int
 check_index(Py_ssize_t index, pyawaitable_array *array)
 {
     assert(array != NULL);
-    if (index < 0)
+    if (PyAwaitable_UNLIKELY(index < 0))
     {
         PyErr_SetString(
             PyExc_IndexError,
-            "pyawaitable: cannot set negative index"
+            "PyAwaitable: Cannot set negative index"
         );
         return -1;
     }
 
-    if (index >= pyawaitable_array_LENGTH(array))
+    if (PyAwaitable_UNLIKELY(index >= pyawaitable_array_LENGTH(array)))
     {
         PyErr_SetString(
             PyExc_IndexError,
-            "pyawaitable: cannot set index that is out of bounds"
+            "PyAwaitable: Cannot set index that is out of bounds"
         );
         return -1;
     }

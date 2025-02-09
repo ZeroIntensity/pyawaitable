@@ -1,4 +1,5 @@
 #include <pyawaitable/array.h>
+#include <pyawaitable/optimize.h>
 
 static inline void
 call_deallocator_maybe(pyawaitable_array *array, Py_ssize_t index)
@@ -20,7 +21,7 @@ pyawaitable_array_init_with_size(
     assert(array != NULL);
     assert(initial > 0);
     void **items = PyMem_Calloc(sizeof(void *), initial);
-    if (items == NULL)
+    if (PyAwaitable_UNLIKELY(items == NULL))
     {
         return -1;
     }
@@ -44,7 +45,7 @@ resize_if_needed(pyawaitable_array *array)
             array->items,
             sizeof(void *) * array->capacity
         );
-        if (new_items == NULL)
+        if (PyAwaitable_UNLIKELY(new_items == NULL))
         {
             return -1;
         }
@@ -55,8 +56,8 @@ resize_if_needed(pyawaitable_array *array)
     return 0;
 }
 
-_PyAwaitable_INTERNAL(int)
-pyawaitable_array_append(pyawaitable_array * array, void *item)
+_PyAwaitable_INTERNAL(int) PyAwaitable_PURE
+pyawaitable_array_append(pyawaitable_array *array, void *item)
 {
     pyawaitable_array_ASSERT_VALID(array);
     array->items[array->length++] = item;

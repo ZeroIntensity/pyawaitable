@@ -3,7 +3,9 @@
 
 #include <Python.h>
 #include <stdlib.h>
+
 #include <pyawaitable/dist.h>
+#include <pyawaitable/optimize.h>
 
 #define _pyawaitable_array_DEFAULT_SIZE 16
 
@@ -195,7 +197,7 @@ pyawaitable_array_new_with_size(
 )
 {
     pyawaitable_array *array = PyMem_Malloc(sizeof(pyawaitable_array));
-    if (array == NULL)
+    if (PyAwaitable_UNLIKELY(array == NULL))
     {
         return NULL;
     }
@@ -241,7 +243,7 @@ pyawaitable_array_GET_ITEM(pyawaitable_array *array, Py_ssize_t index)
 /*
  * Get the length of the array. This cannot fail.
  */
-static inline Py_ssize_t
+static inline Py_ssize_t PyAwaitable_PURE
 pyawaitable_array_LENGTH(pyawaitable_array *array)
 {
     pyawaitable_array_ASSERT_VALID(array);

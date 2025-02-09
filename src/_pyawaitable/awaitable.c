@@ -7,6 +7,7 @@
 #include <pyawaitable/coro.h>
 #include <pyawaitable/genwrapper.h>
 #include <pyawaitable/init.h>
+#include <pyawaitable/optimize.h>
 
 static void
 callback_dealloc(void *ptr)
@@ -24,7 +25,7 @@ awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     assert(tp->tp_alloc != NULL);
 
     PyObject *self = tp->tp_alloc(tp, 0);
-    if (self == NULL)
+    if (PyAwaitable_UNLIKELY(self == NULL))
     {
         return NULL;
     }
@@ -220,7 +221,7 @@ PyAwaitable_New(void)
 {
     // XXX Use a freelist?
     PyTypeObject *type = _PyAwaitable_GetAwaitableType();
-    if (type == NULL)
+    if (PyAwaitable_UNLIKELY(type == NULL))
     {
         return NULL;
     }

@@ -1,8 +1,9 @@
 #include <Python.h>
-#include <pyawaitable/backport.h>
 #include <pyawaitable/awaitableobject.h>
-#include <pyawaitable/genwrapper.h>
+#include <pyawaitable/backport.h>
 #include <pyawaitable/coro.h>
+#include <pyawaitable/genwrapper.h>
+#include <pyawaitable/optimize.h>
 
 static PyObject *
 awaitable_send_with_arg(PyObject *self, PyObject *value)
@@ -11,7 +12,7 @@ awaitable_send_with_arg(PyObject *self, PyObject *value)
     if (aw->aw_gen == NULL)
     {
         PyObject *gen = awaitable_next(self);
-        if (gen == NULL)
+        if (PyAwaitable_UNLIKELY(gen == NULL))
         {
             return NULL;
         }
@@ -60,12 +61,12 @@ awaitable_throw(PyObject *self, PyObject *args)
     if (PyType_Check(type))
     {
         PyObject *err = PyObject_CallOneArg(type, value);
-        if (err == NULL)
+        if (PyAwaitable_UNLIKELY(err == NULL))
         {
             return NULL;
         }
 
-        if (traceback)
+        if (traceback != NULL)
         {
             if (PyException_SetTraceback(err, traceback) < 0)
             {
@@ -121,7 +122,7 @@ awaitable_am_send(PyObject *self, PyObject *arg, PyObject **presult)
             PyObject *item = PyObject_GetAttrString(occurred, "value");
             Py_DECREF(occurred);
 
-            if (item == NULL)
+            if (PyAwaitable_UNLIKELY(item == NULL))
             {
                 return PYGEN_ERROR;
             }
