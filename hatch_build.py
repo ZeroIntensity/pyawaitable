@@ -8,12 +8,13 @@ import textwrap
 
 try:
     from hatchling.builders.hooks.plugin.interface import BuildHookInterface
-except ImportError as err:
+except ImportError:
     class BuildHookInterface:
         pass
 
 DIST_PATH = "src/pyawaitable/pyawaitable.h"
 HEADER_FILES = [
+    "optimize.h",
     "dist.h",
     "array.h",
     "backport.h",

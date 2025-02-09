@@ -2,6 +2,7 @@
 #include <pyawaitable/backport.h>
 #include <pyawaitable/awaitableobject.h>
 #include <pyawaitable/genwrapper.h>
+#include <pyawaitable/optimize.h>
 #include <pyawaitable/init.h>
 #include <stdlib.h>
 #define DONE(cb)                 \
@@ -13,21 +14,21 @@
             aw->aw_done = true; \
             Py_CLEAR(g->gw_aw); \
         } while (0)
-#define DONE_IF_OK(cb)    \
-        if (cb != NULL) { \
-            DONE(cb);     \
+#define DONE_IF_OK(cb)                        \
+        if (PyAwaitable_LIKELY(cb != NULL)) { \
+            DONE(cb);                         \
         }
-#define DONE_IF_OK_AND_CHECK(cb)         \
-        if (aw->aw_recently_cancelled) { \
-            cb = NULL;                   \
-        } else {                         \
-            DONE(cb);                    \
+#define DONE_IF_OK_AND_CHECK(cb)                               \
+        if (PyAwaitable_UNLIKELY(aw->aw_recently_cancelled)) { \
+            cb = NULL;                                         \
+        } else {                                               \
+            DONE(cb);                                          \
         }
 /* If we recently cancelled, then cb is no longer valid */
-#define CLEAR_CALLBACK_IF_CANCELLED()    \
-        if (aw->aw_recently_cancelled) { \
-            cb = NULL;                   \
-        }                                \
+#define CLEAR_CALLBACK_IF_CANCELLED()                          \
+        if (PyAwaitable_UNLIKELY(aw->aw_recently_cancelled)) { \
+            cb = NULL;                                         \
+        }                                                      \
 
 #define FIRE_ERROR_CALLBACK_AND_NEXT() \
         if (                           \
@@ -44,7 +45,7 @@
         return genwrapper_next(self);
 #define RETURN_ADVANCE_GENERATOR() \
         DONE(cb);                  \
-        return genwrapper_next(self);
+        PyAwaitable_MUSTTAIL return genwrapper_next(self);
 
 static PyObject *
 gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
@@ -53,7 +54,7 @@ gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
     assert(tp->tp_alloc != NULL);
 
     PyObject *self = tp->tp_alloc(tp, 0);
-    if (self == NULL)
+    if (PyAwaitable_UNLIKELY(self == NULL))
     {
         return NULL;
     }
@@ -96,7 +97,7 @@ genwrapper_new(PyAwaitableObject * aw)
 {
     assert(aw != NULL);
     PyTypeObject *type = _PyAwaitable_GetGenWrapperType();
-    if (type == NULL)
+    if (PyAwaitable_UNLIKELY(type == NULL))
     {
         return NULL;
     }
@@ -106,7 +107,7 @@ genwrapper_new(PyAwaitableObject * aw)
         NULL
     );
 
-    if (!g)
+    if (PyAwaitable_UNLIKELY(g == NULL))
     {
         return NULL;
     }
@@ -170,7 +171,7 @@ get_generator_return_value(void)
         assert(value != NULL);
         assert(PyObject_IsInstance(value, PyExc_StopIteration));
         PyObject *tmp = PyObject_GetAttrString(value, "value");
-        if (tmp == NULL)
+        if (PyAwaitable_UNLIKELY(tmp == NULL))
         {
             Py_DECREF(value);
             return NULL;
@@ -200,7 +201,7 @@ maybe_set_result(PyAwaitableObject *aw)
     return 0;
 }
 
-static inline PyObject *
+static inline PyAwaitable_COLD PyObject *
 bad_callback(void)
 {
     PyErr_SetString(
@@ -214,8 +215,10 @@ static inline PyObject *
 get_awaitable_iterator(PyObject *op)
 {
     if (
-        Py_TYPE(op)->tp_as_async == NULL ||
-        Py_TYPE(op)->tp_as_async->am_await == NULL
+        PyAwaitable_UNLIKELY(
+            Py_TYPE(op)->tp_as_async == NULL ||
+            Py_TYPE(op)->tp_as_async->am_await == NULL
+        )
     )
     {
         // Fall back to the dunder
@@ -233,13 +236,13 @@ get_awaitable_iterator(PyObject *op)
     return Py_TYPE(op)->tp_as_async->am_await(op);
 }
 
-_PyAwaitable_INTERNAL(PyObject *)
-genwrapper_next(PyObject * self)
+_PyAwaitable_INTERNAL(PyObject *) PyAwaitable_HOT
+genwrapper_next(PyObject *self)
 {
     GenWrapperObject *g = (GenWrapperObject *)self;
     PyAwaitableObject *aw = g->gw_aw;
 
-    if (!aw)
+    if (PyAwaitable_UNLIKELY(aw == NULL))
     {
         PyErr_SetString(
             PyExc_RuntimeError,
@@ -314,9 +317,7 @@ genwrapper_next(PyObject * self)
         }
     }
 
-    if (
-        occurred && !PyErr_ExceptionMatches(PyExc_StopIteration)
-    )
+    if (occurred && !PyErr_ExceptionMatches(PyExc_StopIteration))
     {
         // An error occurred!
         FIRE_ERROR_CALLBACK_AND_NEXT();
@@ -379,7 +380,3 @@ _PyAwaitable_INTERNAL_DATA_DEF(PyTypeObject) _PyAwaitableGenWrapperType =
     .tp_traverse = genwrapper_traverse,
     .tp_new = gen_new,
 };
-
-#undef DONE
-#undef AW_DONE
-#undef DONE_IF_OK
