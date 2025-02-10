@@ -55,7 +55,8 @@ typedef struct _pyawaitable_abi
     );
     int (*defer_await)(
         PyObject *aw,
-        defer_callback cb);
+        defer_callback cb
+    );
 } PyAwaitableABI;
 
 #ifdef PYAWAITABLE_THIS_FILE_INIT
