@@ -3,5 +3,5 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pyawaitable_setuptools"
+name = "pyawaitable_test"
 version = "0.0.0"
