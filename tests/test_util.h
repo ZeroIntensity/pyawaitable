@@ -8,15 +8,15 @@
 #define TEST_ASSERT(cond)                                  \
         do {                                               \
             if (!(cond)) {                                 \
-                PyErr_SetString(                           \
+                PyErr_Format(                           \
     PyExc_AssertionError,                                  \
-    "assertion failed: " #cond " at" __FILE__ ":" __LINE__ \
+    "assertion failed in %s (" __FILE__ ":%d): " #cond, \
+                __func__, __LINE__ \
                 );                                         \
                 return NULL;                               \
             }                                              \
         } while (0)
 #define TESTS(name) PyMethodDef _pyawaitable_test_ ## name []
-#define SENTINEL() {NULL, 0, NULL, NULL}
 
 void Test_SetNoMemory(void);
 void Test_UnSetNoMemory(void);

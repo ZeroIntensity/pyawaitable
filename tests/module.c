@@ -10,8 +10,10 @@ _pyawaitable_test_exec(PyObject *mod)
             if (PyModule_AddFunctions(mod, _pyawaitable_test_ ## name) < 0) { \
                 return -1;                                                    \
             }                                                                 \
-        }
+        } while (0)
+
     ADD_TESTS(awaitable);
+#undef ADD_TESTS
     return PyAwaitable_Init();
 }
 

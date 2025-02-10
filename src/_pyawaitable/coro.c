@@ -16,10 +16,10 @@ awaitable_send_with_arg(PyObject *self, PyObject *value)
         }
 
         if (PyAwaitable_UNLIKELY(value != Py_None)) {
-            PyErr_SetNone(
+            PyErr_SetString(
                 PyExc_RuntimeError,
                 "can't send non-None value to a just-started awaitable"
-            )
+            );
             return NULL;
         }
 

@@ -49,5 +49,5 @@ test_awaitable_c_result_without_callback(PyObject *self, PyObject *nothing)
 TESTS(awaitable) = {
     TEST(test_awaitable_new),
     TEST(test_awaitable_c_result_without_callback),
-    SENTINEL()
-}
+    {NULL}
+};
