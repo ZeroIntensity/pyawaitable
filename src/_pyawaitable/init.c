@@ -232,7 +232,6 @@ _PyAwaitable_GetGenWrapperType(void)
 _PyAwaitable_API(int)
 PyAwaitable_Init(void)
 {
-    Py_FatalError("gotcha");
     PyObject *mod = PyModuleDef_Init(&pyawaitable_module);
     if (mod == NULL) {
         return -1;
