@@ -43,7 +43,7 @@ jobs:
                   CIBW_ARCHS_MACOS: x86_64
                   HATCH_BUILD_HOOKS_ENABLE: "true"
 
-            - uses: actions/upload-artifact@v3
+            - uses: actions/upload-artifact@v4
               with:
                   name: artifacts
                   path: wheelhouse/*.whl
@@ -74,7 +74,7 @@ jobs:
                   CIBW_ARCHS_LINUX: aarch64
                   HATCH_BUILD_HOOKS_ENABLE: "true"
 
-            - uses: actions/upload-artifact@v3
+            - uses: actions/upload-artifact@v4
               with:
                   name: artifacts
                   path: wheelhouse/*.whl
@@ -89,7 +89,7 @@ jobs:
         if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
 
         steps:
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: artifacts
                   path: dist
