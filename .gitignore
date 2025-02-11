@@ -9,6 +9,7 @@ dist/
 *.so
 pyawaitable.h
 pcbuild/
+*.o
 
 # LSP
 compile_flags.txt
