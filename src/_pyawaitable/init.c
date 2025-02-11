@@ -4,8 +4,9 @@
 #include <pyawaitable/genwrapper.h>
 
 static int
-pyawaitable_exec(PyObject *mod)
+init_module(PyObject *mod)
 {
+    assert(PyModule_Check(mod));
     if (PyModule_AddType(mod, &PyAwaitable_Type) < 0) {
         return -1;
     }
@@ -27,16 +28,10 @@ pyawaitable_exec(PyObject *mod)
     return 0;
 }
 
-static PyModuleDef_Slot pyawaitable_slots[] = {
-    {Py_mod_exec, pyawaitable_exec},
-    {0, NULL}
-};
-
 static struct PyModuleDef pyawaitable_module = {
     .m_base = PyModuleDef_HEAD_INIT,
     .m_name = "_pyawaitable",
     .m_size = 0,
-    .m_slots = pyawaitable_slots
 };
 
 static PyObject *
@@ -72,6 +67,8 @@ not_initialized(void)
 static inline int
 module_corrupted(const char *err, PyObject *found)
 {
+    assert(err != NULL);
+    assert(found != NULL);
     PyErr_Format(
         PyExc_SystemError,
         "PyAwaitable module corruption! %s: %R",
@@ -84,6 +81,8 @@ module_corrupted(const char *err, PyObject *found)
 static long
 get_module_version(PyObject *mod)
 {
+    assert(mod != NULL);
+    assert(PyModule_Check(mod));
     PyObject *mod_name = PyModule_GetNameObject(mod);
     if (mod_name == NULL) {
         assert(PyErr_Occurred());
@@ -164,6 +163,9 @@ _PyAwaitable_GetModule(void)
     }
 
     long version = get_module_version(mod);
+    if (version == -1) {
+        return NULL;
+    }
     if (version != PyAwaitable_MAGIC_NUMBER) {
         // Not our module!
         mod = find_module_for_version(dict, PyAwaitable_MAGIC_NUMBER);
@@ -232,8 +234,12 @@ _PyAwaitable_GetGenWrapperType(void)
 _PyAwaitable_API(int)
 PyAwaitable_Init(void)
 {
-    PyObject *mod = PyModuleDef_Init(&pyawaitable_module);
+    PyObject *mod = PyModule_Create(&pyawaitable_module);
     if (mod == NULL) {
+        return -1;
+    }
+
+    if (init_module(mod) < 0) {
         return -1;
     }
 

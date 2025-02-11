@@ -8,7 +8,7 @@ To build a working copy, you can either install the package
 locally (via `pip install .`), or by executing the `hatch_build.py` file.
 """
 
-def find_local_pyawaitable() -> Path:
+def find_local_pyawaitable() -> str:
     """Find the directory containing the local copy of pyawaitable.h"""
     top_level = Path(__file__).parent.parent
     source = top_level / "src" / "pyawaitable"
@@ -24,6 +24,7 @@ if __name__ == "__main__":
                 "_pyawaitable_test",
                 glob("*.c"),
                 include_dirs=[find_local_pyawaitable()],
+                extra_compile_args=["-O0", "-g3"]
             )
         ]
     )
