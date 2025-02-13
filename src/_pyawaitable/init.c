@@ -133,7 +133,6 @@ find_module_for_version(PyObject *interp_dict, long version)
     PyObject *list = PyDict_GetItemString(interp_dict, "_pyawaitable_list");
     if (list == NULL)
     {
-        puts("a");
         return not_initialized();
     }
 
@@ -159,7 +158,6 @@ find_module_for_version(PyObject *interp_dict, long version)
         }
     }
 
-    puts("b");
     return not_initialized();
 }
 
@@ -182,7 +180,6 @@ _PyAwaitable_GetModule(void)
     PyObject *mod = PyDict_GetItemString(dict, "_pyawaitable_mod");
     if (mod == NULL)
     {
-        puts("c");
         return not_initialized();
     }
 
@@ -263,7 +260,6 @@ _PyAwaitable_GetGenWrapperType(void)
 _PyAwaitable_API(int)
 PyAwaitable_Init(void)
 {
-    Py_FatalError("gotcha");
     PyObject *mod = PyModuleDef_Init(&pyawaitable_module);
     if (mod == NULL)
     {
