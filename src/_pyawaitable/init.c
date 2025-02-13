@@ -163,7 +163,7 @@ find_module_for_version(PyObject *interp_dict, long version)
     return not_initialized();
 }
 
-static _Thread_local PyObject *pyawaitable_fast_module = NULL;
+static PyAwaitable_thread_local PyObject *pyawaitable_fast_module = NULL;
 
 _PyAwaitable_INTERNAL(PyObject *)
 _PyAwaitable_GetModule(void)
@@ -202,8 +202,8 @@ _PyAwaitable_GetModule(void)
     return mod;
 }
 
-static _Thread_local PyTypeObject *pyawaitable_fast_aw = NULL;
-static _Thread_local PyTypeObject *pyawaitable_fast_gw = NULL;
+static PyAwaitable_thread_local PyTypeObject *pyawaitable_fast_aw = NULL;
+static PyAwaitable_thread_local PyTypeObject *pyawaitable_fast_gw = NULL;
 
 _PyAwaitable_INTERNAL(PyTypeObject *)
 _PyAwaitable_GetAwaitableType(void)
