@@ -33,6 +33,12 @@ pyawaitable_exec(PyObject *mod)
 static PyModuleDef_Slot pyawaitable_slots[] =
 {
     {Py_mod_exec, pyawaitable_exec},
+#if PY_MINOR_VERSION >= 12
+    {Py_mod_multiple_interpreters, Py_MOD_PER_INTERPRETER_GIL_SUPPORTED},
+#endif
+#if defined(Py_GIL_DISABLED) || PY_MINOR_VERSION >= 13
+    {Py_mod_gil, Py_MOD_GIL_NOT_USED},
+#endif
     {0, NULL}
 };
 
