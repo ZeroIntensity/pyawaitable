@@ -4,35 +4,58 @@
 #include <pyawaitable/genwrapper.h>
 
 static int
-init_module(PyObject *mod)
+dict_add_type(PyObject *state, PyTypeObject *obj)
 {
-    assert(PyModule_Check(mod));
-    if (PyModule_AddType(mod, &PyAwaitable_Type) < 0) {
+    Py_INCREF(obj);
+    if (PyDict_SetItemString(state, obj->tp_name, (PyObject *)obj) < 0) {
+        Py_DECREF(obj);
+        return -1;
+    }
+    Py_DECREF(obj);
+}
+
+static int
+init_state(PyObject *state)
+{
+    assert(state != NULL);
+    assert(PyDict_Check(state));
+    if (dict_add_type(state, &PyAwaitable_Type) < 0) {
         return -1;
     }
 
-    if (PyModule_AddType(mod, &_PyAwaitableGenWrapperType) < 0) {
+    if (dict_add_type(state, &_PyAwaitableGenWrapperType) < 0) {
         return -1;
     }
 
-    if (
-        PyModule_AddIntConstant(
-            mod,
-            "magic_version",
-            PyAwaitable_MAGIC_NUMBER
-        ) < 0
-    ) {
+    PyObject *version = PyLong_FromLong(PyAwaitable_MAGIC_NUMBER);
+    if (version == NULL) {
         return -1;
     }
 
+    if (PyDict_SetItemString(state, "magic_version", version) < 0) {
+        Py_DECREF(version);
+        return -1;
+    }
+
+    Py_DECREF(version);
     return 0;
 }
 
-static struct PyModuleDef pyawaitable_module = {
-    .m_base = PyModuleDef_HEAD_INIT,
-    .m_name = "_pyawaitable",
-    .m_size = 0,
-};
+static PyObject *
+create_state(void)
+{
+    PyObject *state = PyDict_New();
+    if (state == NULL) {
+        return NULL;
+    }
+
+    if (init_state(state) < 0) {
+        Py_DECREF(state);
+        return NULL;
+    }
+
+    return state;
+}
 
 static PyObject *
 interp_get_dict(void)
@@ -65,50 +88,57 @@ not_initialized(void)
 }
 
 static inline int
-module_corrupted(const char *err, PyObject *found)
+state_corrupted(const char *err, PyObject *found)
 {
     assert(err != NULL);
     assert(found != NULL);
     PyErr_Format(
         PyExc_SystemError,
-        "PyAwaitable module corruption! %s: %R",
+        "PyAwaitable corruption! %s: %R",
         err,
         found
     );
+    Py_DECREF(found);
     return -1;
 }
 
-static long
-get_module_version(PyObject *mod)
+static PyObject *
+get_state_value(PyObject *state, const char *name)
 {
-    assert(mod != NULL);
-    assert(PyModule_Check(mod));
-    PyObject *mod_name = PyModule_GetNameObject(mod);
-    if (mod_name == NULL) {
-        assert(PyErr_Occurred());
-        return -1;
+    assert(name != NULL);
+    PyObject *str = PyUnicode_FromString(name);
+    if (str == NULL) {
+        return NULL;
     }
 
-    if (PyUnicode_CompareWithASCIIString(mod_name, "_pyawaitable") != 0) {
-        return module_corrupted("Invalid module name", mod_name);
-    }
+    PyObject *version = PyDict_GetItemWithError(state, str);
+    Py_DECREF(str);
+    return version;
+}
 
-    PyObject *version = PyObject_GetAttrString(mod, "magic_version");
+static long
+get_state_version(PyObject *state)
+{
+    assert(state != NULL);
+    assert(PyDict_Check(state));
+
+    PyObject *version = get_state_value(state, "magic_version");
     if (version == NULL) {
-        return -1;
+        return NULL;
     }
 
     if (!PyLong_CheckExact(version)) {
-        return module_corrupted("Non-int version number", version);
+        return state_corrupted("Non-int version number", version);
     }
 
     long version_num = PyLong_AsLong(version);
     if (version_num == -1 && PyErr_Occurred()) {
+        Py_DECREF(version);
         return -1;
     }
 
     if (version_num < 0) {
-        return module_corrupted("Found <0 version somehow", version);
+        return state_corrupted("Found <0 version somehow", version);
     }
 
     return version_num;
@@ -117,19 +147,19 @@ get_module_version(PyObject *mod)
 static PyObject *
 find_module_for_version(PyObject *interp_dict, long version)
 {
-    PyObject *list = PyDict_GetItemString(interp_dict, "_pyawaitable_modules");
+    PyObject *list = PyDict_GetItemString(interp_dict, "_pyawaitable_states");
     if (list == NULL) {
         return not_initialized();
     }
 
     if (!PyList_CheckExact(list)) {
-        module_corrupted("_pyawaitable_modules is not a list", list);
+        state_corrupted("_pyawaitable_states is not a list", list);
         return NULL;
     }
 
     for (Py_ssize_t i = 0; i < PyList_GET_SIZE(list); ++i) {
         PyObject *mod = PyList_GET_ITEM(list, i);
-        long got_version = get_module_version(mod);
+        long got_version = get_state_version(mod);
 
         if (got_version == -1) {
             return NULL;
@@ -143,40 +173,56 @@ find_module_for_version(PyObject *interp_dict, long version)
     return not_initialized();
 }
 
-static _Thread_local PyObject *pyawaitable_fast_module = NULL;
-
-_PyAwaitable_INTERNAL(PyObject *)
-_PyAwaitable_GetModule(void)
+static PyObject *
+find_top_level_state(PyObject **interp_dict)
 {
-    if (pyawaitable_fast_module != NULL) {
-        return pyawaitable_fast_module;
-    }
-
     PyObject *dict = interp_get_dict();
     if (dict == NULL) {
         return NULL;
     }
 
-    PyObject *mod = PyDict_GetItemString(dict, "_pyawaitable_mod");
+    PyObject *mod = PyDict_GetItemString(dict, "_pyawaitable_state");
     if (mod == NULL) {
         return not_initialized();
     }
 
-    long version = get_module_version(mod);
+    if (interp_dict != NULL) {
+        *interp_dict = dict;
+    }
+    return mod;
+}
+
+static _Thread_local PyObject *pyawaitable_fast_state = NULL;
+
+_PyAwaitable_INTERNAL(PyObject *)
+_PyAwaitable_GetState(void)
+{
+    if (pyawaitable_fast_state != NULL) {
+        return pyawaitable_fast_state;
+    }
+
+    PyObject *interp_dict;
+    PyObject *state = find_top_level_state(&interp_dict); // Borrowed reference
+    if (state == NULL) {
+        return NULL;
+    }
+
+    long version = get_state_version(state);
     if (version == -1) {
         return NULL;
     }
+
     if (version != PyAwaitable_MAGIC_NUMBER) {
         // Not our module!
-        mod = find_module_for_version(dict, PyAwaitable_MAGIC_NUMBER);
-        if (mod == NULL) {
+        state = find_module_for_version(interp_dict, PyAwaitable_MAGIC_NUMBER);
+        if (state == NULL) {
             return NULL;
         }
     }
 
     // We want this to be a borrowed reference
-    pyawaitable_fast_module = mod;
-    return mod;
+    pyawaitable_fast_state = state;
+    return state;
 }
 
 static _Thread_local PyTypeObject *pyawaitable_fast_aw = NULL;
@@ -188,13 +234,13 @@ _PyAwaitable_GetAwaitableType(void)
     if (pyawaitable_fast_aw != NULL) {
         return pyawaitable_fast_aw;
     }
-    PyObject *mod = _PyAwaitable_GetModule();
-    if (mod == NULL) {
+    PyObject *state = _PyAwaitable_GetModule();
+    if (state == NULL) {
         return NULL;
     }
 
-    PyTypeObject *pyawaitable_type = (PyTypeObject *)PyObject_GetAttrString(
-        mod,
+    PyTypeObject *pyawaitable_type = (PyTypeObject *)get_state_value(
+        state,
         "_PyAwaitableType"
     );
     if (pyawaitable_type == NULL) {
@@ -213,13 +259,13 @@ _PyAwaitable_GetGenWrapperType(void)
     if (pyawaitable_fast_gw != NULL) {
         return pyawaitable_fast_gw;
     }
-    PyObject *mod = _PyAwaitable_GetModule();
-    if (mod == NULL) {
+    PyObject *state = _PyAwaitable_GetState();
+    if (state == NULL) {
         return NULL;
     }
 
-    PyTypeObject *gw_type = (PyTypeObject *)PyObject_GetAttrString(
-        mod,
+    PyTypeObject *gw_type = (PyTypeObject *)get_state_value(
+        state,
         "_PyAwaitableGenWrapperType"
     );
     if (gw_type == NULL) {
@@ -230,69 +276,90 @@ _PyAwaitable_GetGenWrapperType(void)
     return (PyTypeObject *)gw_type;
 }
 
+static int
+add_state_to_list(PyObject *interp_dict, PyObject *state)
+{
+    assert(interp_dict != NULL);
+    assert(state != NULL);
+    assert(PyDict_Check(interp_dict));
+    assert(PyDict_Check(state));
+
+    PyObject *pyawaitable_list = Py_XNewRef(
+        PyDict_GetItemString(
+            interp_dict,
+            "_pyawaitable_states"
+        )
+    );
+    if (pyawaitable_list == NULL) {
+        // No list has been set
+        pyawaitable_list = PyList_New(1);
+        if (pyawaitable_list == NULL) {
+            // Memory error
+            return -1;
+        }
+
+        if (PyDict_SetItemString(
+            interp_dict,
+            "_pyawaitable_states",
+            pyawaitable_list
+            ) < 0) {
+            Py_DECREF(pyawaitable_list);
+            return -1;
+        }
+    }
+
+    if (PyList_Append(pyawaitable_list, state) < 0) {
+        Py_DECREF(pyawaitable_list);
+        return -1;
+    }
+
+    Py_DECREF(pyawaitable_list);
+    return 0;
+}
 
 _PyAwaitable_API(int)
 PyAwaitable_Init(void)
 {
-    PyObject *mod = PyModule_Create(&pyawaitable_module);
-    if (mod == NULL) {
-        return -1;
-    }
-
-    if (init_module(mod) < 0) {
-        return -1;
-    }
-
     PyObject *dict = interp_get_dict();
     if (dict == NULL) {
-        Py_DECREF(mod);
         return -1;
     }
 
-    PyObject *existing = PyDict_GetItemString(dict, "_pyawaitable_mod");
+    PyObject *state = create_state();
+    if (state == NULL) {
+        return -1;
+    }
+
+    PyObject *existing = PyDict_GetItemString(dict, "_pyawaitable_state");
     if (existing != NULL) {
         /* Oh no, PyAwaitable has been used twice! */
-        long version = get_module_version(existing);
+        long version = get_state_version(existing);
         if (version == -1) {
-            Py_DECREF(mod);
+            Py_DECREF(state);
             return -1;
         }
 
         if (version == PyAwaitable_MAGIC_NUMBER) {
             // Yay! It just happens that it's the same version as us.
             // Let's just reuse it.
-            Py_DECREF(mod);
+            Py_DECREF(state);
             return 0;
         }
 
-        PyObject *pyawaitable_list = PyDict_GetItemString(
-            dict,
-            "_pyawaitable_modules"
-        );
-        if (pyawaitable_list == NULL) {
-            // No list has been set
-            pyawaitable_list = PyList_New(1);
-            if (pyawaitable_list == NULL) {
-                // Memory error
-                Py_DECREF(mod);
-                return -1;
-            }
-        }
-
-        if (PyList_Append(pyawaitable_list, mod) < 0) {
-            Py_DECREF(mod);
+        if (add_state_to_list(dict, state) < 0) {
+            Py_DECREF(state);
             return -1;
         }
 
-        Py_DECREF(mod);
+        Py_DECREF(state);
         return 0;
     }
 
-    if (PyDict_SetItemString(dict, "_pyawaitable_mod", mod) < 0) {
-        Py_DECREF(mod);
+    if (PyDict_SetItemString(dict, "_pyawaitable_state", state) < 0) {
+        Py_DECREF(state);
         return -1;
     }
 
-    Py_DECREF(mod);
+    Py_DECREF(state);
     return 0;
 }
