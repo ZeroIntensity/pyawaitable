@@ -345,7 +345,7 @@ genwrapper_next(PyObject *self)
 
 _PyAwaitable_INTERNAL_DATA_DEF(PyTypeObject) _PyAwaitableGenWrapperType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "_genwrapper",
+    .tp_name = "_PyAwaitableGenWrapperType",
     .tp_basicsize = sizeof(GenWrapperObject),
     .tp_dealloc = gen_dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
