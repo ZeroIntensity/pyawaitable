@@ -234,7 +234,7 @@ _PyAwaitable_GetAwaitableType(void)
     if (pyawaitable_fast_aw != NULL) {
         return pyawaitable_fast_aw;
     }
-    PyObject *state = _PyAwaitable_GetModule();
+    PyObject *state = _PyAwaitable_GetState();
     if (state == NULL) {
         return NULL;
     }

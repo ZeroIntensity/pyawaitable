@@ -5,7 +5,7 @@
 #include <pyawaitable/dist.h>
 
 _PyAwaitable_INTERNAL(PyObject *)
-_PyAwaitable_GetModule(void);
+_PyAwaitable_GetState(void);
 
 _PyAwaitable_INTERNAL(PyTypeObject *)
 _PyAwaitable_GetAwaitableType(void);
