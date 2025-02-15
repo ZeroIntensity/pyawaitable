@@ -23,7 +23,7 @@ test_awaitable_new(PyObject *self, PyObject *nothing)
 }
 
 static PyObject *
-test_awaitable_c_result_without_callback(PyObject *self, PyObject *nothing)
+test_set_result(PyObject *self, PyObject *nothing)
 {
     PyObject *awaitable = PyAwaitable_New();
     if (awaitable == NULL) {
@@ -47,8 +47,25 @@ test_awaitable_c_result_without_callback(PyObject *self, PyObject *nothing)
     return Test_RunAndCheck(awaitable, value);
 }
 
+static PyObject *
+add_await(PyObject *self, PyObject *coro)
+{
+    PyObject *awaitable = PyAwaitable_New();
+    if (awaitable == NULL) {
+        return NULL;
+    }
+
+    if (PyAwaitable_AddAwait(awaitable, coro, NULL, NULL) < 0) {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+
+    return awaitable;
+}
+
 TESTS(awaitable) = {
     TEST(test_awaitable_new),
-    TEST(test_awaitable_c_result_without_callback),
+    TEST(test_set_result),
+    TEST_UTIL(add_await),
     {NULL}
 };

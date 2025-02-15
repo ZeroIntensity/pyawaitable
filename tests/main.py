@@ -1,8 +1,17 @@
 import unittest
 import _pyawaitable_test
+import asyncio
 
 class PyAwaitableTests(unittest.TestCase):
-    pass
+    def test_add_await(self):
+        called = False
+        async def dummy():
+            await asyncio.sleep(0)
+            nonlocal called
+            called = True
+
+        asyncio.run(_pyawaitable_test.add_await(dummy()))
+        self.assertTrue(called)
 
 for method in dir(_pyawaitable_test):
     if method.startswith("test_"):
