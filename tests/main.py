@@ -2,18 +2,20 @@ import unittest
 import _pyawaitable_test
 import asyncio
 from typing import Any, Callable
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Coroutine
+import inspect
+
 
 class PyAwaitableTests(unittest.TestCase):
-    def test_add_await(self):
-        called = False
-        async def dummy():
-            await asyncio.sleep(0)
-            nonlocal called
-            called = True
+    def test_awaitable_semantics(self):
+        awaitable = _pyawaitable_test.generic_awaitable(None)
+        self.assertIsInstance(awaitable, Awaitable)
+        self.assertIsInstance(awaitable, Coroutine)
+        # It's not a *native* coroutine
+        self.assertFalse(inspect.iscoroutine(awaitable))
 
-        asyncio.run(_pyawaitable_test.add_await(dummy()))
-        self.assertTrue(called)
+        with self.assertWarns(ResourceWarning):
+            del awaitable
 
 def coro_wrap_call(method: Callable[[Awaitable[Any]], Any]) -> Callable[[], None]:
     def wrapper(*_: Any):

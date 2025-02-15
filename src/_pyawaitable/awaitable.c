@@ -101,8 +101,8 @@ awaitable_dealloc(PyObject *self)
     if (!aw->aw_awaited) {
         if (
             PyErr_WarnEx(
-                PyExc_RuntimeWarning,
-                "pyawaitable object was never awaited",
+                PyExc_ResourceWarning,
+                "PyAwaitable object was never awaited",
                 1
             ) < 0
         ) {

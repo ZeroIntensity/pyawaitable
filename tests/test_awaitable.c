@@ -3,6 +3,24 @@
 #include "pyawaitable_test.h"
 
 static PyObject *
+generic_awaitable(PyObject *self, PyObject *coro)
+{
+    PyObject *awaitable = PyAwaitable_New();
+    if (awaitable == NULL) {
+        return NULL;
+    }
+
+    if (coro != Py_None) {
+        if (PyAwaitable_AddAwait(awaitable, coro, NULL, NULL) < 0) {
+            Py_DECREF(awaitable);
+            return NULL;
+        }
+    }
+
+    return awaitable;
+}
+
+static PyObject *
 test_awaitable_new(PyObject *self, PyObject *nothing)
 {
     PyObject *awaitable = PyAwaitable_New();
@@ -127,6 +145,7 @@ test_add_await_no_memory(PyObject *self, PyObject *coro)
 }
 
 TESTS(awaitable) = {
+    TEST_UTIL(generic_awaitable),
     TEST(test_awaitable_new),
     TEST(test_set_result),
     TEST_CORO(test_add_await),
