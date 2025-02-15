@@ -192,7 +192,7 @@ find_top_level_state(PyObject **interp_dict)
     return mod;
 }
 
-static _Thread_local PyObject *pyawaitable_fast_state = NULL;
+static PyAwaitable_thread_local PyObject *pyawaitable_fast_state = NULL;
 
 _PyAwaitable_INTERNAL(PyObject *)
 _PyAwaitable_GetState(void)
@@ -225,8 +225,8 @@ _PyAwaitable_GetState(void)
     return state;
 }
 
-static _Thread_local PyTypeObject *pyawaitable_fast_aw = NULL;
-static _Thread_local PyTypeObject *pyawaitable_fast_gw = NULL;
+static PyAwaitable_thread_local PyTypeObject *pyawaitable_fast_aw = NULL;
+static PyAwaitable_thread_local PyTypeObject *pyawaitable_fast_gw = NULL;
 
 _PyAwaitable_INTERNAL(PyTypeObject *)
 _PyAwaitable_GetAwaitableType(void)
