@@ -1,10 +1,17 @@
 import unittest
-import _pyawaitable_test
 import asyncio
 from typing import Any, Callable
 from collections.abc import Awaitable, Coroutine
 import inspect
 
+NOT_FOUND = """
+The PyAwaitable test package wasn't built!
+Please install it with `pip install ./tests`
+"""
+try:
+    import _pyawaitable_test
+except ImportError as err:
+    raise RuntimeError(NOT_FOUND) from err
 
 class PyAwaitableTests(unittest.TestCase):
     def test_awaitable_semantics(self):
