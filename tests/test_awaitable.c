@@ -114,25 +114,30 @@ test_add_await_no_memory(PyObject *self, PyObject *coro)
         TEST_ASSERT(Py_REFCNT(dummy) > 1);
         Py_DECREF(dummy);
     }
-
+#if Py_MINOR_VERSION < 11
+/* Apparently, it's not a MemoryError for exceptions on <3.11 */
+#define EXPECT_ERROR_NOMEM(exc) EXPECT_ERROR(exc)
+#else
+#define EXPECT_ERROR_NOMEM(exc) EXPECT_ERROR(PyExc_MemoryError)
+#endif
 
     int res;
     Test_SetNoMemory();
     res = PyAwaitable_AddAwait(awaitable, NULL, NULL, NULL);
     Test_UnSetNoMemory();
-    EXPECT_ERROR(PyExc_MemoryError);
+    EXPECT_ERROR_NOMEM(PyExc_ValueError);
     TEST_ASSERT(res < 0);
 
     Test_SetNoMemory();
     res = PyAwaitable_AddAwait(awaitable, awaitable, NULL, NULL);
     Test_UnSetNoMemory();
-    EXPECT_ERROR(PyExc_MemoryError);
+    EXPECT_ERROR_NOMEM(PyExc_ValueError);
     TEST_ASSERT(res < 0);
 
     Test_SetNoMemory();
     res = PyAwaitable_AddAwait(awaitable, coro, NULL, NULL);
     Test_UnSetNoMemory();
-    EXPECT_ERROR(PyExc_MemoryError);
+    EXPECT_ERROR_NOMEM(PyExc_TypeError);
     TEST_ASSERT(res < 0);
 
     // Actually await it to prevent the warning
