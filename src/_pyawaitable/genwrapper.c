@@ -31,21 +31,21 @@
             cb = NULL;                                         \
         }                                                      \
 
-#define FIRE_ERROR_CALLBACK_AND_NEXT() \
-        if (                           \
-    _PyAwaitableGenWrapper_FireErrCallback(      \
-    (PyObject *) aw,                   \
-    cb->err_callback                   \
-    ) < 0                              \
-        ) {                            \
-            DONE_IF_OK_AND_CHECK(cb);  \
-            AW_DONE();                 \
-            return NULL;               \
-        }                              \
-        DONE_IF_OK_AND_CHECK(cb);      \
+#define FIRE_ERROR_CALLBACK_AND_NEXT()      \
+        if (                                \
+    _PyAwaitableGenWrapper_FireErrCallback( \
+    (PyObject *) aw,                        \
+    cb->err_callback                        \
+    ) < 0                                   \
+        ) {                                 \
+            DONE_IF_OK_AND_CHECK(cb);       \
+            AW_DONE();                      \
+            return NULL;                    \
+        }                                   \
+        DONE_IF_OK_AND_CHECK(cb);           \
         return _PyAwaitableGenWrapper_Next(self);
-#define RETURN_ADVANCE_GENERATOR()       \
-        DONE_IF_OK(cb);                  \
+#define RETURN_ADVANCE_GENERATOR() \
+        DONE_IF_OK(cb);            \
         PyAwaitable_MUSTTAIL return _PyAwaitableGenWrapper_Next(self);
 
 static PyObject *

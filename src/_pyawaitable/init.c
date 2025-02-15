@@ -309,11 +309,13 @@ add_state_to_list(PyObject *interp_dict, PyObject *state)
             return -1;
         }
 
-        if (PyDict_SetItemString(
-            interp_dict,
-            "_pyawaitable_states",
-            pyawaitable_list
-            ) < 0) {
+        if (
+            PyDict_SetItemString(
+                interp_dict,
+                "_pyawaitable_states",
+                pyawaitable_list
+            ) < 0
+        ) {
             Py_DECREF(pyawaitable_list);
             return -1;
         }

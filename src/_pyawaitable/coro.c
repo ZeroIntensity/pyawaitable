@@ -88,7 +88,10 @@ awaitable_throw(PyObject *self, PyObject *args)
             return NULL;
         }
 
-        if (_PyAwaitableGenWrapper_FireErrCallback(self, cb->err_callback) < 0) {
+        if (_PyAwaitableGenWrapper_FireErrCallback(
+            self,
+            cb->err_callback
+            ) < 0) {
             return NULL;
         }
     }

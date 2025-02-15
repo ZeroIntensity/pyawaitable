@@ -7,8 +7,7 @@
 
 _PyAwaitable_INTERNAL_DATA(PyTypeObject) _PyAwaitableGenWrapperType;
 
-typedef struct _GenWrapperObject
-{
+typedef struct _GenWrapperObject {
     PyObject_HEAD
     PyAwaitableObject *gw_aw;
     PyObject *gw_current_await;

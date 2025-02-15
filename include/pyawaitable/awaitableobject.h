@@ -11,16 +11,14 @@ typedef int (*awaitcallback)(PyObject *, PyObject *);
 typedef int (*awaitcallback_err)(PyObject *, PyObject *);
 typedef int (*defer_callback)(PyObject *);
 
-typedef struct _pyawaitable_callback
-{
+typedef struct _pyawaitable_callback {
     PyObject *coro;
     awaitcallback callback;
     awaitcallback_err err_callback;
     bool done;
 } _PyAwaitable_MANGLE(pyawaitable_callback);
 
-struct _PyAwaitableObject
-{
+struct _PyAwaitableObject {
     PyObject_HEAD
 
     pyawaitable_array aw_callbacks;

@@ -18,8 +18,7 @@ typedef void (*_PyAwaitable_MANGLE(pyawaitable_array_deallocator))(void *);
 /*
  * Internal only dynamic array for PyAwaitable.
  */
-typedef struct
-{
+typedef struct {
     /*
      * The actual items in the dynamic array.
      * Don't access this field publicly to get
@@ -197,13 +196,11 @@ pyawaitable_array_new_with_size(
 )
 {
     pyawaitable_array *array = PyMem_Malloc(sizeof(pyawaitable_array));
-    if (PyAwaitable_UNLIKELY(array == NULL))
-    {
+    if (PyAwaitable_UNLIKELY(array == NULL)) {
         return NULL;
     }
 
-    if (pyawaitable_array_init_with_size(array, deallocator, initial) < 0)
-    {
+    if (pyawaitable_array_init_with_size(array, deallocator, initial) < 0) {
         PyMem_Free(array);
         return NULL;
     }

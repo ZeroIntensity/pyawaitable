@@ -37,7 +37,6 @@
 #define PyAwaitable_LIKELY(x) (x)
 #endif
 
-/* Logic based on pyport.h in the cpython source code. */
 #ifdef thread_local
 #  define PyAwaitable_thread_local thread_local
 #elif __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
@@ -47,6 +46,7 @@
 #elif defined(__GNUC__)  /* includes clang */
 #  define PyAwaitable_thread_local __thread
 # else
-#error "_Thread_local, __declspec(thread), and thread_local are all missing. Cannot continue compile."
-#endif  
+#error \
+    "no thread-local storage classifier is available"
+#endif
 #endif
