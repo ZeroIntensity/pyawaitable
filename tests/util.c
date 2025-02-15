@@ -90,14 +90,19 @@ Test_RunAwaitable(PyObject *awaitable)
     PyObject *err = PyErr_GetRaisedException();
     PyObject *close_res = PyObject_CallMethod(loop, "close", "");
     Py_DECREF(loop);
-    PyErr_SetRaisedException(err);
 
-    if (close_res == NULL) {
-        // Both failed? Yikes. Let's just show the first one and bail out.
-        Py_XDECREF(res);
+    if (res == NULL) {
+        assert(err != NULL);
+        PyErr_SetRaisedException(err);
         return NULL;
     }
 
+    if (close_res == NULL) {
+        Py_DECREF(res);
+        return NULL;
+    }
+
+    Py_DECREF(close_res);
     return res;
 }
 

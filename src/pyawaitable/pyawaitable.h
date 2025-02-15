@@ -16,9 +16,9 @@
 #define PyAwaitable_MAGIC_NUMBER 200
 
 #include <stdarg.h>
-#include <Python.h>
-#include <stdbool.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <Python.h>
 #ifndef PYAWAITABLE_OPTIMIZE_H
 #define PYAWAITABLE_OPTIMIZE_H
 
@@ -2222,19 +2222,19 @@ PyAwaitable_Init(void)
     return 0;
 }
 
-#undef FIRE_ERROR_CALLBACK_AND_NEXT
-#undef RETURN_ADVANCE_GENERATOR
-#undef DONE_IF_OK
-#undef UNPACK
-#undef SET
+#undef CLEAR_CALLBACK_IF_CANCELLED
 #undef SAVE
-#undef NOTHING
-#undef AW_DONE
-#undef GET
-#undef CLEAR_IF_NON_NULL
 #undef DONE_IF_OK_AND_CHECK
 #undef DONE
-#undef CLEAR_CALLBACK_IF_CANCELLED
+#undef SET
+#undef FIRE_ERROR_CALLBACK_AND_NEXT
+#undef DONE_IF_OK
+#undef NOTHING
+#undef GET
+#undef AW_DONE
+#undef RETURN_ADVANCE_GENERATOR
+#undef CLEAR_IF_NON_NULL
+#undef UNPACK
 #else
 #error "the limited API cannot be used with pyawaitable"
 #endif /* PYAWAITABLE_VENDOR_H */
