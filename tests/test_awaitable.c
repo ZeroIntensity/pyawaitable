@@ -115,8 +115,22 @@ test_add_await_no_memory(PyObject *self, PyObject *coro)
         Py_DECREF(dummy);
     }
 
+
+    int res;
     Test_SetNoMemory();
-    int res = PyAwaitable_AddAwait(awaitable, coro, NULL, NULL);
+    res = PyAwaitable_AddAwait(awaitable, NULL, NULL, NULL);
+    Test_UnSetNoMemory();
+    EXPECT_ERROR(PyExc_MemoryError);
+    TEST_ASSERT(res < 0);
+
+    Test_SetNoMemory();
+    res = PyAwaitable_AddAwait(awaitable, awaitable, NULL, NULL);
+    Test_UnSetNoMemory();
+    EXPECT_ERROR(PyExc_MemoryError);
+    TEST_ASSERT(res < 0);
+
+    Test_SetNoMemory();
+    res = PyAwaitable_AddAwait(awaitable, coro, NULL, NULL);
     Test_UnSetNoMemory();
     EXPECT_ERROR(PyExc_MemoryError);
     TEST_ASSERT(res < 0);
