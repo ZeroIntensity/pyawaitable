@@ -121,7 +121,7 @@ _Test_RunAndCheck(
         return NULL;
     }
     Py_DECREF(awaitable);
-    if (!Py_Is(res, expected)) {
+    if (res != expected) {
         PyErr_Format(
             PyExc_AssertionError,
             "test %s at %s:%d expected awaitable to return %R, got %R",
