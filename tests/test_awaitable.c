@@ -114,7 +114,7 @@ test_add_await_no_memory(PyObject *self, PyObject *coro)
         TEST_ASSERT(Py_REFCNT(dummy) > 1);
         Py_DECREF(dummy);
     }
-#if Py_MINOR_VERSION < 11
+#if PY_MINOR_VERSION < 11
 /* Apparently, it's not a MemoryError for exceptions on <3.11 */
 #define EXPECT_ERROR_NOMEM(exc) EXPECT_ERROR(exc)
 #else
