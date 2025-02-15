@@ -44,8 +44,8 @@
         }                              \
         DONE_IF_OK_AND_CHECK(cb);      \
         return _PyAwaitableGenWrapper_Next(self);
-#define RETURN_ADVANCE_GENERATOR() \
-        DONE(cb);                  \
+#define RETURN_ADVANCE_GENERATOR()       \
+        DONE_IF_OK(cb);                  \
         PyAwaitable_MUSTTAIL return _PyAwaitableGenWrapper_Next(self);
 
 static PyObject *
@@ -263,8 +263,7 @@ _PyAwaitableGenWrapper_Next(PyObject *self)
             }
 
             // Callback is done.
-            DONE_IF_OK(cb);
-            return _PyAwaitableGenWrapper_Next(self);
+            RETURN_ADVANCE_GENERATOR();
         }
 
         assert(cb->coro != NULL);
