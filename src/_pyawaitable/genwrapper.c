@@ -303,7 +303,7 @@ _PyAwaitableGenWrapper_Next(PyObject *self)
     }
 
     /* Coroutine is done, but with a result. */
-    if (cb == NULL && cb->callback == NULL) {
+    if (cb == NULL || cb->callback == NULL) {
         // We can disregard the result if there's no callback.
         PyErr_Clear();
         RETURN_ADVANCE_GENERATOR();
