@@ -18,3 +18,4 @@ os.environ['PYAWAITABLE_INCLUDE'] = pyawaitable.include(suppress_error=True)
 
 [build.hooks.custom]
 enable-by-default = true
+dependencies = ["typing_extensions"]

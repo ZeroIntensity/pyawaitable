@@ -4,9 +4,11 @@ PyAwaitable Vendoring Script
 
 import os
 from pathlib import Path
-from typing import Callable, TextIO, TypeVar, TYPE_CHECKING
-if TYPE_CHECKING:
-    # We don't want to add an extra build dependency
+from typing import Callable, TextIO, TypeVar
+try:
+    from typing import ParamSpec
+except ImportError as err:
+    # Let's hope it's installed!
     from typing_extensions import ParamSpec
 import re
 from contextlib import contextmanager
