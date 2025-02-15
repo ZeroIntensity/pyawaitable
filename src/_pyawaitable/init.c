@@ -124,7 +124,7 @@ get_state_version(PyObject *state)
 
     PyObject *version = get_state_value(state, "magic_version");
     if (version == NULL) {
-        return NULL;
+        return -1;
     }
 
     if (!PyLong_CheckExact(version)) {
