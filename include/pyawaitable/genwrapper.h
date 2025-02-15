@@ -19,7 +19,7 @@ _PyAwaitableGenWrapper_Next(PyObject * self);
 _PyAwaitable_INTERNAL(int)
 _PyAwaitableGenWrapper_FireErrCallback(
     PyObject * self,
-    awaitcallback_err err_callback
+    PyAwaitable_Error err_callback
 );
 
 _PyAwaitable_INTERNAL(PyObject *)

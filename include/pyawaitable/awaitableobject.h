@@ -7,14 +7,14 @@
 #include <pyawaitable/array.h>
 #include <pyawaitable/dist.h>
 
-typedef int (*awaitcallback)(PyObject *, PyObject *);
-typedef int (*awaitcallback_err)(PyObject *, PyObject *);
-typedef int (*defer_callback)(PyObject *);
+typedef int (*PyAwaitable_Callback)(PyObject *, PyObject *);
+typedef int (*PyAwaitable_Error)(PyObject *, PyObject *);
+typedef int (*PyAwaitable_Defer)(PyObject *);
 
 typedef struct _pyawaitable_callback {
     PyObject *coro;
-    awaitcallback callback;
-    awaitcallback_err err_callback;
+    PyAwaitable_Callback callback;
+    PyAwaitable_Error err_callback;
     bool done;
 } _PyAwaitable_MANGLE(pyawaitable_callback);
 
@@ -50,12 +50,12 @@ _PyAwaitable_API(int)
 PyAwaitable_AddAwait(
     PyObject * aw,
     PyObject * coro,
-    awaitcallback cb,
-    awaitcallback_err err
+    PyAwaitable_Callback cb,
+    PyAwaitable_Error err
 );
 
 _PyAwaitable_API(int)
-PyAwaitable_DeferAwait(PyObject * aw, defer_callback cb);
+PyAwaitable_DeferAwait(PyObject * aw, PyAwaitable_Defer cb);
 
 _PyAwaitable_API(void)
 PyAwaitable_Cancel(PyObject * aw);

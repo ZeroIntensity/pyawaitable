@@ -133,11 +133,38 @@ _PyAwaitable_API(int)
 PyAwaitable_AddAwait(
     PyObject * self,
     PyObject * coro,
-    awaitcallback cb,
-    awaitcallback_err err
+    PyAwaitable_Callback cb,
+    PyAwaitable_Error err
 )
 {
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
+    if (coro == NULL) {
+        PyErr_SetString(
+            PyExc_ValueError,
+            "PyAwaitable: NULL passed to PyAwaitable_AddAwait()! "
+            "Did you forget an error check?"
+        );
+        return NULL;
+    }
+
+    if (coro == self) {
+        PyErr_Format(
+            PyExc_ValueError,
+            "PyAwaitable: Self (%R) was passed to PyAwaitable_AddAwait()! "
+            "This would result in a recursive nightmare.",
+            self
+        );
+        return NULL;
+    }
+
+    if (!PyObject_HasAttrString(coro, "__await__")) {
+        PyErr_Format(
+            PyExc_TypeError,
+            "PyAwaitable: %R is not an awaitable object",
+            coro
+        );
+        return -1;
+    }
 
     pyawaitable_callback *aw_c = PyMem_Malloc(sizeof(pyawaitable_callback));
     if (aw_c == NULL) {
@@ -160,7 +187,7 @@ PyAwaitable_AddAwait(
 }
 
 _PyAwaitable_API(int)
-PyAwaitable_DeferAwait(PyObject * awaitable, defer_callback cb)
+PyAwaitable_DeferAwait(PyObject * awaitable, PyAwaitable_Defer cb)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
     pyawaitable_callback *aw_c = PyMem_Malloc(sizeof(pyawaitable_callback));
@@ -170,7 +197,7 @@ PyAwaitable_DeferAwait(PyObject * awaitable, defer_callback cb)
     }
 
     aw_c->coro = NULL;
-    aw_c->callback = (awaitcallback)cb;
+    aw_c->callback = (PyAwaitable_Callback)cb;
     aw_c->err_callback = NULL;
     aw_c->done = false;
 

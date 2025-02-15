@@ -117,7 +117,7 @@ genwrapper_new(PyAwaitableObject * aw)
 _PyAwaitable_INTERNAL(int)
 _PyAwaitableGenWrapper_FireErrCallback(
     PyObject * self,
-    awaitcallback_err err_callback
+    PyAwaitable_Error err_callback
 )
 {
     assert(PyErr_Occurred() != NULL);
@@ -254,7 +254,7 @@ _PyAwaitableGenWrapper_Next(PyObject *self)
         assert(cb->done == false);
 
         if (cb->callback != NULL && cb->coro == NULL) {
-            int def_res = ((defer_callback)cb->callback)((PyObject *)aw);
+            int def_res = ((PyAwaitable_Defer)cb->callback)((PyObject *)aw);
             CLEAR_CALLBACK_IF_CANCELLED();
             if (def_res < 0) {
                 DONE_IF_OK(cb);
@@ -319,7 +319,7 @@ _PyAwaitableGenWrapper_Next(PyObject *self)
     }
 
     // Preserve the error callback in case we get cancelled
-    awaitcallback_err err_callback = cb->err_callback;
+    PyAwaitable_Error err_callback = cb->err_callback;
     Py_INCREF(aw);
     int res = cb->callback((PyObject *) aw, value);
     Py_DECREF(aw);

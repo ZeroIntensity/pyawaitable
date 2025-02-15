@@ -6,8 +6,8 @@
 static int
 async_with_inner(PyObject *aw, PyObject *res)
 {
-    awaitcallback cb;
-    awaitcallback_err err;
+    PyAwaitable_Callback cb;
+    PyAwaitable_Error err;
     PyObject *exit;
     if (PyAwaitable_UnpackArbValues(aw, &cb, &err) < 0) {
         return -1;
@@ -86,8 +86,8 @@ _PyAwaitable_API(int)
 PyAwaitable_AsyncWith(
     PyObject * aw,
     PyObject * ctx,
-    awaitcallback cb,
-    awaitcallback_err err
+    PyAwaitable_Callback cb,
+    PyAwaitable_Error err
 )
 {
     PyObject *with = PyObject_GetAttrString(ctx, "__aenter__");
