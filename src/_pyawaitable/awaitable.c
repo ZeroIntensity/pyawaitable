@@ -194,7 +194,7 @@ _PyAwaitable_API(PyObject *)
 PyAwaitable_New(void)
 {
     // XXX Use a freelist?
-    PyTypeObject *type = _PyAwaitable_GetAwaitableType();
+    PyTypeObject *type = PyAwaitable_GetType();
     if (PyAwaitable_UNLIKELY(type == NULL)) {
         return NULL;
     }
