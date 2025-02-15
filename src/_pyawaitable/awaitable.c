@@ -144,7 +144,7 @@ PyAwaitable_AddAwait(
             "PyAwaitable: NULL passed to PyAwaitable_AddAwait()! "
             "Did you forget an error check?"
         );
-        return NULL;
+        return -1;
     }
 
     if (coro == self) {
@@ -154,7 +154,7 @@ PyAwaitable_AddAwait(
             "This would result in a recursive nightmare.",
             self
         );
-        return NULL;
+        return -1;
     }
 
     if (!PyObject_HasAttrString(coro, "__await__")) {
