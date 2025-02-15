@@ -89,33 +89,33 @@ test_add_await_no_memory(PyObject *self, PyObject *coro)
 
         if (PyAwaitable_AddAwait(awaitable, dummy, NULL, NULL) < 0) {
             Py_DECREF(awaitable);
+            Py_DECREF(dummy);
             return NULL;
         }
 
-        PyAwaitable_Cancel(awaitable);
-        TEST_ASSERT(Py_REFCNT(awaitable) > 1);
-        Py_DECREF(awaitable);
+        TEST_ASSERT(Py_REFCNT(dummy) > 1);
+        Py_DECREF(dummy);
     }
 
-    Test_SetNoMemory();
-    int null_failure = PyAwaitable_AddAwait(awaitable, NULL, NULL, NULL);
-    Test_UnSetNoMemory();
-    EXPECT_ERROR(PyExc_ValueError);
-    TEST_ASSERT(null_failure < 0);
 
+    int res;
     Test_SetNoMemory();
-    int self_failure = PyAwaitable_AddAwait(awaitable, awaitable, NULL, NULL);
-    Test_UnSetNoMemory();
-    EXPECT_ERROR(PyExc_ValueError);
-    TEST_ASSERT(self_failure < 0);
-
-    // Now time for memory errors, since the allocation needed
-    // to check __await__ will fail
-    Test_SetNoMemory();
-    int memory_failure = PyAwaitable_AddAwait(awaitable, coro, NULL, NULL);
+    res = PyAwaitable_AddAwait(awaitable, NULL, NULL, NULL);
     Test_UnSetNoMemory();
     EXPECT_ERROR(PyExc_MemoryError);
-    TEST_ASSERT(memory_failure < 0);
+    TEST_ASSERT(res < 0);
+
+    Test_SetNoMemory();
+    res = PyAwaitable_AddAwait(awaitable, awaitable, NULL, NULL);
+    Test_UnSetNoMemory();
+    EXPECT_ERROR(PyExc_MemoryError);
+    TEST_ASSERT(res < 0);
+
+    Test_SetNoMemory();
+    res = PyAwaitable_AddAwait(awaitable, coro, NULL, NULL);
+    Test_UnSetNoMemory();
+    EXPECT_ERROR(PyExc_MemoryError);
+    TEST_ASSERT(res < 0);
 
     // Actually await it to prevent the warning
     if (PyAwaitable_AddAwait(awaitable, coro, NULL, NULL) < 0) {

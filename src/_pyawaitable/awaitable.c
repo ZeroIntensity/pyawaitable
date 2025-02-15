@@ -68,10 +68,10 @@ _PyAwaitable_INTERNAL(PyObject *)
 awaitable_next(PyObject * self)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *)self;
-    if (aw->aw_awaited) {
+    if (aw->aw_done) {
         PyErr_SetString(
             PyExc_RuntimeError,
-            "pyawaitable: cannot reuse awaitable"
+            "PyAwaitable: Cannot reuse awaitable"
         );
         return NULL;
     }
