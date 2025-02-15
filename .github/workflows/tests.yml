@@ -5,10 +5,8 @@ on:
     branches:
       - master
   pull_request:
-    types:
-      - "opened"
-      - "reopened"
-      - "synchronize"
+    branches:
+      - master
 
 concurrency:
   group: test-${{ github.head_ref }}
