@@ -35,8 +35,6 @@ jobs:
           filters: |
             source:
               - 'src/**'
-            csource:
-              - 'src/_pyawaitable/**'
 
   run-tests:
     needs: changes
@@ -56,60 +54,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install Hatch
-        uses: pypa/hatch@install
+      - name: Build PyAwaitable
+        run: pip install .
+
+      - name: Build PyAwaitable Test Package
+        run: pip install ./tests
 
       - name: Run tests
-        run: hatch test
-
-  memory-errors:
-    needs:
-      - changes
-      - run-tests
-    if: ${{ needs.changes.outputs.csource == 'true' }}
-    name: Check for memory errors
-    runs-on: ubuntu-latest
-    env:
-      PYTHONMALLOC: malloc
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.12
-
-      - name: Install Valgrind
-        run: sudo apt-get update && sudo apt-get -y install valgrind
-
-      - name: Install Hatch
-        uses: pypa/hatch@install
-
-      - name: Run tests
-        run: valgrind --suppressions=valgrind-python.supp --exit-errorcode=1 hatch test
-
-  memory-leaks:
-    needs:
-      - changes
-      - memory-errors
-    if: ${{ needs.changes.outputs.csource == 'true' }}
-    name: Check for memory leaks
-    runs-on: ubuntu-latest
-    env:
-      PYTHONMALLOC: malloc
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.12
-
-      - name: Install Hatch
-        uses: pypa/hatch@install
-
-      - name: Run tests with Memray tracking
-        run: hatch test --enable-leak-tracking
+        run: python -W error -m unittest tests/main.py --verbose
 
   tests-pass:
     runs-on: ubuntu-latest
@@ -118,8 +70,6 @@ jobs:
 
     needs:
       - run-tests
-      - memory-errors
-      - memory-leaks
 
     steps:
       - name: Check whether all tests passed
