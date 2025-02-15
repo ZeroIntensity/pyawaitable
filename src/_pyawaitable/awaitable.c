@@ -190,18 +190,6 @@ PyAwaitable_SetResult(PyObject * awaitable, PyObject * result)
     return 0;
 }
 
-_PyAwaitable_INTERNAL(PyObject *)
-_PyAwaitable_GetType(PyObject * mod, const char *type)
-{
-    PyObject *_type = PyObject_GetAttrString(mod, type);
-    if (!PyCallable_Check(_type)) {
-        Py_XDECREF(_type);
-        return NULL;
-    }
-
-    return _type;
-}
-
 _PyAwaitable_API(PyObject *)
 PyAwaitable_New(void)
 {
