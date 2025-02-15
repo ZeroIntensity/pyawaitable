@@ -33,7 +33,7 @@
 
 #define FIRE_ERROR_CALLBACK_AND_NEXT() \
         if (                           \
-    genwrapper_fire_err_callback(      \
+    _PyAwaitableGenWrapper_FireErrCallback(      \
     (PyObject *) aw,                   \
     cb->err_callback                   \
     ) < 0                              \
@@ -43,10 +43,10 @@
             return NULL;               \
         }                              \
         DONE_IF_OK_AND_CHECK(cb);      \
-        return genwrapper_next(self);
+        return _PyAwaitableGenWrapper_Next(self);
 #define RETURN_ADVANCE_GENERATOR() \
         DONE(cb);                  \
-        PyAwaitable_MUSTTAIL return genwrapper_next(self);
+        PyAwaitable_MUSTTAIL return _PyAwaitableGenWrapper_Next(self);
 
 static PyObject *
 gen_new(PyTypeObject *tp, PyObject *args, PyObject *kwds)
@@ -115,7 +115,7 @@ genwrapper_new(PyAwaitableObject * aw)
 }
 
 _PyAwaitable_INTERNAL(int)
-genwrapper_fire_err_callback(
+_PyAwaitableGenWrapper_FireErrCallback(
     PyObject * self,
     awaitcallback_err err_callback
 )
@@ -227,7 +227,7 @@ get_awaitable_iterator(PyObject *op)
 }
 
 _PyAwaitable_INTERNAL(PyObject *) PyAwaitable_HOT
-genwrapper_next(PyObject *self)
+_PyAwaitableGenWrapper_Next(PyObject *self)
 {
     GenWrapperObject *g = (GenWrapperObject *)self;
     PyAwaitableObject *aw = g->gw_aw;
@@ -264,7 +264,7 @@ genwrapper_next(PyObject *self)
 
             // Callback is done.
             DONE_IF_OK(cb);
-            return genwrapper_next(self);
+            return _PyAwaitableGenWrapper_Next(self);
         }
 
         assert(cb->coro != NULL);
@@ -350,7 +350,7 @@ _PyAwaitable_INTERNAL_DATA_DEF(PyTypeObject) _PyAwaitableGenWrapperType = {
     .tp_dealloc = gen_dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .tp_iter = PyObject_SelfIter,
-    .tp_iternext = genwrapper_next,
+    .tp_iternext = _PyAwaitableGenWrapper_Next,
     .tp_clear = genwrapper_clear,
     .tp_traverse = genwrapper_traverse,
     .tp_new = gen_new,

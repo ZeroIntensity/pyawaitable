@@ -27,7 +27,7 @@ awaitable_send_with_arg(PyObject *self, PyObject *value)
         Py_RETURN_NONE;
     }
 
-    return genwrapper_next(aw->aw_gen);
+    return _PyAwaitableGenWrapper_Next(aw->aw_gen);
 }
 
 static PyObject *
@@ -88,7 +88,7 @@ awaitable_throw(PyObject *self, PyObject *args)
             return NULL;
         }
 
-        if (genwrapper_fire_err_callback(self, cb->err_callback) < 0) {
+        if (_PyAwaitableGenWrapper_FireErrCallback(self, cb->err_callback) < 0) {
             return NULL;
         }
     }

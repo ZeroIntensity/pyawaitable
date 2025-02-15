@@ -15,10 +15,10 @@ typedef struct _GenWrapperObject
 } _PyAwaitable_MANGLE(GenWrapperObject);
 
 _PyAwaitable_INTERNAL(PyObject *)
-genwrapper_next(PyObject * self);
+_PyAwaitableGenWrapper_Next(PyObject * self);
 
 _PyAwaitable_INTERNAL(int)
-genwrapper_fire_err_callback(
+_PyAwaitableGenWrapper_FireErrCallback(
     PyObject * self,
     awaitcallback_err err_callback
 );
