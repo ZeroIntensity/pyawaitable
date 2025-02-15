@@ -1,4 +1,5 @@
 #include <Python.h>
+#include <pyawaitable.h>
 
 typedef struct {
     PyMemAllocatorEx raw;
