@@ -11,12 +11,13 @@ test_awaitable_new(PyObject *self, PyObject *nothing)
     }
 
     TEST_ASSERT(Py_IS_TYPE(awaitable, PyAwaitable_GetType()));
+    PyAwaitable_Cancel(awaitable); // Prevent warning
     Py_DECREF(awaitable);
 
     Test_SetNoMemory();
     PyObject *fail_alloc = PyAwaitable_New();
     Test_UnSetNoMemory();
-
+    EXPECT_ERROR(&PyExc_MemoryError);
     TEST_ASSERT(fail_alloc == NULL);
     Py_RETURN_NONE;
 }

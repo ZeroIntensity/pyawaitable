@@ -98,7 +98,7 @@ awaitable_dealloc(PyObject *self)
     Py_XDECREF(aw->aw_gen);
     Py_XDECREF(aw->aw_result);
 
-    if (!aw->aw_done) {
+    if (!aw->aw_awaited) {
         if (
             PyErr_WarnEx(
                 PyExc_RuntimeWarning,
@@ -126,6 +126,7 @@ PyAwaitable_Cancel(PyObject * self)
     }
 
     aw->aw_recently_cancelled = 1;
+    aw->aw_awaited = 1;
 }
 
 _PyAwaitable_API(int)
