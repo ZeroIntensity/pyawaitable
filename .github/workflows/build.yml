@@ -11,8 +11,6 @@ on:
     pull_request:
         branches:
             - master
-        paths:
-            - '.github/workflows/build.yml'
 
 concurrency:
     group: build-${{ github.head_ref }}
