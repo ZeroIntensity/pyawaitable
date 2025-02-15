@@ -10,9 +10,7 @@ test_awaitable_new(PyObject *self, PyObject *nothing)
         return NULL;
     }
 
-    _PyObject_Dump(awaitable);
-    _PyObject_Dump((PyObject *)&PyAwaitable_Type);
-    TEST_ASSERT(Py_IS_TYPE(awaitable, &PyAwaitable_Type));
+    TEST_ASSERT(Py_IS_TYPE(awaitable, PyAwaitable_GetType()));
     Py_DECREF(awaitable);
 
     Test_SetNoMemory();

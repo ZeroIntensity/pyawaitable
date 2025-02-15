@@ -7,8 +7,8 @@
 _PyAwaitable_INTERNAL(PyObject *)
 _PyAwaitable_GetState(void);
 
-_PyAwaitable_INTERNAL(PyTypeObject *)
-_PyAwaitable_GetAwaitableType(void);
+_PyAwaitable_API(PyTypeObject *)
+PyAwaitable_GetType(void);
 
 _PyAwaitable_INTERNAL(PyTypeObject *)
 _PyAwaitable_GetGenWrapperType(void);

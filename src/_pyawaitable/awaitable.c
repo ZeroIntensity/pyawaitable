@@ -202,7 +202,7 @@ PyAwaitable_New(void)
     return result;
 }
 
-_PyAwaitable_API(PyTypeObject) PyAwaitable_Type = {
+_PyAwaitable_INTERNAL_DATA_DEF(PyTypeObject) PyAwaitable_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "_PyAwaitableType",
     .tp_basicsize = sizeof(PyAwaitableObject),

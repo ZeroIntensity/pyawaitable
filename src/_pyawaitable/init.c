@@ -239,8 +239,8 @@ _PyAwaitable_GetState(void)
 static PyAwaitable_thread_local PyTypeObject *pyawaitable_fast_aw = NULL;
 static PyAwaitable_thread_local PyTypeObject *pyawaitable_fast_gw = NULL;
 
-_PyAwaitable_INTERNAL(PyTypeObject *)
-_PyAwaitable_GetAwaitableType(void)
+_PyAwaitable_API(PyTypeObject *)
+PyAwaitable_GetType(void)
 {
     if (pyawaitable_fast_aw != NULL) {
         return pyawaitable_fast_aw;
