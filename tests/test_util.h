@@ -31,6 +31,7 @@
         /* Let the unexpected error fall through */ \
         return NULL; \
     } \
+    PyErr_Clear(); \
 } while (0)
 
 void Test_SetNoMemory(void);

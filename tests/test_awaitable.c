@@ -17,7 +17,7 @@ test_awaitable_new(PyObject *self, PyObject *nothing)
     Test_SetNoMemory();
     PyObject *fail_alloc = PyAwaitable_New();
     Test_UnSetNoMemory();
-    EXPECT_ERROR(&PyExc_MemoryError);
+    EXPECT_ERROR(PyExc_MemoryError);
     TEST_ASSERT(fail_alloc == NULL);
     Py_RETURN_NONE;
 }
