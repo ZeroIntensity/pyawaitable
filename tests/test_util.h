@@ -5,6 +5,7 @@
 
 #define TEST(name) {#name, name, METH_NOARGS, NULL}
 #define TEST_UTIL(name) {#name, name, METH_O, NULL}
+#define TEST_CORO(name) {#name "_needs_coro", name, METH_O, NULL}
 #define TEST_ERROR(msg)           \
         PyErr_Format(             \
     PyExc_AssertionError,         \

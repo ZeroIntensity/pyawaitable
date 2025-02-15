@@ -48,7 +48,7 @@ test_set_result(PyObject *self, PyObject *nothing)
 }
 
 static PyObject *
-add_await(PyObject *self, PyObject *coro)
+test_add_await(PyObject *self, PyObject *coro)
 {
     PyObject *awaitable = PyAwaitable_New();
     if (awaitable == NULL) {
@@ -60,12 +60,12 @@ add_await(PyObject *self, PyObject *coro)
         return NULL;
     }
 
-    return awaitable;
+    return Test_RunAwaitable(awaitable);
 }
 
 TESTS(awaitable) = {
     TEST(test_awaitable_new),
     TEST(test_set_result),
-    TEST_UTIL(add_await),
+    TEST_CORO(test_add_await),
     {NULL}
 };
