@@ -6,12 +6,23 @@
 static int
 dict_add_type(PyObject *state, PyTypeObject *obj)
 {
+    assert(obj != NULL);
+    assert(state != NULL);
+    assert(PyDict_Check(state));
+    assert(obj->tp_name != NULL);
+
     Py_INCREF(obj);
+    if (PyType_Ready(obj) < 0) {
+        Py_DECREF(obj);
+        return -1;
+    }
+
     if (PyDict_SetItemString(state, obj->tp_name, (PyObject *)obj) < 0) {
         Py_DECREF(obj);
         return -1;
     }
     Py_DECREF(obj);
+    return 0;
 }
 
 static int
