@@ -1,27 +1,29 @@
 """
 PyAwaitable - Call asynchronous code from an extension module.
 
+It's unlikely that you want to import this module from Python, other than
+for use in setuptools.
+
 Docs: https://awaitable.zintensity.dev/
 Source: https://github.com/ZeroIntensity/pyawaitable
 """
 
-from typing import Type
-
-from _pyawaitable import _PyAwaitableType  # type: ignore
-
-from . import abi
-
-__all__ = "PyAwaitable", "include", "abi"
-__version__ = "1.4.0"
+__all__ = ("include",)
+__version__ = "2.0.0-dev0"
 __author__ = "Peter Bierma"
 
-PyAwaitable: Type = _PyAwaitableType
 
-
-def include() -> str:
+def include(*, suppress_error: bool = False) -> str:
     """
     Get the directory containing the `pyawaitable.h` file.
     """
     import os
+    from pathlib import Path
 
-    return os.path.dirname(__file__)
+    directory = Path(__file__).parent
+    if "pyawaitable.h" not in os.listdir(directory) and not suppress_error:
+        raise RuntimeError(
+            "pyawaitable.h wasn't found! Are you sure your installation is correct?"
+        )
+
+    return str(directory.absolute())

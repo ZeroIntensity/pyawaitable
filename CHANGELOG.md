@@ -1,9 +1,16 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## Unreleased
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+- Moved away from function pointer tables for loading PyAwaitable--everything is now vendored upon installation.
+- Improved performance with compiler optimizations.
+- `PyAwaitable_` prefixes are now required, and the old `pyawaitable_*` functions have been removed.
+- The warning emitted when a PyAwaitable object is not awaited is now a `ResourceWarning` (was a `RuntimeWarning`).
+- `PyAwaitable_AddAwait` now raises a `ValueError` if the passed object is `NULL` or self, and also now raises a `TypeError` if the passed object is not a coroutine.
+- **Breaking Change:** `PyAwaitable_Init` no longer takes a module object.
+- **Breaking Change:** Renamed `awaitcallback` to `PyAwaitable_Callback`
+- **Breaking Change:** Renamed `awaitcallback_err` to `PyAwaitable_Error`
+- **Breaking Change:** Renamed `defercallback` to `PyAwaitable_Defer`
 
 ## [1.4.0] - 2025-02-09
 

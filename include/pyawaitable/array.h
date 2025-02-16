@@ -4,19 +4,21 @@
 #include <Python.h>
 #include <stdlib.h>
 
-#define pyawaitable_array_DEFAULT_SIZE 16
+#include <pyawaitable/dist.h>
+#include <pyawaitable/optimize.h>
+
+#define _pyawaitable_array_DEFAULT_SIZE 16
 
 /*
  * Deallocator for items on a pyawaitable_array structure. A NULL pointer
  * will never be given to the deallocator.
  */
-typedef void (*pyawaitable_array_deallocator)(void *);
+typedef void (*_PyAwaitable_MANGLE(pyawaitable_array_deallocator))(void *);
 
 /*
- * Internal only dynamic array for CPython.
+ * Internal only dynamic array for PyAwaitable.
  */
-typedef struct
-{
+typedef struct {
     /*
      * The actual items in the dynamic array.
      * Don't access this field publicly to get
@@ -37,7 +39,7 @@ typedef struct
      * This may be NULL.
      */
     pyawaitable_array_deallocator deallocator;
-} pyawaitable_array;
+} _PyAwaitable_MANGLE(pyawaitable_array);
 
 
 /* Zero out the array */
@@ -74,9 +76,9 @@ pyawaitable_array_ASSERT_INDEX(pyawaitable_array *array, Py_ssize_t index)
  *
  * Returns -1 upon failure, 0 otherwise.
  */
-int
+_PyAwaitable_INTERNAL(int)
 pyawaitable_array_init_with_size(
-    pyawaitable_array *array,
+    pyawaitable_array * array,
     pyawaitable_array_deallocator deallocator,
     Py_ssize_t initial
 );
@@ -87,7 +89,8 @@ pyawaitable_array_init_with_size(
  * Returns -1 upon failure, 0 otherwise.
  * If this fails, the deallocator is not ran on the item.
  */
-int pyawaitable_array_append(pyawaitable_array *array, void *item);
+_PyAwaitable_INTERNAL(int)
+pyawaitable_array_append(pyawaitable_array * array, void *item);
 
 /*
  * Insert an item at the target index. The index
@@ -96,16 +99,16 @@ int pyawaitable_array_append(pyawaitable_array *array, void *item);
  * Returns -1 upon failure, 0 otherwise.
  * If this fails, the deallocator is not ran on the item.
  */
-int
+_PyAwaitable_INTERNAL(int)
 pyawaitable_array_insert(
-    pyawaitable_array *array,
+    pyawaitable_array * array,
     Py_ssize_t index,
     void *item
 );
 
 /* Remove all items from the array. */
-void
-pyawaitable_array_clear_items(pyawaitable_array *array);
+_PyAwaitable_INTERNAL(void)
+pyawaitable_array_clear_items(pyawaitable_array * array);
 
 /*
  * Clear all the fields on the array.
@@ -116,7 +119,8 @@ pyawaitable_array_clear_items(pyawaitable_array *array);
  * It's safe to call pyawaitable_array_init() or init_with_size() again
  * on the array after calling this.
  */
-void pyawaitable_array_clear(pyawaitable_array *array);
+_PyAwaitable_INTERNAL(void)
+pyawaitable_array_clear(pyawaitable_array * array);
 
 /*
  * Set a value at index in the array.
@@ -126,8 +130,8 @@ void pyawaitable_array_clear(pyawaitable_array *array);
  *
  * This cannot fail.
  */
-void
-pyawaitable_array_set(pyawaitable_array *array, Py_ssize_t index, void *item);
+_PyAwaitable_INTERNAL(void)
+pyawaitable_array_set(pyawaitable_array * array, Py_ssize_t index, void *item);
 
 /*
  * Remove the item at the index, and call the deallocator on it (if the array
@@ -135,8 +139,8 @@ pyawaitable_array_set(pyawaitable_array *array, Py_ssize_t index, void *item);
  *
  * This cannot fail.
  */
-void
-pyawaitable_array_remove(pyawaitable_array *array, Py_ssize_t index);
+_PyAwaitable_INTERNAL(void)
+pyawaitable_array_remove(pyawaitable_array * array, Py_ssize_t index);
 
 /*
  * Remove the item at the index *without* deallocating it, and
@@ -144,8 +148,8 @@ pyawaitable_array_remove(pyawaitable_array *array, Py_ssize_t index);
  *
  * This cannot fail.
  */
-void *
-pyawaitable_array_pop(pyawaitable_array *array, Py_ssize_t index);
+_PyAwaitable_INTERNAL(void *)
+pyawaitable_array_pop(pyawaitable_array * array, Py_ssize_t index);
 
 /*
  * Clear all the fields on a dynamic array, and then
@@ -175,7 +179,7 @@ pyawaitable_array_init(
     return pyawaitable_array_init_with_size(
         array,
         deallocator,
-        pyawaitable_array_DEFAULT_SIZE
+        _pyawaitable_array_DEFAULT_SIZE
     );
 }
 
@@ -192,13 +196,11 @@ pyawaitable_array_new_with_size(
 )
 {
     pyawaitable_array *array = PyMem_Malloc(sizeof(pyawaitable_array));
-    if (array == NULL)
-    {
+    if (PyAwaitable_UNLIKELY(array == NULL)) {
         return NULL;
     }
 
-    if (pyawaitable_array_init_with_size(array, deallocator, initial) < 0)
-    {
+    if (pyawaitable_array_init_with_size(array, deallocator, initial) < 0) {
         PyMem_Free(array);
         return NULL;
     }
@@ -218,7 +220,7 @@ pyawaitable_array_new(pyawaitable_array_deallocator deallocator)
 {
     return pyawaitable_array_new_with_size(
         deallocator,
-        pyawaitable_array_DEFAULT_SIZE
+        _pyawaitable_array_DEFAULT_SIZE
     );
 }
 
@@ -238,7 +240,7 @@ pyawaitable_array_GET_ITEM(pyawaitable_array *array, Py_ssize_t index)
 /*
  * Get the length of the array. This cannot fail.
  */
-static inline Py_ssize_t
+static inline Py_ssize_t PyAwaitable_PURE
 pyawaitable_array_LENGTH(pyawaitable_array *array)
 {
     pyawaitable_array_ASSERT_VALID(array);

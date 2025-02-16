@@ -1,0 +1,21 @@
+[version]
+path = "src/pyawaitable/__init__.py"
+
+[build.targets.wheel]
+packages = ["src/pyawaitable"]
+
+[build.targets.sdist]
+only-include = ["src/pyawaitable", "include/", "src/_pyawaitable"]
+
+[build.targets.wheel.hooks.autorun]
+dependencies = ["hatch-autorun"]
+code = """
+import pyawaitable
+import os
+
+os.environ['PYAWAITABLE_INCLUDE'] = pyawaitable.include(suppress_error=True)
+"""
+
+[build.hooks.custom]
+enable-by-default = true
+dependencies = ["typing_extensions"]
