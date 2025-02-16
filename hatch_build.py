@@ -5,6 +5,7 @@ PyAwaitable Vendoring Script
 import os
 from pathlib import Path
 from typing import Callable, TextIO, TypeVar
+
 try:
     from typing import ParamSpec
 except ImportError as err:
@@ -48,7 +49,9 @@ SOURCE_FILES: list[Path] = [
 
 INCLUDE_REGEX = re.compile(r"#include <(.+)>")
 FUNCTION_REGEX = re.compile(r"(.+)\(.*\).*")
-INTERNAL_FUNCTION_REGEX = re.compile(r"_PyAwaitable_INTERNAL\(.+\)\n(.+)\(.*\).*")
+INTERNAL_FUNCTION_REGEX = re.compile(
+    r"_PyAwaitable_INTERNAL\(.+\)\n(.+)\(.*\).*"
+)
 INTERNAL_DATA_REGEX = re.compile(r"_PyAwaitable_INTERNAL_DATA\(.+\) (.+)")
 EXPLICIT_REGEX = re.compile(r".*_PyAwaitable_MANGLE\((.+)\).*")
 NO_EXPLICIT_REGEX = re.compile(r".*_PyAwaitable_NO_MANGLE\((.+)\).*")
@@ -144,7 +147,9 @@ def filter_name(name: str) -> bool:
 def mangle_explicit(changed_names: dict[str, str], line: str) -> None:
     explicit = EXPLICIT_REGEX.match(line)
     if explicit is None:
-        raise RuntimeError(f"{line} does not follow _PyAwaitable_MANGLE correctly")
+        raise RuntimeError(
+            f"{line} does not follow _PyAwaitable_MANGLE correctly"
+        )
 
     name = explicit.group(1)
     if filter_name(name):
@@ -158,7 +163,9 @@ def mangle_internal(
     changed_names: dict[str, str], lines: list[str], index: int
 ) -> None:
     try:
-        func_def = INTERNAL_FUNCTION_REGEX.match(lines[index] + "\n" + lines[index + 1])
+        func_def = INTERNAL_FUNCTION_REGEX.match(
+            lines[index] + "\n" + lines[index + 1]
+        )
     except IndexError:
         return
 
@@ -186,7 +193,9 @@ def mangle_internal_data(changed_names: dict[str, str], line: str) -> None:
 
 
 @new_context("Processing static function...")
-def mangle_static(changed_names: dict[str, str], lines: list[str], index: int) -> None:
+def mangle_static(
+    changed_names: dict[str, str], lines: list[str], index: int
+) -> None:
     try:
         line = lines[index + 1]
     except IndexError:
@@ -267,7 +276,9 @@ def process_files(fp: TextIO) -> None:
         for header_file in HEADER_FILES:
             header_file = "include/pyawaitable" / Path(header_file)
             log(f"Processing {header_file}")
-            lines: list[str] = header_file.read_text(encoding="utf-8").split("\n")
+            lines: list[str] = header_file.read_text(encoding="utf-8").split(
+                "\n"
+            )
             find_includes(lines, includes)
             mangle_names(changed_names, lines)
             to_write.append("\n".join(lines))
@@ -275,7 +286,9 @@ def process_files(fp: TextIO) -> None:
     log("Processing source files...")
     with logging_context():
         for source_file in SOURCE_FILES:
-            lines: list[str] = source_file.read_text(encoding="utf-8").split("\n")
+            lines: list[str] = source_file.read_text(encoding="utf-8").split(
+                "\n"
+            )
             log(f"Processing {source_file}")
             find_includes(lines, includes)
             mangle_names(changed_names, lines)
@@ -308,21 +321,23 @@ def process_files(fp: TextIO) -> None:
 FINAL = "0xF"
 BETA = "0xB"
 ALPHA = "0xA"
-RELEASE_LEVEL = re.compile(r"(\w+)([0-9])*")
+RELEASE_LEVEL = re.compile(r"([A-z]+)([0-9])*")
 RELEASE_LEVELS = {
     "dev": ALPHA,
     "alpha": ALPHA,
     "a": ALPHA,
     "beta": BETA,
-    "b": BETA
+    "b": BETA,
 }
 
+
 def deduce_release_level(part: str) -> tuple[str, str]:
+    part = part.replace(".", "-")
     dev = part.split("-", maxsplit=1)
     if len(dev) == 1:
         # No release level attached, assume final release
         return FINAL, "0"
-    
+
     release = dev[1]
     match = RELEASE_LEVEL.match(release)
     if not match:
@@ -331,13 +346,24 @@ def deduce_release_level(part: str) -> tuple[str, str]:
     name = match.group(1).lower()
     level = RELEASE_LEVELS.get(name)
     if not level:
-        raise RuntimeError(f"{level} is not a valid release level")
+        raise RuntimeError(f"{name} is not a valid release level")
     number = match.group(2)
+
+    # Sanity check
+    if number and not number.isdigit():
+        raise RuntimeError(f"{number} is not a valid number")
+
     if number == "":
-        amount = 2 if level == BETA else 3
-        number = "0" * amount
+        number = "0"
+
+    amount = 2 if level == BETA else 3
+    number = ("0" * amount) + number
 
     return level, number
+
+
+def clean_micro_version(micro: str) -> str:
+    return micro.split("-", maxsplit=1)[0]
 
 
 def main(version: str) -> None:
@@ -347,8 +373,10 @@ def main(version: str) -> None:
         os.remove(dist)
     log("Creating vendored copy of pyawaitable...")
 
-    major, minor, micro = version.split(".", maxsplit=3)
+    major, minor, micro = version.split(".", maxsplit=2)
     release_level, release_number = deduce_release_level(micro)
+    micro = clean_micro_version(micro)
+
     version_text = textwrap.dedent(
         f"""
     #define PyAwaitable_MAJOR_VERSION {major}
