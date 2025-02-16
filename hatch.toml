@@ -5,7 +5,7 @@ path = "src/pyawaitable/__init__.py"
 packages = ["src/pyawaitable"]
 
 [build.targets.sdist]
-only-include = ["src/pyawaitable"]
+only-include = ["src/pyawaitable", "include/", "src/_pyawaitable"]
 
 [build.targets.wheel.hooks.autorun]
 dependencies = ["hatch-autorun"]
