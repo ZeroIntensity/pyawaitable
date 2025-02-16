@@ -363,7 +363,7 @@ def deduce_release_level(part: str) -> tuple[str, str]:
 
 
 def clean_micro_version(micro: str) -> str:
-    return micro.split("-", maxsplit=1)[0]
+    return micro.replace(".", "-").split("-", maxsplit=1)[0]
 
 
 def main(version: str) -> None:
