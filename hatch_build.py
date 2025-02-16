@@ -305,6 +305,41 @@ def process_files(fp: TextIO) -> None:
             write(fp, f"#undef {define}")
 
 
+FINAL = "0xF"
+BETA = "0xB"
+ALPHA = "0xA"
+RELEASE_LEVEL = re.compile(r"(\w+)([0-9])*")
+RELEASE_LEVELS = {
+    "dev": ALPHA,
+    "alpha": ALPHA,
+    "a": ALPHA,
+    "beta": BETA,
+    "b": BETA
+}
+
+def deduce_release_level(part: str) -> tuple[str, str]:
+    dev = part.split("-", maxsplit=1)
+    if len(dev) == 1:
+        # No release level attached, assume final release
+        return FINAL, "0"
+    
+    release = dev[1]
+    match = RELEASE_LEVEL.match(release)
+    if not match:
+        raise RuntimeError(f"version did not match expression: {release}")
+
+    name = match.group(1).lower()
+    level = RELEASE_LEVELS.get(name)
+    if not level:
+        raise RuntimeError(f"{level} is not a valid release level")
+    number = match.group(2)
+    if number == "":
+        amount = 2 if level == BETA else 3
+        number = "0" * amount
+
+    return level, number
+
+
 def main(version: str) -> None:
     dist = Path(DIST_PATH)
     if dist.exists():
@@ -313,13 +348,15 @@ def main(version: str) -> None:
     log("Creating vendored copy of pyawaitable...")
 
     major, minor, micro = version.split(".", maxsplit=3)
+    release_level, release_number = deduce_release_level(micro)
     version_text = textwrap.dedent(
         f"""
     #define PyAwaitable_MAJOR_VERSION {major}
     #define PyAwaitable_MINOR_VERSION {minor}
     #define PyAwaitable_MICRO_VERSION {micro}
     #define PyAwaitable_PATCH_VERSION PyAwaitable_MICRO_VERSION
-    #define PyAwaitable_MAGIC_NUMBER {major}{minor}{micro}
+    #define PyAwaitable_RELEASE_LEVEL {release_level}
+    #define PyAwaitable_MAGIC_NUMBER {major}{minor}{micro}{release_number}
     """
     )
 
