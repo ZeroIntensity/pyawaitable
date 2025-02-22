@@ -16,7 +16,6 @@ env:
   PYTHONUNBUFFERED: "1"
   FORCE_COLOR: "1"
   PYTHONIOENCODING: "utf8"
-  PYAWAITABLE_OPTIMIZED: 1
 
 jobs:
   changes:
@@ -45,21 +44,18 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Build PyAwaitable
-        run: pip install . --verbose
-
-      - name: Build PyAwaitable Test Package
-        run: pip install ./tests --verbose
+      
+      - name: Install Hatch
+        uses: pypa/hatch@install
 
       - name: Run tests
-        run: python -W error -m unittest tests/main.py --verbose
+        run: hatch test
 
   tests-pass:
     runs-on: ubuntu-latest

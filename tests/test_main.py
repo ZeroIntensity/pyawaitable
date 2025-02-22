@@ -3,6 +3,7 @@ import asyncio
 from typing import Any, Callable
 from collections.abc import Awaitable, Coroutine
 import inspect
+from pytest import warns
 
 NOT_FOUND = """
 The PyAwaitable test package wasn't built!
@@ -13,16 +14,15 @@ try:
 except ImportError as err:
     raise RuntimeError(NOT_FOUND) from err
 
-class PyAwaitableTests(unittest.TestCase):
-    def test_awaitable_semantics(self):
-        awaitable = _pyawaitable_test.generic_awaitable(None)
-        self.assertIsInstance(awaitable, Awaitable)
-        self.assertIsInstance(awaitable, Coroutine)
-        # It's not a *native* coroutine
-        self.assertFalse(inspect.iscoroutine(awaitable))
+def test_awaitable_semantics():
+    awaitable = _pyawaitable_test.generic_awaitable(None)
+    assert isinstance(awaitable, Awaitable)
+    assert isinstance(awaitable, Coroutine)
+    # It's not a *native* coroutine
+    assert inspect.iscoroutine(awaitable) is False
 
-        with self.assertWarns(ResourceWarning):
-            del awaitable
+    with warns(ResourceWarning):
+        del awaitable
 
 def coro_wrap_call(method: Callable[[Awaitable[Any]], Any]) -> Callable[[], None]:
     def wrapper(*_: Any):
@@ -35,11 +35,12 @@ def coro_wrap_call(method: Callable[[Awaitable[Any]], Any]) -> Callable[[], None
 
 for method in dir(_pyawaitable_test):
     if method.startswith("test_"):
-        test_case = getattr(_pyawaitable_test, method)
+        case = getattr(_pyawaitable_test, method)
         if method.endswith("needs_coro"):
-            setattr(PyAwaitableTests, method.rstrip("_needs_coro"), coro_wrap_call(test_case))
+            globals()[method.rstrip("_needs_coro")] = coro_wrap_call(case)
         else:
-            setattr(PyAwaitableTests, method, test_case)
+            # Wrap it with a Python function for pytest
+            globals()[method] = lambda: case()
 
 if __name__ == "__main__":
     unittest.main()
