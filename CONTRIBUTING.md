@@ -44,8 +44,6 @@ To build PyAwaitable locally, simple run `pip`:
 $ pip install .
 ```
 
-It's highly recommended to do this inside of a [virtual environment](https://docs.python.org/3/library/venv.html).
-
 ## Running Tests
 
 PyAwaitable uses [Hatch](https://hatch.pypa.io), so that will handle everything for you:
