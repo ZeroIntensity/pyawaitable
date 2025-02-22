@@ -19,3 +19,10 @@ os.environ['PYAWAITABLE_INCLUDE'] = pyawaitable.include(suppress_error=True)
 [build.hooks.custom]
 enable-by-default = true
 dependencies = ["typing_extensions"]
+
+[envs.hatch-test]
+dependencies = ["pyawaitable_test @ {root:uri}/tests", "pytest"]
+default-args = ["--verbose"]
+
+[[envs.hatch-test.matrix]]
+python = ["3.13", "3.12", "3.11", "3.10", "3.9"]
