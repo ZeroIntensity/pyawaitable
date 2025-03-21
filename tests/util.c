@@ -116,11 +116,10 @@ _Test_RunAndCheck(
 )
 {
     PyObject *res = Test_RunAwaitable(awaitable);
+    Py_DECREF(awaitable);
     if (res == NULL) {
-        Py_DECREF(awaitable);
         return NULL;
     }
-    Py_DECREF(awaitable);
     if (res != expected) {
         PyErr_Format(
             PyExc_AssertionError,

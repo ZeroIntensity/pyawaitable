@@ -13,7 +13,7 @@
     __func__,                     \
     __LINE__                      \
         );
-#define TEST_ASSERT(cond)                               \
+#define TEST_ASSERT_RETVAL(cond, retval)                \
         do {                                            \
             if (!(cond)) {                              \
                 PyErr_Format(                           \
@@ -22,9 +22,11 @@
     __func__,                                           \
     __LINE__                                            \
                 );                                      \
-                return NULL;                            \
+                return retval;                          \
             }                                           \
         } while (0)
+#define TEST_ASSERT(cond) TEST_ASSERT_RETVAL(cond, NULL)
+#define TEST_ASSERT_INT(cond) TEST_ASSERT_RETVAL(cond, -1)
 #define TESTS(name) PyMethodDef _pyawaitable_test_ ## name []
 #define EXPECT_ERROR(tp)                                    \
         do {                                                \

@@ -3,7 +3,7 @@ import asyncio
 from typing import Any, Callable
 from collections.abc import Awaitable, Coroutine
 import inspect
-from pytest import warns
+from pytest import raises, warns
 
 NOT_FOUND = """
 The PyAwaitable test package wasn't built!
@@ -23,6 +23,17 @@ def test_awaitable_semantics():
 
     with warns(ResourceWarning):
         del awaitable
+    
+async def raising_coroutine():
+    await asyncio.sleep(0)
+    raise ZeroDivisionError()
+
+
+def test_coroutine_propagates_exception():
+    awaitable = _pyawaitable_test.coroutine_trampoline(raising_coroutine())
+    with raises(ZeroDivisionError):
+        asyncio.run(awaitable)
+
 
 def coro_wrap_call(method: Callable[[Awaitable[Any]], Any]) -> Callable[[], None]:
     def wrapper(*_: Any):
