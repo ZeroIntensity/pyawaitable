@@ -13,6 +13,7 @@ _pyawaitable_test_exec(PyObject *mod)
         } while (0)
 
     ADD_TESTS(awaitable);
+    ADD_TESTS(callbacks);
 #undef ADD_TESTS
     return PyAwaitable_Init();
 }
