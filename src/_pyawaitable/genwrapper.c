@@ -213,6 +213,7 @@ get_awaitable_iterator(PyObject *op)
         )
     ) {
         // Fall back to the dunder
+        // XXX Is this case possible?
         PyObject *__await__ = PyObject_GetAttrString(op, "__await__");
         if (__await__ == NULL) {
             return NULL;

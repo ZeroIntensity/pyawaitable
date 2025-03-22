@@ -8,7 +8,7 @@ from typing import Callable, TextIO, TypeVar
 
 try:
     from typing import ParamSpec
-except ImportError as err:
+except ImportError:
     # Let's hope it's installed!
     from typing_extensions import ParamSpec
 import re
@@ -58,9 +58,13 @@ NO_EXPLICIT_REGEX = re.compile(r".*_PyAwaitable_NO_MANGLE\((.+)\).*")
 DEFINE_REGEX = re.compile(r" *# *define *(\w+)(\(.*\))?.*")
 
 HEADER_GUARD = """
-#if !defined(PYAWAITABLE_VENDOR_H) && !defined(Py_LIMITED_API)
+#ifndef PYAWAITABLE_VENDOR_H
 #define PYAWAITABLE_VENDOR_H
 #define _PYAWAITABLE_VENDOR
+
+#ifdef Py_LIMITED_API
+#error "Sorry, the limited API cannot be used with PyAwaitable."
+#endif
 """
 HEADER = (
     lambda version: f"""\
@@ -394,9 +398,7 @@ def main(version: str) -> None:
             process_files(f)
             write(
                 f,
-                """#else
-#error "the limited API cannot be used with pyawaitable"
-#endif /* PYAWAITABLE_VENDOR_H */""",
+                "#endif /* PYAWAITABLE_VENDOR_H */",
             )
 
     log(f"Created PyAwaitable distribution at {dist}")

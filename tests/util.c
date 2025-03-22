@@ -136,3 +136,23 @@ _Test_RunAndCheck(
     Py_DECREF(res);
     Py_RETURN_NONE;
 }
+
+PyObject *
+Test_NewAwaitableWithCoro(
+    PyObject *coro,
+    PyAwaitable_Callback callback,
+    PyAwaitable_Error error
+)
+{
+    PyObject *awaitable = PyAwaitable_New();
+    if (awaitable == NULL) {
+        return NULL;
+    }
+
+    if (PyAwaitable_AddAwait(awaitable, coro, callback, error) < 0) {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+
+    return awaitable;
+}
