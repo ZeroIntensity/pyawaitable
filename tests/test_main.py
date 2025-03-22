@@ -1,4 +1,3 @@
-import unittest
 import asyncio
 from typing import Any, Callable
 from collections.abc import Awaitable, Coroutine
@@ -59,6 +58,3 @@ for method in dir(_pyawaitable_test):
         def _wrapped(testfunc: Callable[..., Any]) -> Any:
             return lambda: testfunc()
         globals()[method] = _wrapped(case)
-
-if __name__ == "__main__":
-    unittest.main()
