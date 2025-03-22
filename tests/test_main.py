@@ -45,13 +45,20 @@ def coro_wrap_call(method: Callable[[Awaitable[Any]], Any]) -> Callable[[], None
     return wrapper
 
 for method in dir(_pyawaitable_test):
-    if method.startswith("test_"):
-        case = getattr(_pyawaitable_test, method)
-        if method.endswith("needs_coro"):
-            globals()[method.rstrip("_needs_coro")] = coro_wrap_call(case)
-        else:
-            # Wrap it with a Python function for pytest
-            globals()[method] = lambda: case()
+    if not method.startswith("test_"):
+        continue
+
+    case: Callable[..., None] = getattr(_pyawaitable_test, method)
+    if method.endswith("needs_coro"):
+        globals()[method.rstrip("_needs_coro")] = coro_wrap_call(case)
+    else:
+        # Wrap it with a Python function for pytest, but we have to do
+        # this extra shim to keep a reference to the right call.
+        # I'm tired right now, so if there's an easier way to do this, feel
+        # free to submit a PR.
+        def _wrapped(testfunc: Callable[..., Any]) -> Any:
+            return lambda: testfunc()
+        globals()[method] = _wrapped(case)
 
 if __name__ == "__main__":
     unittest.main()

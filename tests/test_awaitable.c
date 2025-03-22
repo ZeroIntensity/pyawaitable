@@ -158,7 +158,7 @@ coroutine_trampoline(PyObject *self, PyObject *coro)
         return NULL;
     }
 
-    if (PyAwaitable_AddAwait(coro, awaitable, NULL, NULL) < 0) {
+    if (PyAwaitable_AddAwait(awaitable, coro, NULL, NULL) < 0) {
         Py_DECREF(awaitable);
         return NULL;
     }
