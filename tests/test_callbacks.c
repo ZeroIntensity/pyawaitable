@@ -57,6 +57,13 @@ failing_callback_no_error(PyObject *awaitable, PyObject *value)
 }
 
 static int
+failing_callback_force(PyObject *awaitable, PyObject *value)
+{
+    PyErr_SetNone(PyExc_ZeroDivisionError);
+    return -2;
+}
+
+static int
 repropagating_error_callback(PyObject *awaitable, PyObject *err)
 {
     TEST_ASSERT_INT(!PyErr_Occurred());
@@ -101,7 +108,7 @@ test_callback_is_called(PyObject *self, PyObject *coro)
     PyObject *awaitable = Test_NewAwaitableWithCoro(
         coro,
         simple_callback,
-        NULL
+        aborting_callback
     );
     if (awaitable == NULL) {
         return NULL;
@@ -236,7 +243,21 @@ test_failing_callback_with_no_exception(PyObject *self, PyObject *coro)
     );
     PyObject *res = Test_RunAwaitable(awaitable);
     EXPECT_ERROR(PyExc_SystemError);
-    TEST_ASSERT(res == NULL);;
+    TEST_ASSERT(res == NULL);
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+test_forcefully_propagating_callback_error(PyObject *self, PyObject *coro)
+{
+    PyObject *awaitable = Test_NewAwaitableWithCoro(
+        coro,
+        failing_callback_force,
+        aborting_callback
+    );
+    PyObject *res = Test_RunAwaitable(awaitable);
+    EXPECT_ERROR(PyExc_ZeroDivisionError);
+    TEST_ASSERT(res == NULL);
     Py_RETURN_NONE;
 }
 
@@ -249,5 +270,6 @@ TESTS(callbacks) = {
     TEST_RAISING_CORO(test_error_callback_can_overwrite_exception),
     TEST_CORO(test_failing_callback_gives_to_error_callback),
     TEST_CORO(test_failing_callback_with_no_exception),
+    TEST_CORO(test_forcefully_propagating_callback_error),
     {NULL}
 };
