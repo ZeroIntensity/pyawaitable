@@ -126,6 +126,13 @@ _PyAwaitableGenWrapper_FireErrCallback(
     }
 
     PyObject *err = PyErr_GetRaisedException();
+    if (PyAwaitable_UNLIKELY(err == NULL)) {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "PyAwaitable: Something returned -1 without an exception set"
+        );
+        return -1;
+    }
 
     Py_INCREF(self);
     int e_res = err_callback(self, err);
@@ -303,7 +310,7 @@ _PyAwaitableGenWrapper_Next(PyObject *self)
         FIRE_ERROR_CALLBACK_AND_NEXT();
     }
 
-    /* Coroutine is done, but with a result. */
+    // Coroutine is done, but with a non-None result.
     if (cb == NULL || cb->callback == NULL) {
         // We can disregard the result if there's no callback.
         PyErr_Clear();
@@ -327,6 +334,16 @@ _PyAwaitableGenWrapper_Next(PyObject *self)
     Py_DECREF(value);
 
     CLEAR_CALLBACK_IF_CANCELLED();
+
+    // Sanity check to make sure that there's actually
+    // an error set.
+    if (res < 0) {
+        if (!PyErr_Occurred()) {
+            DONE(cb);
+            AW_DONE();
+            return bad_callback();
+        }
+    }
 
     if (res < -1) {
         // -2 or lower denotes that the error should be deferred,

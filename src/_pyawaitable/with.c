@@ -31,7 +31,7 @@ async_with_inner(PyObject *aw, PyObject *res)
         if (tp == NULL) {
             PyErr_SetString(
                 PyExc_SystemError,
-                "pyawaitable: async with callback returned -1 without exception set"
+                "PyAwaitable: `async with` callback returned -1 without exception set"
             );
             return -1;
         }
@@ -94,7 +94,7 @@ PyAwaitable_AsyncWith(
     if (with == NULL) {
         PyErr_Format(
             PyExc_TypeError,
-            "pyawaitable: %R is not an async context manager (missing __aenter__)",
+            "PyAwaitable: %R is not an async context manager (missing __aenter__)",
             ctx
         );
         return -1;
@@ -104,7 +104,7 @@ PyAwaitable_AsyncWith(
         Py_DECREF(with);
         PyErr_Format(
             PyExc_TypeError,
-            "pyawaitable: %R is not an async context manager (missing __aexit__)",
+            "PyAwaitable: %R is not an async context manager (missing __aexit__)",
             ctx
         );
         return -1;
