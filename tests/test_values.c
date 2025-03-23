@@ -55,6 +55,7 @@ test_store_and_load_object_values(PyObject *self, PyObject *nothing)
     TEST_ASSERT(num_unpacked == num);
     TEST_ASSERT(str_unpacked == str);
     PyAwaitable_Cancel(awaitable);
+    Py_DECREF(awaitable);
     Py_RETURN_NONE;
 }
 
@@ -91,8 +92,90 @@ test_object_values_can_outlive_awaitable(PyObject *self, PyObject *nothing)
     Py_RETURN_NONE;
 }
 
+static PyObject *
+test_store_and_load_arbitrary_values(PyObject *self, PyObject *nothing)
+{
+    PyObject *awaitable = PyAwaitable_New();
+    if (awaitable == NULL) {
+        return NULL;
+    }
+
+    int *ptr = malloc(sizeof(int));
+    if (ptr == NULL) {
+        Py_DECREF(awaitable);
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    *ptr = 42;
+    if (PyAwaitable_SaveArbValues(awaitable, 2, ptr, NULL) < 0) {
+        Py_DECREF(awaitable);
+        free(ptr);
+        return NULL;
+    }
+
+    int *ptr_unpacked;
+    void *null_unpacked;
+    if (
+        PyAwaitable_UnpackArbValues(
+            awaitable,
+            &ptr_unpacked,
+            &null_unpacked
+        ) < 0
+    ) {
+        Py_DECREF(awaitable);
+        free(ptr);
+        return NULL;
+    }
+    TEST_ASSERT(ptr_unpacked == ptr);
+    TEST_ASSERT((*ptr_unpacked) == 42);
+    TEST_ASSERT(null_unpacked == NULL);
+    free(ptr);
+    PyAwaitable_Cancel(awaitable);
+    Py_DECREF(awaitable);
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+test_store_and_load_int_values(PyObject *self, PyObject *nothing)
+{
+    PyObject *awaitable = PyAwaitable_New();
+    if (awaitable == NULL) {
+        return NULL;
+    }
+
+    int val = 42;
+    int other_val = 24;
+
+    if (PyAwaitable_SaveIntValues(awaitable, 2, val, other_val) < 0) {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+
+    int val_unpacked;
+    int other_val_unpacked;
+    if (
+        PyAwaitable_UnpackIntValues(
+            awaitable,
+            &val_unpacked,
+            &other_val_unpacked
+        ) < 0
+    ) {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+
+    TEST_ASSERT(val_unpacked == 42);
+    TEST_ASSERT(other_val_unpacked == 24);
+    PyAwaitable_Cancel(awaitable);
+    Py_DECREF(awaitable);
+    Py_RETURN_NONE;
+}
+
 TESTS(values) = {
     TEST(test_store_and_load_object_values),
     TEST(test_object_values_can_outlive_awaitable),
+    TEST(test_store_and_load_arbitrary_values),
+    TEST(test_store_and_load_int_values),
     {NULL}
 };
