@@ -11,7 +11,7 @@ simple_callback(PyObject *awaitable, PyObject *value)
 {
     TEST_ASSERT_INT(awaitable != NULL);
     TEST_ASSERT_INT(value == Py_None);
-    TEST_ASSERT_INT(Py_IS_TYPE(Py_TYPE(awaitable), PyAwaitable_GetType()));
+    TEST_ASSERT_INT(Py_IS_TYPE(awaitable, PyAwaitable_GetType()));
     TEST_ASSERT_INT(callback_called == 0);
     callback_called = 1;
     return 0;
@@ -20,7 +20,9 @@ simple_callback(PyObject *awaitable, PyObject *value)
 static int
 aborting_callback(PyObject *awaitable, PyObject *value)
 {
+    _PyObject_Dump(value);
     Py_FatalError("Test case shouldn't have ever reached here!");
+    return 0;
 }
 
 static int
@@ -28,11 +30,11 @@ error_callback(PyObject *awaitable, PyObject *err)
 {
     TEST_ASSERT_INT(!PyErr_Occurred());
     TEST_ASSERT_INT(awaitable != NULL);
-    TEST_ASSERT_INT(Py_IS_TYPE(Py_TYPE(awaitable), PyAwaitable_GetType()));
+    TEST_ASSERT_INT(Py_IS_TYPE(awaitable, PyAwaitable_GetType()));
     TEST_ASSERT_INT(err != NULL);
     TEST_ASSERT_INT(
         Py_IS_TYPE(
-            Py_TYPE(err),
+            err,
             (PyTypeObject *)PyExc_ZeroDivisionError
         )
     );
@@ -46,11 +48,11 @@ repropagating_error_callback(PyObject *awaitable, PyObject *err)
 {
     TEST_ASSERT_INT(!PyErr_Occurred());
     TEST_ASSERT_INT(awaitable != NULL);
-    TEST_ASSERT_INT(Py_IS_TYPE(Py_TYPE(awaitable), PyAwaitable_GetType()));
+    TEST_ASSERT_INT(Py_IS_TYPE(awaitable, PyAwaitable_GetType()));
     TEST_ASSERT_INT(err != NULL);
     TEST_ASSERT_INT(
         Py_IS_TYPE(
-            Py_TYPE(err),
+            err,
             (PyTypeObject *)PyExc_ZeroDivisionError
         )
     );
@@ -64,11 +66,11 @@ overwriting_error_callback(PyObject *awaitable, PyObject *err)
 {
     TEST_ASSERT_INT(!PyErr_Occurred());
     TEST_ASSERT_INT(awaitable != NULL);
-    TEST_ASSERT_INT(Py_IS_TYPE(Py_TYPE(awaitable), PyAwaitable_GetType()));
+    TEST_ASSERT_INT(Py_IS_TYPE(awaitable, PyAwaitable_GetType()));
     TEST_ASSERT_INT(err != NULL);
     TEST_ASSERT_INT(
         Py_IS_TYPE(
-            Py_TYPE(err),
+            err,
             (PyTypeObject *)PyExc_ZeroDivisionError
         )
     );
@@ -91,7 +93,11 @@ test_callback_is_called(PyObject *self, PyObject *coro)
     if (awaitable == NULL) {
         return NULL;
     }
-    Py_DECREF(Test_RunAwaitable(awaitable));
+    PyObject *res = Test_RunAwaitable(awaitable);
+    if (res == NULL) {
+        return NULL;
+    }
+    Py_DECREF(res);
     TEST_ASSERT(callback_called == 1);
     Py_RETURN_NONE;
 }
@@ -107,7 +113,7 @@ test_callback_not_invoked_when_exception(PyObject *self, PyObject *coro)
     if (awaitable == NULL) {
         return NULL;
     }
-    Py_DECREF(Test_RunAwaitable(awaitable));
+    PyObject *res = Test_RunAwaitable(awaitable);
     EXPECT_ERROR(PyExc_ZeroDivisionError);
     Py_RETURN_NONE;
 }
@@ -124,7 +130,11 @@ test_error_callback_not_invoked_when_ok(PyObject *self, PyObject *coro)
     if (awaitable == NULL) {
         return NULL;
     }
-    Py_DECREF(Test_RunAwaitable(awaitable /* stolen */));
+    PyObject *res = Test_RunAwaitable(awaitable);
+    if (res == NULL) {
+        return NULL;
+    }
+    Py_DECREF(res);
     TEST_ASSERT(callback_called == 1);
     Py_RETURN_NONE;
 }
@@ -138,7 +148,11 @@ test_error_callback_gets_exception_from_coro(PyObject *self, PyObject *coro)
         aborting_callback,
         error_callback
     );
-    Py_DECREF(Test_RunAwaitable(awaitable));
+    PyObject *res = Test_RunAwaitable(awaitable);
+    if (res == NULL) {
+        return NULL;
+    }
+    Py_DECREF(res);
     TEST_ASSERT(error_callback_called == 1);
     Py_RETURN_NONE;
 }
@@ -155,8 +169,9 @@ test_failing_error_callback_repropagates_exception(
         aborting_callback,
         repropagating_error_callback
     );
-    Py_DECREF(Test_RunAwaitable(awaitable));
+    PyObject *res = Test_RunAwaitable(awaitable);
     EXPECT_ERROR(PyExc_ZeroDivisionError);
+    TEST_ASSERT(res == NULL);
     TEST_ASSERT(error_callback_called == 1);
     Py_RETURN_NONE;
 }
@@ -173,8 +188,9 @@ test_error_callback_can_overwrite_exception(
         aborting_callback,
         overwriting_error_callback
     );
-    Py_DECREF(Test_RunAwaitable(awaitable));
+    PyObject *res = Test_RunAwaitable(awaitable);
     EXPECT_ERROR(PyExc_FileExistsError);
+    TEST_ASSERT(res == NULL);
     TEST_ASSERT(error_callback_called == 1);
     Py_RETURN_NONE;
 }
