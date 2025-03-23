@@ -23,6 +23,16 @@ def test_awaitable_semantics():
     with warns(ResourceWarning):
         del awaitable
     
+    called = False
+    async def dummy():
+        await asyncio.sleep(0)
+        nonlocal called
+        called = True
+
+    assert asyncio.run(_pyawaitable_test.generic_awaitable(dummy())) is None
+    assert called is True
+
+
 async def raising_coroutine() -> None:
     await asyncio.sleep(0)
     raise ZeroDivisionError()
@@ -43,6 +53,12 @@ def coro_wrap_call(method: Callable[[Awaitable[Any]], Any], corofunc: Callable[[
 
     return wrapper
 
+def shim_c_function(testfunc: Callable[[], Any]) -> Any:
+    def shim():
+        testfunc()
+
+    return shim
+
 for method in dir(_pyawaitable_test):
     if not method.startswith("test_"):
         continue
@@ -50,13 +66,9 @@ for method in dir(_pyawaitable_test):
     case: Callable[..., None] = getattr(_pyawaitable_test, method)
     if method.endswith("needs_coro"):
         globals()[method.rstrip("_needs_coro")] = coro_wrap_call(case, dummy_coroutine)
-    if method.endswith("needs_rcoro"):
+    elif method.endswith("needs_rcoro"):
         globals()[method.rstrip("_needs_rcoro")] = coro_wrap_call(case, raising_coroutine)
     else:
-        # Wrap it with a Python function for pytest, but we have to do
-        # this extra shim to keep a reference to the right call.
-        # I'm tired right now, so if there's an easier way to do this, feel
-        # free to submit a PR.
-        def _wrapped(testfunc: Callable[..., Any]) -> Any:
-            return lambda: testfunc()
-        globals()[method] = _wrapped(case)
+        # Wrap it with a Python function for pytest, because it can't handle C
+        # functions for some reason.
+        globals()[method] = shim_c_function(case)
