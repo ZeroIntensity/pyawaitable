@@ -1,7 +1,6 @@
 #include <Python.h>
 #include <pyawaitable.h>
 #include "pyawaitable_test.h"
-#include "pyerrors.h"
 
 static int PyAwaitable_thread_local callback_called = 0;
 static int PyAwaitable_thread_local error_callback_called = 0;
