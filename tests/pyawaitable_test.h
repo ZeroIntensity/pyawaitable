@@ -5,5 +5,6 @@
 #include "test_util.h"
 
 extern TESTS(awaitable);
+extern TESTS(callbacks);
 
 #endif

@@ -91,7 +91,7 @@ test_add_await(PyObject *self, PyObject *coro)
 }
 
 static PyObject *
-test_add_await_no_memory(PyObject *self, PyObject *coro)
+test_add_await_special_cases(PyObject *self, PyObject *coro)
 {
     PyObject *awaitable = PyAwaitable_New();
     if (awaitable == NULL) {
@@ -149,11 +149,20 @@ test_add_await_no_memory(PyObject *self, PyObject *coro)
     return Test_RunAwaitable(awaitable);
 }
 
+static PyObject *
+coroutine_trampoline(PyObject *self, PyObject *coro)
+{
+    TEST_ASSERT(Py_IS_TYPE(coro, &PyCoro_Type));
+    PyObject *awaitable = Test_NewAwaitableWithCoro(coro, NULL, NULL);
+    return awaitable;
+}
+
 TESTS(awaitable) = {
     TEST_UTIL(generic_awaitable),
     TEST(test_awaitable_new),
     TEST(test_set_result),
     TEST_CORO(test_add_await),
-    TEST_CORO(test_add_await_no_memory),
+    TEST_CORO(test_add_await_special_cases),
+    TEST_UTIL(coroutine_trampoline),
     {NULL}
 };

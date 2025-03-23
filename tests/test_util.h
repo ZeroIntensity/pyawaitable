@@ -2,10 +2,12 @@
 #define PYAWAITABLE_TEST_UTIL_H
 
 #include <Python.h>
+#include <pyawaitable.h>
 
 #define TEST(name) {#name, name, METH_NOARGS, NULL}
 #define TEST_UTIL(name) {#name, name, METH_O, NULL}
 #define TEST_CORO(name) {#name "_needs_coro", name, METH_O, NULL}
+#define TEST_RAISING_CORO(name) {#name "_needs_rcoro", name, METH_O, NULL}
 #define TEST_ERROR(msg)           \
         PyErr_Format(             \
     PyExc_AssertionError,         \
@@ -13,7 +15,7 @@
     __func__,                     \
     __LINE__                      \
         );
-#define TEST_ASSERT(cond)                               \
+#define TEST_ASSERT_RETVAL(cond, retval)                \
         do {                                            \
             if (!(cond)) {                              \
                 PyErr_Format(                           \
@@ -22,9 +24,11 @@
     __func__,                                           \
     __LINE__                                            \
                 );                                      \
-                return NULL;                            \
+                return retval;                          \
             }                                           \
         } while (0)
+#define TEST_ASSERT(cond) TEST_ASSERT_RETVAL(cond, NULL)
+#define TEST_ASSERT_INT(cond) TEST_ASSERT_RETVAL(cond, -1)
 #define TESTS(name) PyMethodDef _pyawaitable_test_ ## name []
 #define EXPECT_ERROR(tp)                                    \
         do {                                                \
@@ -62,5 +66,12 @@ _Test_RunAndCheck(
     __FILE__,                    \
     __LINE__                     \
         );
+
+PyObject *
+Test_NewAwaitableWithCoro(
+    PyObject *coro,
+    PyAwaitable_Callback callback,
+    PyAwaitable_Error error
+);
 
 #endif
