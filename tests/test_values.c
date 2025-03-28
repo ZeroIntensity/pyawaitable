@@ -151,7 +151,7 @@ test_load_fails_when_no_values(PyObject *self, PyObject *nothing)
 }
 
 static PyObject *
-test_load_null_pointer(PyObject *self, PyObject *nothing)
+test_load_arbitrary_null_pointer(PyObject *self, PyObject *nothing)
 {
     PyObject *awaitable = PyAwaitable_New();
     PyAwaitable_Cancel(awaitable);
@@ -177,7 +177,7 @@ test_load_null_pointer(PyObject *self, PyObject *nothing)
 }
 
 static PyObject *
-test_get_and_set_values(PyObject *self, PyObject *nothing)
+test_get_and_set_arbitrary_values(PyObject *self, PyObject *nothing)
 {
     PyObject *awaitable = PyAwaitable_New();
     PyAwaitable_Cancel(awaitable);
@@ -213,12 +213,66 @@ test_get_and_set_values(PyObject *self, PyObject *nothing)
     Py_RETURN_NONE;
 }
 
+static PyObject *
+test_get_and_set_object_values(PyObject *self, PyObject *nothing)
+{
+    PyObject *awaitable = PyAwaitable_New();
+    PyAwaitable_Cancel(awaitable);
+
+    PyObject *one = PyLong_FromLong(1);
+    if (one == NULL) {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+
+    PyObject *str = PyUnicode_FromString("hello world");
+    if (str == NULL) {
+        Py_DECREF(one);
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+
+    if (PyAwaitable_SaveValues(awaitable, 2, one, str) < 0) {
+        Py_DECREF(awaitable);
+        Py_DECREF(one);
+        Py_DECREF(str);
+        return NULL;
+    }
+    TEST_ASSERT(Py_REFCNT(one) >= 2);
+    TEST_ASSERT(Py_REFCNT(str) >= 2);
+    Py_DECREF(one);
+    Py_DECREF(str);
+
+    TEST_ASSERT(PyAwaitable_GetValue(awaitable, 0) == one);
+    TEST_ASSERT(PyAwaitable_GetValue(awaitable, 1) == str);
+
+    if (PyAwaitable_SetValue(awaitable, 1, one) < 0) {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+
+    TEST_ASSERT(PyAwaitable_GetValue(awaitable, 1) == one);
+    TEST_ASSERT(Py_REFCNT(one) >= 2);
+
+    PyObject *fail = PyAwaitable_GetValue(awaitable, 4);
+    EXPECT_ERROR(PyExc_IndexError);
+    TEST_ASSERT(fail == NULL);
+
+    int other_fail = PyAwaitable_SetValue(awaitable, 5, one);
+    EXPECT_ERROR(PyExc_IndexError);
+    TEST_ASSERT(other_fail < 0);
+
+    Py_DECREF(awaitable);
+    Py_RETURN_NONE;
+}
+
 TESTS(values) = {
     TEST(test_store_and_load_object_values),
     TEST(test_object_values_can_outlive_awaitable),
     TEST(test_store_and_load_arbitrary_values),
     TEST(test_load_fails_when_no_values),
-    TEST(test_load_null_pointer),
-    TEST(test_get_and_set_values),
+    TEST(test_load_arbitrary_null_pointer),
+    TEST(test_get_and_set_arbitrary_values),
+    TEST(test_get_and_set_object_values),
     {NULL}
 };
