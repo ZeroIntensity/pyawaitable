@@ -23,10 +23,6 @@ test_store_and_load_object_values(PyObject *self, PyObject *nothing)
         return NULL;
     }
 
-    int fail = PyAwaitable_UnpackValues(awaitable);
-    EXPECT_ERROR(PyExc_RuntimeError);
-    TEST_ASSERT(fail == -1);
-
     if (PyAwaitable_SaveValues(awaitable, 2, num, str) < 0) {
         Py_DECREF(awaitable);
         Py_DECREF(num);
@@ -137,37 +133,45 @@ test_store_and_load_arbitrary_values(PyObject *self, PyObject *nothing)
 }
 
 static PyObject *
-test_store_and_load_int_values(PyObject *self, PyObject *nothing)
+test_load_fails_when_no_values(PyObject *self, PyObject *nothing)
 {
     PyObject *awaitable = PyAwaitable_New();
-    if (awaitable == NULL) {
-        return NULL;
-    }
-
-    int val = 42;
-    int other_val = 24;
-
-    if (PyAwaitable_SaveIntValues(awaitable, 2, val, other_val) < 0) {
-        Py_DECREF(awaitable);
-        return NULL;
-    }
-
-    int val_unpacked;
-    int other_val_unpacked;
-    if (
-        PyAwaitable_UnpackIntValues(
-            awaitable,
-            &val_unpacked,
-            &other_val_unpacked
-        ) < 0
-    ) {
-        Py_DECREF(awaitable);
-        return NULL;
-    }
-
-    TEST_ASSERT(val_unpacked == 42);
-    TEST_ASSERT(other_val_unpacked == 24);
     PyAwaitable_Cancel(awaitable);
+
+    int fail = PyAwaitable_UnpackValues(awaitable);
+    EXPECT_ERROR(PyExc_RuntimeError);
+    TEST_ASSERT(fail == -1);
+
+    int fail_arb = PyAwaitable_UnpackArbValues(awaitable);
+    EXPECT_ERROR(PyExc_RuntimeError);
+    TEST_ASSERT(fail_arb == -1);
+
+    Py_DECREF(awaitable);
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+test_load_null_pointer(PyObject *self, PyObject *nothing)
+{
+    PyObject *awaitable = PyAwaitable_New();
+    PyAwaitable_Cancel(awaitable);
+
+    // It doesn't matter what this is, it just needs to be unique
+    int sentinel;
+    void *dummy = &sentinel;
+
+    if (PyAwaitable_SaveArbValues(awaitable, 3, dummy, dummy, dummy) < 0) {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+
+    void *only_unpack;
+    if (PyAwaitable_UnpackArbValues(awaitable, NULL, &only_unpack, NULL) < 0) {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+
+    TEST_ASSERT(only_unpack == dummy);
     Py_DECREF(awaitable);
     Py_RETURN_NONE;
 }
@@ -176,6 +180,7 @@ TESTS(values) = {
     TEST(test_store_and_load_object_values),
     TEST(test_object_values_can_outlive_awaitable),
     TEST(test_store_and_load_arbitrary_values),
-    TEST(test_store_and_load_int_values),
+    TEST(test_load_fails_when_no_values),
+    TEST(test_load_null_pointer),
     {NULL}
 };
