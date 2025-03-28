@@ -11,6 +11,7 @@
 - **Breaking Change:** Renamed `awaitcallback` to `PyAwaitable_Callback`
 - **Breaking Change:** Renamed `awaitcallback_err` to `PyAwaitable_Error`
 - **Breaking Change:** Renamed `defercallback` to `PyAwaitable_Defer`
+- **Breaking Change:** Removed the integer value APIs (`SaveIntValues`, `LoadIntValues`, `SetIntValue`, `GetIntValue`). They proved to be maintenance heavy, unintuitive, and most of all replaceable with the arbitrary values API (via `malloc`ing an integer and storing it).
 
 ## [1.4.0] - 2025-02-09
 

@@ -6,5 +6,6 @@
 
 extern TESTS(awaitable);
 extern TESTS(callbacks);
+extern TESTS(values);
 
 #endif
