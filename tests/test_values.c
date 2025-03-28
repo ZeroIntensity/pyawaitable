@@ -219,5 +219,6 @@ TESTS(values) = {
     TEST(test_store_and_load_arbitrary_values),
     TEST(test_load_fails_when_no_values),
     TEST(test_load_null_pointer),
+    TEST(test_get_and_set_values),
     {NULL}
 };
