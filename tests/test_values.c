@@ -201,11 +201,11 @@ test_get_and_set_arbitrary_values(PyObject *self, PyObject *nothing)
 
     TEST_ASSERT(PyAwaitable_GetArbValue(awaitable, 1) == dummy);
 
-    void *fail = PyAwaitable_GetArbValue(awaitable, 4);
+    void *fail = PyAwaitable_GetArbValue(awaitable, 3);
     EXPECT_ERROR(PyExc_IndexError);
     TEST_ASSERT(fail == NULL);
 
-    int other_fail = PyAwaitable_SetArbValue(awaitable, 5, dummy);
+    int other_fail = PyAwaitable_SetArbValue(awaitable, 3, dummy);
     EXPECT_ERROR(PyExc_IndexError);
     TEST_ASSERT(other_fail < 0);
 
@@ -254,11 +254,11 @@ test_get_and_set_object_values(PyObject *self, PyObject *nothing)
     TEST_ASSERT(PyAwaitable_GetValue(awaitable, 1) == one);
     TEST_ASSERT(Py_REFCNT(one) >= 2);
 
-    PyObject *fail = PyAwaitable_GetValue(awaitable, 4);
+    PyObject *fail = PyAwaitable_GetValue(awaitable, 3);
     EXPECT_ERROR(PyExc_IndexError);
     TEST_ASSERT(fail == NULL);
 
-    int other_fail = PyAwaitable_SetValue(awaitable, 5, one);
+    int other_fail = PyAwaitable_SetValue(awaitable, 3, one);
     EXPECT_ERROR(PyExc_IndexError);
     TEST_ASSERT(other_fail < 0);
 
