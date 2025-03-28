@@ -176,6 +176,43 @@ test_load_null_pointer(PyObject *self, PyObject *nothing)
     Py_RETURN_NONE;
 }
 
+static PyObject *
+test_get_and_set_values(PyObject *self, PyObject *nothing)
+{
+    PyObject *awaitable = PyAwaitable_New();
+    PyAwaitable_Cancel(awaitable);
+
+    int sentinel;
+    void *dummy = &sentinel;
+
+    if (PyAwaitable_SaveArbValues(awaitable, 3, dummy, NULL, dummy) < 0) {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+
+    TEST_ASSERT(PyAwaitable_GetArbValue(awaitable, 0) == dummy);
+    TEST_ASSERT(PyAwaitable_GetArbValue(awaitable, 1) == NULL);
+    TEST_ASSERT(PyAwaitable_GetArbValue(awaitable, 2) == dummy);
+
+    if (PyAwaitable_SetArbValue(awaitable, 1, dummy) < 0) {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+
+    TEST_ASSERT(PyAwaitable_GetArbValue(awaitable, 1) == dummy);
+
+    void *fail = PyAwaitable_GetArbValue(awaitable, 4);
+    EXPECT_ERROR(PyExc_IndexError);
+    TEST_ASSERT(fail == NULL);
+
+    int other_fail = PyAwaitable_SetArbValue(awaitable, 5, dummy);
+    EXPECT_ERROR(PyExc_IndexError);
+    TEST_ASSERT(other_fail < 0);
+
+    Py_DECREF(awaitable);
+    Py_RETURN_NONE;
+}
+
 TESTS(values) = {
     TEST(test_store_and_load_object_values),
     TEST(test_object_values_can_outlive_awaitable),
