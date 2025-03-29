@@ -26,3 +26,14 @@ default-args = ["--verbose"]
 
 [[envs.hatch-test.matrix]]
 python = ["3.13", "3.12", "3.11", "3.10", "3.9"]
+
+[envs.test-builds]
+dependencies = [
+    "pyawaitable_test_meson @ {root:uri}/tests/builds/meson",
+    "pyawaitable_test_sbc @ {root:uri}/tests/builds/scikit-build-core",
+]
+dev-mode = false
+
+[envs.test-build.scripts]
+meson = "python3 tests/builds/ensure_build_worked.py _meson_module"
+scikit-build-core = "python3 tests/builds/ensure_build_worked.py _sbc_module"

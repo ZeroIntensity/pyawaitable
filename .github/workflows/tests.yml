@@ -1,73 +1,79 @@
 name: Tests
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+    push:
+        branches:
+            - master
+    pull_request:
+        branches:
+            - master
 
 concurrency:
-  group: test-${{ github.head_ref }}
-  cancel-in-progress: true
+    group: test-${{ github.head_ref }}
+    cancel-in-progress: true
 
 env:
-  PYTHONUNBUFFERED: "1"
-  FORCE_COLOR: "1"
-  PYTHONIOENCODING: "utf8"
+    PYTHONUNBUFFERED: "1"
+    FORCE_COLOR: "1"
+    PYTHONIOENCODING: "utf8"
 
 jobs:
-  changes:
-    name: Check for changed files
-    runs-on: ubuntu-latest
-    outputs:
-      source: ${{ steps.filter.outputs.source }}
-      csource: ${{ steps.filter.outputs.csource }}
-    steps:
-      - uses: actions/checkout@v2
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            source:
-              - 'src/**'
+    changes:
+        name: Check for changed files
+        runs-on: ubuntu-latest
+        outputs:
+            source: ${{ steps.filter.outputs.source }}
+            csource: ${{ steps.filter.outputs.csource }}
+        steps:
+            - uses: actions/checkout@v2
+            - uses: dorny/paths-filter@v3
+              id: filter
+              with:
+                  filters: |
+                      source:
+                        - 'src/**'
 
-  run-tests:
-    needs: changes
-    if: ${{ needs.changes.outputs.source == 'true' }}
-    name: Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: true
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
-    steps:
-      - uses: actions/checkout@v3
+    run-tests:
+        needs: changes
+        if: ${{ needs.changes.outputs.source == 'true' }}
+        name: Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
+        runs-on: ${{ matrix.os }}
+        strategy:
+            fail-fast: true
+            matrix:
+                os: [ubuntu-latest, windows-latest, macos-latest]
+                python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        steps:
+            - uses: actions/checkout@v3
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      
-      - name: Install Hatch
-        uses: pypa/hatch@install
+            - name: Set up Python ${{ matrix.python-version }}
+              uses: actions/setup-python@v4
+              with:
+                  python-version: ${{ matrix.python-version }}
 
-      - name: Run tests
-        run: hatch test
+            - name: Install Hatch
+              uses: pypa/hatch@install
 
-  tests-pass:
-    runs-on: ubuntu-latest
-    name: All tests passed
-    if: always()
+            - name: Run tests
+              run: hatch test
 
-    needs:
-      - run-tests
+            - name: Run build test for scikit-build-core
+              run: hatch run test-build:scikit-build-core
 
-    steps:
-      - name: Check whether all tests passed
-        uses: re-actors/alls-green@release/v1
-        with:
-          jobs: ${{ toJSON(needs) }}
-          allowed-skips: ${{ toJSON(needs) }}
+            - name: Run build test for meson-python
+              run: hatch run test-build:meson-python
+
+    tests-pass:
+        runs-on: ubuntu-latest
+        name: All tests passed
+        if: always()
+
+        needs:
+            - run-build-tests
+
+        steps:
+            - name: Check whether all tests passed
+              uses: re-actors/alls-green@release/v1
+              with:
+                  jobs: ${{ toJSON(needs) }}
+                  allowed-skips: ${{ toJSON(needs) }}

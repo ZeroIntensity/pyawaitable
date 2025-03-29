@@ -1,0 +1,7 @@
+[build-system]
+requires = ["meson-python"]
+build-backend = 'mesonpy'
+
+[project]
+name = "pyawaitable_test_meson"
+version = "0.0.0"
