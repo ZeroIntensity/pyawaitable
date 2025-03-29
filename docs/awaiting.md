@@ -1,8 +1,3 @@
----
-hide:
-    - navigation
----
-
 # Awaiting Coroutines
 
 ## Introduction
@@ -24,13 +19,13 @@ static PyMethodDef methods[] = {
 
 ## Making an asynchronous C function
 
-Now let's make this asynchronous. First, we need to create a new PyAwaitable object, through `pyawaitable_new`. This is where the magic happens! Returning one of these objects from the C function inherently makes it asynchronous (in a sense, at least), as if it were defined with `async def`. Using `test` from above, this looks like:
+Now let's make this asynchronous. First, we need to create a new PyAwaitable object, through `PyAwaitable_New`. This is where the magic happens! Returning one of these objects from the C function inherently makes it asynchronous (in a sense, at least), as if it were defined with `async def`. Using `test` from above, this looks like:
 
 ```c
 static PyObject *
 test(PyObject *self, PyObject *arg)
 {
-    return pyawaitable_new();
+    return PyAwaitable_New();
 }
 ```
 
@@ -41,15 +36,14 @@ If you were to use `test` from Python, you can now execute it via `await` (note 
 >>> await test.test(42)
 ```
 
-This doesn't do anything yet, we simply have an awaitable function that's defined in C. However, we overrode the return value with our PyAwaitable object! If we want the `await` expression to return a value other than `None`, you can use `pyawaitable_set_result`:
+This doesn't do anything yet, we simply have an awaitable function that's defined in C. However, we overrode the return value with our PyAwaitable object! If we want the `await` expression to return a value other than `None`, you can use `PyAwaitable_SetResult`:
 
 ```c
 static PyObject *
 test(PyObject *self, PyObject *arg)
 {
-    PyObject *aw = pyawaitable_new();
-    if (aw == NULL)
-    {
+    PyObject *aw = PyAwaitable_New();
+    if (aw == NULL) {
         return NULL;
     }
 
@@ -60,7 +54,7 @@ test(PyObject *self, PyObject *arg)
         return NULL;
     }
 
-    if (pyawaitable_set_result(aw, value) < 0)
+    if (PyAwaitable_SetResult(aw, value) < 0)
     {
         Py_DECREF(aw);
         Py_DECREF(value);
@@ -110,11 +104,11 @@ This _does not_ raise a `ZeroDivisionError`, because the coroutine is lazy: it w
 
     In technical terms, when we say "coroutine," what we really mean is *awaitable* (*i.e.*, you can perform `await` on it, or that it supports `__await__`.) Nothing in PyAwaitable is specific to coroutine objects, but really any awaitable object. For reference, see [collections.abc.Awaitable](https://docs.python.org/3/library/collections.abc.html#collections.abc.Awaitable).
 
-Now that we understand defining asynchronous function, let's try and replicate the expression `await coro` in C. The function we need to use for awaiting a coroutine is `pyawaitable_await`. For reference, here's it's signature:
+Now that we understand defining asynchronous function, let's try and replicate the expression `await coro` in C. The function we need to use for awaiting a coroutine is `PyAwaitable_AddAwait`. For reference, here's it's signature:
 
 ```c
 int
-pyawaitable_await(
+PyAwaitable_AddAwait(
     PyObject *aw,
     PyObject *coro,
     awaitcallback cb,
@@ -122,7 +116,7 @@ pyawaitable_await(
 );
 ```
 
-There's a lot to unpack here! To keep it simple, let's just focus on the first two arguments: `aw` and `coro`. `aw` is the PyAwaitable object created by `pyawaitable_new`, and `coro` is a coroutine (or really, any object that supports `__await__`).
+There's a lot to unpack here! To keep it simple, let's just focus on the first two arguments: `aw` and `coro`. `aw` is the PyAwaitable object created by `PyAwaitable_New`, and `coro` is a coroutine (or really, any object that supports `__await__`).
 
 !!! note
 
@@ -134,8 +128,8 @@ Ok, with that in mind, let's await the argument passed via `METH_O`:
 static PyObject *
 test(PyObject *self, PyObject *arg)
 {
-    PyObject *aw = pyawaitable_new();
-    if (pyawaitable_await(aw, arg, NULL, NULL) < 0)
+    PyObject *aw = PyAwaitable_New();
+    if (PyAwaitable_AddAwait(aw, arg, NULL, NULL) < 0)
     {
         Py_DECREF(aw);
         return NULL;
@@ -152,11 +146,11 @@ async def test(arg: Awaitable) -> None:
     await arg
 ```
 
-However, a counter-intuitive property of this is that in C, `arg` is _not_ awaited directly after the `pyawaitable_await` call.
+However, a counter-intuitive property of this is that in C, `arg` is _not_ awaited directly after the `PyAwaitable_AddAwait` call.
 
 In fact, we don't actually `await` anything in our function body. Instead, we mark it for awaiting to PyAwaitable, and then that object we returned will deal with it when it is awaited by the user.
 
-For example, if you wanted to `await` three coroutines: `foo`, `bar`, and `baz`, you would call `pyawaitable_await` on each of them, but they wouldn't actually get executed until _after_ the C function has returned.
+For example, if you wanted to `await` three coroutines: `foo`, `bar`, and `baz`, you would call `PyAwaitable_AddAwait` on each of them, but they wouldn't actually get executed until _after_ the C function has returned.
 
 ## Next Steps
 

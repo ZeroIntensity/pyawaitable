@@ -1,8 +1,3 @@
----
-hide:
-    - navigation
----
-
 # Storing and Fetching Values
 
 ## Introduction
