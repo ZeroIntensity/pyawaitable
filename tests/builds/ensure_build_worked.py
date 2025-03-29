@@ -24,11 +24,11 @@ def main():
     except BaseException as err:
         traceback.print_exc()
         print("Build failed!", file=sys.stderr)
-        sys.exit(-1)
+        sys.exit(1)
     
     if not called:
         print("Build doesn't work!", file=sys.stderr)
-        sys.exit(-1)
+        sys.exit(1)
     
     print("Success!")
 
