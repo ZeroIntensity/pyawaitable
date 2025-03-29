@@ -91,7 +91,7 @@ find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 
 Python_add_library(_module MODULE src/module.c WITH_SOABI)
 target_include_directories(_module PRIVATE $ENV{PYAWAITABLE_INCLUDE})
-install(TARGETS _module DESTINATION ${SKBUILD_PROJECT_NAME})
+install(TARGETS _module DESTINATION .)
 ```
 
 ### `meson-python`
@@ -104,6 +104,7 @@ py = import('python').find_installation(pure: false)
 pyawaitable_include = run_command('pyawaitable --include', check: true).stdout().strip()
 
 py.extension_module(
+    '_module',
     'src/module.c',
     install: true,
     include_directories: [pyawaitable_include],
@@ -121,18 +122,6 @@ module_exec(PyObject *mod)
 {
     return PyAwaitable_Init();
 }
-
-static PyModuleDef_Slot module_slots[] = {
-    {Py_mod_exec, module_exec},
-    {0, NULL}
-};
-
-static PyModuleDef module = {
-    .m_base = PyModuleDef_HEAD_INIT,
-    .m_size = 0,
-    .m_slots = module_slots,
-    .m_methods = module_methods
-};
 
 /*
  Equivalent to the following Python function:
@@ -157,10 +146,22 @@ async_function(PyObject *self, PyObject *coro)
     return awaitable;
 }
 
+static PyModuleDef_Slot module_slots[] = {
+    {Py_mod_exec, module_exec},
+    {0, NULL}
+};
+
 static PyMethodDef module_methods[] = {
     {"async_function", async_function, METH_O, NULL},
     {NULL, NULL, 0, NULL},
-}
+};
+
+static PyModuleDef module = {
+    .m_base = PyModuleDef_HEAD_INIT,
+    .m_size = 0,
+    .m_slots = module_slots,
+    .m_methods = module_methods
+};
 
 PyMODINIT_FUNC
 PyInit__module()
