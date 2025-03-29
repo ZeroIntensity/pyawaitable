@@ -6,13 +6,17 @@ repo_name: ZeroIntensity/pyawaitable
 nav:
     - Home: index.md
     - Installation: installation.md
-    - Awaiting Coroutines: awaiting.md
+    - Making a C Function Asynchronous: c_async.md
     - Callbacks: callbacks.md
     - Storing and Fetching Values: storage.md
-    - Useful Utilities: utilities.md
 
 theme:
     name: readthedocs
+
+markdown_extensions:
+    - toc:
+          permalink: true
+    - admonition
 
 plugins:
     - search
