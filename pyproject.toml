@@ -27,3 +27,6 @@ requires-python = ">=3.9"
 Documentation = "https://awaitable.zintensity.dev"
 Issues = "https://github.com/ZeroIntensity/pyawaitable/issues"
 Source = "https://github.com/ZeroIntensity/pyawaitable"
+
+[project.scripts]
+pyawaitable = "pyawaitable.__main__:main"
