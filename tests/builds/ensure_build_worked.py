@@ -2,6 +2,7 @@ import optparse
 import sys
 import asyncio
 import traceback
+import importlib
 
 
 def main():
@@ -20,7 +21,7 @@ def main():
         called = True
 
     try:
-        asyncio.run(__import__(mod).async_function(dummy()))
+        asyncio.run(importlib.import_module(mod).async_function(dummy()))
     except BaseException as err:
         traceback.print_exc()
         print("Build failed!", file=sys.stderr)
