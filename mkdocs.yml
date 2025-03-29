@@ -7,7 +7,7 @@ nav:
     - Home: index.md
     - Installation: installation.md
     - Making a C Function Asynchronous: c_async.md
-    - Callbacks: callbacks.md
+    - Making Asynchronous Calls from C: adding_awaits.md
     - Storing and Fetching Values: storage.md
 
 theme:

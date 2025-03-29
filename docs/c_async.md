@@ -3,7 +3,7 @@
 Let's make a C function that replicates the following Python code:
 
 ```py
-async def hello():
+async def hello() -> None:
     print("Hello, PyAwaitable")
 ```
 
@@ -21,11 +21,11 @@ Of course, you need to do `await hello()` instead. `hello()` is returning a _cor
 
 ```py
 class _hello_coroutine:
-    def __await__(self) -> None:
+    def __await__(self) -> collections.abc.Generator:
         print("Hello, PyAwaitable")
         yield
 
-def hello():
+def hello() -> collections.abc.Coroutine:
     return _hello_coroutine()
 ```
 
