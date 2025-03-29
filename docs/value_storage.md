@@ -28,3 +28,87 @@ There are four parts to the value APIs, each with a variant for object and arbit
 -   Unpacking values; `PyAwaitable_UnpackValues`/`PyAwaitable_UnpackArbValues`.
 -   Getting values; `PyAwaitable_GetValue`/`PyAwaitable_GetArbValue`.
 -   Setting values; `PyAwaitable_SetValue`/`PyAwaitable_SetArbValue`.
+
+## Object Value Storage
+
+In most cases, you want to store Python objects on your PyAwaitable object. This can be anything you want, such as arguments passed into your function. The two main APIs you want when using value storage are `PyAwaitable_SaveValues` and `PyAwaitable_UnpackValues`.
+
+These are variadic C functions; for `Save`, pass the PyAwaitable object and the number of objects you want to store, and then pass `PyObject *` pointers matching that number. These references will _not_ be stolen by PyAwaitable.
+
+`Unpack`, on the other hand, does not require you to pass the number of objects that you want--it remembers how many you stored in `Save`. In `Unpack`, you just pass the PyAwaitable object and pointers to local `PyObject *` variables, which will then be unpacked by the PyAwaitable object (these may be `NULL`, in which case the value is skipped).
+
+!!! note
+
+    Both `PyAwaitable_SaveValues` and `PyAwaitable_UnpackValues` can fail. They return `-1` with an exception set on failure, and `0` on success.
+
+For example, if you called `PyAwaitable_SaveValues(awaitable, 3, /* ... */)`, you must pass three non-`NULL` `PyObject *` references, and then pass three pointers-to-pointers to `PyAwaitable_UnpackValues` (but these may be `NULL`).
+
+So, with all that in mind, we can implement `multiply_async` above as such:
+
+```c
+static int
+multiply_callback(PyObject *awaitable, PyObject *value)
+{
+    PyObject *number;
+    if (PyAwaitable_UnpackValues(awaitable, &number) < 0) {
+        return -1;
+    }
+
+    PyObject *result = PyNumber_Multiply(number, value);
+    if (result == NULL) {
+        return -1;
+    }
+
+    if (PyAwaitable_SetResult(awaitable, result) < 0) {
+        Py_DECREF(result);
+        return -1;
+    }
+
+    Py_DECREF(result);
+    return 0;
+}
+
+static PyObject *
+multiply_async(PyObject *self, PyObject *args) // METH_VARARGS
+{
+    PyObject *number;
+    PyObject *get_number_io;
+
+    if (!PyArg_ParseTuple(args, "OO", &number, &get_number_io)) {
+        return NULL;
+    }
+
+    PyObject *awaitable = PyAwaitable_New();
+    if (awaitable == NULL) {
+        return NULL;
+    }
+
+    if (PyAwaitable_SaveValues(awaitable, 1, number) < 0) {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+
+    PyObject *coro = PyObject_CallNoArgs(get_number_io);
+    if (coro == NULL) {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
+
+    if (PyAwaitable_AddAwait(awaitable, coro, multiply_callback, NULL) < 0) {
+        Py_DECREF(awaitable);
+        Py_DECREF(coro);
+        return NULL;
+    }
+
+    Py_DECREF(coro);
+    return awaitable;
+}
+```
+
+## Getting and Setting Values
+
+In rare cases, it might be desirable to get or set a specific value at an index. `PyAwaitable_SetValue` is useful if you intend to completely overwrite an object at a value index, but `PyAwaitable_GetValue` should basically never be preferred over `PyAwaitable_UnpackValues`; it's, more or less, there for completion.
+
+## Arbitrary Value Storage
+
+Arbitrary value storage works exactly the same as object value storage, with the exception of taking `void *` pointers instead of `PyObject *` pointers. PyAwaitable will never attempt to read or write the pointers that you pass, so managing their lifetime is up to you. In most cases, if your PyAwaitable object is supposed to own the state of the arbitrary value, you deallocate it in the last callback.
