@@ -24,7 +24,6 @@ struct _PyAwaitableObject {
     pyawaitable_array aw_callbacks;
     pyawaitable_array aw_object_values;
     pyawaitable_array aw_arbitrary_values;
-    pyawaitable_array aw_integer_values;
 
     /* Index of current callback */
     Py_ssize_t aw_state;

@@ -114,7 +114,7 @@ pyawaitable_array_clear_items(pyawaitable_array * array);
  * Clear all the fields on the array.
  *
  * Note that this does *not* free the actual dynamic array
- * structure--use pyawaitable_array_Free() for that.
+ * structure--use pyawaitable_array_free() for that.
  *
  * It's safe to call pyawaitable_array_init() or init_with_size() again
  * on the array after calling this.
