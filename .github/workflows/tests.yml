@@ -63,7 +63,7 @@ jobs:
               run: hatch run test-build:scikit-build-core
 
             - name: Run build test for meson-python
-              run: hatch run test-build:meson-python
+              run: hatch run test-build:meson
 
     tests-pass:
         runs-on: ubuntu-latest
