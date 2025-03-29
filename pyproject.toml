@@ -24,7 +24,7 @@ dynamic = ["version"]
 requires-python = ">=3.9"
 
 [project.urls]
-Documentation = "https://awaitable.zintensity.dev"
+Documentation = "https://pyawaitable.zintensity.dev"
 Issues = "https://github.com/ZeroIntensity/pyawaitable/issues"
 Source = "https://github.com/ZeroIntensity/pyawaitable"
 
