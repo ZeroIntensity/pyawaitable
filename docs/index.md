@@ -22,6 +22,8 @@ This documentation assumes that you're familiar with the C API already, and unde
 
 ## Quickstart
 
+Add PyAwaitable as a build dependency:
+
 ```toml
 # pyproject.toml
 [build-system]
@@ -29,73 +31,13 @@ requires = ["your_preferred_build_system", "pyawaitable>=2.0.0"]
 build-backend = "your_preferred_build_system.build"
 ```
 
-### `setuptools`
+Use it in your extension:
 
-```py
-from setuptools import setup, Extension
-import pyawaitable
+!!! note
 
-if __name__ == "__main__":
-    setup(
-        ext_modules=[
-            Extension("_module", ["src/module.c"], include_dirs=[pyawaitable.include()])
-        ]
-    )
-```
-
-### `scikit-build-core`
-
-```t
-# CMakeLists.txt
-cmake_minimum_required(VERSION 3.15...3.30)
-project(${SKBUILD_PROJECT_NAME} LANGUAGES C)
-
-find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
-
-Python_add_library(_module MODULE src/module.c WITH_SOABI)
-target_include_directories(_module PRIVATE $ENV{PYAWAITABLE_INCLUDE})
-install(TARGETS _module DESTINATION ${SKBUILD_PROJECT_NAME})
-```
-
-### `meson-python`
-
-```lua
-project('_module', 'c')
-
-py = import('python').find_installation(pure: false)
-pyawaitable_include = run_command('pyawaitable --include', check: true).stdout().strip()
-
-py.extension_module(
-    'src/module.c',
-    install: true,
-    include_directories: [pyawaitable_include],
-)
-```
-
-### Simple Extension
+    You need to call `PyAwaitable_Init` upon initializing your extension! This can be done in the `PyInit_` function, or a module-exec function if using [multi-phase initialization](https://docs.python.org/3/c-api/module.html#initializing-c-modules).
 
 ```c
-#include <Python.h>
-#include <pyawaitable.h>
-
-static int
-module_exec(PyObject *mod)
-{
-    return PyAwaitable_Init();
-}
-
-static PyModuleDef_Slot module_slots[] = {
-    {Py_mod_exec, module_exec},
-    {0, NULL}
-};
-
-static PyModuleDef module = {
-    .m_base = PyModuleDef_HEAD_INIT,
-    .m_size = 0,
-    .m_slots = module_slots,
-    .m_methods = module_methods
-};
-
 /*
  Equivalent to the following Python function:
 
@@ -117,17 +59,6 @@ async_function(PyObject *self, PyObject *coro)
     }
 
     return awaitable;
-}
-
-static PyMethodDef module_methods[] = {
-    {"async_function", async_function, METH_O, NULL},
-    {NULL, NULL, 0, NULL},
-}
-
-PyMODINIT_FUNC
-PyInit__module()
-{
-    return PyModuleDef_Init(&module);
 }
 ```
 

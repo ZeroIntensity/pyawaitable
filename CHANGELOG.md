@@ -7,6 +7,7 @@
 - `PyAwaitable_` prefixes are now required, and the old `pyawaitable_*` functions have been removed.
 - The warning emitted when a PyAwaitable object is not awaited is now a `ResourceWarning` (was a `RuntimeWarning`).
 - `PyAwaitable_AddAwait` now raises a `ValueError` if the passed object is `NULL` or self, and also now raises a `TypeError` if the passed object is not a coroutine.
+- Added a simple CLI, primarily for getting the include directory from `meson-python` (`pyawaitable --include`).
 - **Breaking Change:** `PyAwaitable_Init` no longer takes a module object.
 - **Breaking Change:** Renamed `awaitcallback` to `PyAwaitable_Callback`
 - **Breaking Change:** Renamed `awaitcallback_err` to `PyAwaitable_Error`
