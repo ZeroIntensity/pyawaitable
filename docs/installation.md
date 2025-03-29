@@ -25,6 +25,12 @@ PyAwaitable provides a number of APIs to access the include path for a number of
 
     PyAwaitable uses a nifty trick for building itself into your project. Python's packaging ecosystem isn't exactly great at distributing C libraries, so the `pyawaitable.h` actually contains the entire PyAwaitable source code (but with mangled names to prevent collisions with your own project).
 
+    This has some pros and cons:
+
+    - PyAwaitable doesn't need to be installed at runtime, as it's embedded directly into your extension. This means it's *extremely* portable; completely different PyAwaitable versions can peacefully coexist in the same process.
+    - Enabling debug flags in your extension also means enabling debug flags in PyAwaitable, thus enabling assertions and whatnot. This is useful for debugging.
+    - However, PyAwaitable can't use the limited API, so it prevents your extension from using the limited API (see the note below).
+
 ## Initializing PyAwaitable in Your Extension
 
 PyAwaitable has to do a one-time initialization to get its types and other state initialized in the Python process. This is done with `PyAwaitable_Init`, which can be called basically anywhere, as long as its called before any other PyAwaitable functions are used.

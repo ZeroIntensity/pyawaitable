@@ -153,36 +153,3 @@ PyAwaitable_GetArbValue(
 {
     GET(aw_arbitrary_values, void *);
 }
-
-/* Integer Values */
-
-_PyAwaitable_API(int)
-PyAwaitable_UnpackIntValues(PyObject * awaitable, ...)
-{
-    UNPACK(aw_integer_values, long);
-}
-
-_PyAwaitable_API(int)
-PyAwaitable_SaveIntValues(PyObject * awaitable, Py_ssize_t nargs, ...)
-{
-    SAVE(aw_integer_values, long, NOTHING);
-}
-
-_PyAwaitable_API(int)
-PyAwaitable_SetIntValue(
-    PyObject * awaitable,
-    Py_ssize_t index,
-    long new_value
-)
-{
-    SET(aw_integer_values, long);
-}
-
-_PyAwaitable_API(long)
-PyAwaitable_GetIntValue(
-    PyObject * awaitable,
-    Py_ssize_t index
-)
-{
-    GET(aw_integer_values, long);
-}
