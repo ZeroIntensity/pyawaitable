@@ -33,10 +33,6 @@ build-backend = "your_preferred_build_system.build"
 
 Use it in your extension:
 
-!!! note
-
-    You need to call `PyAwaitable_Init` upon initializing your extension! This can be done in the `PyInit_` function, or a module-exec function if using [multi-phase initialization](https://docs.python.org/3/c-api/module.html#initializing-c-modules).
-
 ```c
 /*
  Equivalent to the following Python function:
@@ -61,6 +57,10 @@ async_function(PyObject *self, PyObject *coro)
     return awaitable;
 }
 ```
+
+!!! note
+
+    You need to call `PyAwaitable_Init` upon initializing your extension! This can be done in the `PyInit_` function, or a module-exec function if using [multi-phase initialization](https://docs.python.org/3/c-api/module.html#initializing-c-modules).
 
 ## Acknowledgements
 
