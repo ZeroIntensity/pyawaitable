@@ -53,29 +53,4 @@ PyAwaitable_GetArbValue(
     Py_ssize_t index
 );
 
-/* Integer values */
-
-_PyAwaitable_API(int)
-PyAwaitable_SaveIntValues(
-    PyObject * awaitable,
-    Py_ssize_t nargs,
-    ...
-);
-
-_PyAwaitable_API(int)
-PyAwaitable_UnpackIntValues(PyObject * awaitable, ...);
-
-_PyAwaitable_API(int)
-PyAwaitable_SetIntValue(
-    PyObject * awaitable,
-    Py_ssize_t index,
-    long new_value
-);
-
-_PyAwaitable_API(long)
-PyAwaitable_GetIntValue(
-    PyObject * awaitable,
-    Py_ssize_t index
-);
-
 #endif
