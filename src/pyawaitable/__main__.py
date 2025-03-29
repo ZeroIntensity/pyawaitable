@@ -3,7 +3,7 @@ from typing import Literal
 from pyawaitable import __version__, include as get_include
 
 DEFAULT_MESSAGE = f"""PyAwaitable {__version__}
-Documentation: https://awaitable.zintensity.dev
+Documentation: https://pyawaitable.zintensity.dev
 Source: https://github.com/ZeroIntensity/pyawaitable"""
 
 def option_main(include: bool, version: bool) -> None:
