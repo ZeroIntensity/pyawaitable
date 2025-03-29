@@ -1,3 +1,2 @@
 # Requirements for Netlify
 mkdocs
-mkdocs-material
