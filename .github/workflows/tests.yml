@@ -23,7 +23,7 @@ jobs:
         runs-on: ubuntu-latest
         outputs:
             source: ${{ steps.filter.outputs.source }}
-            csource: ${{ steps.filter.outputs.csource }}
+            tests: ${{ steps.filter.outputs.tests }}
         steps:
             - uses: actions/checkout@v2
             - uses: dorny/paths-filter@v3
@@ -32,10 +32,12 @@ jobs:
                   filters: |
                       source:
                         - 'src/**'
+                      tests:
+                        - 'tests/**'
 
     run-tests:
         needs: changes
-        if: ${{ needs.changes.outputs.source == 'true' }}
+        if: ${{ needs.changes.outputs.source == 'true' || needs.changes.outputs.tests }}
         name: Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
         runs-on: ${{ matrix.os }}
         strategy:
@@ -69,7 +71,7 @@ jobs:
         if: always()
 
         needs:
-            - run-build-tests
+            - run-tests
 
         steps:
             - name: Check whether all tests passed
