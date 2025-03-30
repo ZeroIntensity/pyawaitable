@@ -9,8 +9,20 @@ import traceback
 import importlib
 import site
 import os
-import pyawaitable
 from typing import TypeVar
+
+WINDOWS_HATCH_BUG = """PyAwaitable couldn't be imported.
+This is probably a bug in Hatch environments, so this is being skipped
+on Windows."""
+
+try:
+    import pyawaitable
+except ImportError:
+    if os.name != 'nt':
+        raise
+
+    print(WINDOWS_HATCH_BUG)
+    sys.exit(0)
 
 T = TypeVar("T")
 
