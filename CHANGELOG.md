@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## [2.0.0] - 2025-03-30
 
 -   Moved away from function pointer tables for loading PyAwaitable--everything is now vendored upon installation.
