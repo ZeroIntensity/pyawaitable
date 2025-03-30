@@ -53,10 +53,6 @@ awaitable_new_func(PyTypeObject *tp, PyObject *args, PyObject *kwds)
         goto error;
     }
 
-    if (pyawaitable_array_init(&aw->aw_integer_values, NULL) < 0) {
-        goto error;
-    }
-
     return self;
 error:
     PyErr_NoMemory();
@@ -81,6 +77,35 @@ awaitable_next(PyObject * self)
     return gen;
 }
 
+static int
+awaitable_traverse(PyObject *self, visitproc visit, void *arg)
+{
+    PyAwaitableObject *aw = (PyAwaitableObject *)self;
+    pyawaitable_array *array = &aw->aw_object_values;
+    if (array->items != NULL) {
+        for (Py_ssize_t i = 0; i < pyawaitable_array_LENGTH(array); ++i) {
+            PyObject *ref = pyawaitable_array_GET_ITEM(array, i);
+            Py_VISIT(ref);
+        }
+    }
+    Py_VISIT(aw->aw_gen);
+    Py_VISIT(aw->aw_result);
+    return 0;
+}
+
+static int
+awaitable_clear(PyObject *self)
+{
+    PyAwaitableObject *aw = (PyAwaitableObject *)self;
+    pyawaitable_array *array = &aw->aw_object_values;
+    if (array->items != NULL) {
+        pyawaitable_array_clear(array);
+    }
+    Py_CLEAR(aw->aw_gen);
+    Py_CLEAR(aw->aw_result);
+    return 0;
+}
+
 static void
 awaitable_dealloc(PyObject *self)
 {
@@ -90,13 +115,10 @@ awaitable_dealloc(PyObject *self)
             pyawaitable_array_clear(&array); \
         }
     CLEAR_IF_NON_NULL(aw->aw_callbacks);
-    CLEAR_IF_NON_NULL(aw->aw_object_values);
     CLEAR_IF_NON_NULL(aw->aw_arbitrary_values);
-    CLEAR_IF_NON_NULL(aw->aw_integer_values);
 #undef CLEAR_IF_NON_NULL
 
-    Py_XDECREF(aw->aw_gen);
-    Py_XDECREF(aw->aw_result);
+    (void)awaitable_clear(self);
 
     if (!aw->aw_awaited) {
         if (
@@ -239,9 +261,11 @@ _PyAwaitable_INTERNAL_DATA_DEF(PyTypeObject) PyAwaitable_Type = {
     .tp_basicsize = sizeof(PyAwaitableObject),
     .tp_dealloc = awaitable_dealloc,
     .tp_as_async = &pyawaitable_async_methods,
-    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .tp_doc = PyDoc_STR("Awaitable transport utility for the C API."),
     .tp_iternext = awaitable_next,
     .tp_new = awaitable_new_func,
+    .tp_clear = awaitable_clear,
+    .tp_traverse = awaitable_traverse,
     .tp_methods = pyawaitable_methods
 };
