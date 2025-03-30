@@ -4,7 +4,7 @@ PyAwaitable - Call asynchronous code from an extension module.
 It's unlikely that you want to import this module from Python, other than
 for use in setuptools.
 
-Docs: https://awaitable.zintensity.dev/
+Docs: https://pyawaitable.zintensity.dev/
 Source: https://github.com/ZeroIntensity/pyawaitable
 """
 
