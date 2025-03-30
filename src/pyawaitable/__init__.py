@@ -9,7 +9,7 @@ Source: https://github.com/ZeroIntensity/pyawaitable
 """
 
 __all__ = ("include",)
-__version__ = "2.0.0"
+__version__ = "2.1.0-dev0"
 __author__ = "Peter Bierma"
 
 
