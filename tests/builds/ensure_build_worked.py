@@ -8,7 +8,6 @@ import asyncio
 import traceback
 import importlib
 import site
-import pyawaitable
 import os
 from typing import TypeVar
 
@@ -26,7 +25,7 @@ def debug_directory(what: str, path: str) -> None:
             print(f"  {what}: {os.path.join(root, file)}", file=sys.stderr)
 
 def debug_import_error(error: ImportError) -> None:
-    debug_directory("PyAwaitable Include", pyawaitable.include())
+    #debug_directory("PyAwaitable Include", pyawaitable.include())
     debug_directory("User Site", not_none(site.USER_SITE))
     debug_directory("User Base", not_none(site.USER_BASE))
     print(error)
