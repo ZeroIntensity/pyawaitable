@@ -11,9 +11,9 @@
 
 ## What is it?
 
-PyAwaitable is the _only_ library to support writing and calling asynchronous Python functions from pure C code (with the exception of manually implementing an awaitable class from scratch, which is essentially what PyAwaitable does).
+PyAwaitable is the _only_ library to support defining and calling asynchronous Python functions from pure C code.
 
-It was originally designed to be directly part of CPython--you can read the [scrapped PEP](https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926) about it. Since this library only uses the public ABI, it's better fit outside of CPython, as a library.
+It was originally designed to be directly part of CPython; you can read the [scrapped PEP](https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926) about it. But, since this library only uses the public ABI, it's better fit outside of CPython, as a library.
 
 ## Installation
 
@@ -42,18 +42,29 @@ if __name__ == "__main__":
 ## Example
 
 ```c
-#include <pyawaitable.h>
+/*
+ Equivalent to the following Python function:
 
-/* Usage from Python: await my_async_function(coro()) */
+ async def async_function(coro: collections.abc.Awaitable) -> None:
+    await coro
+
+ */
 static PyObject *
-my_async_function(PyObject *self, PyObject *coro) {
-    /* Make our awaitable object */
+async_function(PyObject *self, PyObject *coro)
+{
+    // Create our transport between the C world and the asynchronous world.
     PyObject *awaitable = PyAwaitable_New();
+    if (awaitable == NULL) {
+        return NULL;
+    }
 
-    /* Mark the coroutine for being awaited */
-    PyAwaitable_AddAwait(awaitable, coro, NULL, NULL);
+    // Mark our Python coroutine, *coro*, for being executed by the event loop.
+    if (PyAwaitable_AddAwait(awaitable, coro, NULL, NULL) < 0) {
+        Py_DECREF(awaitable);
+        return NULL;
+    }
 
-    /* Return the awaitable object to yield to the event loop */
+    // Return our transport, allowing *coro* to be eventually executed.
     return awaitable;
 }
 ```
