@@ -4,7 +4,7 @@
 
     This project originates from a scrapped PEP. For the original text, see [here](https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926).
 
-## Motivation
+## Introduction
 
 CPython currently has no existing C interface for writing asynchronous functions or doing any sort of `await` operations, other than defining extension types and manually implementing methods like `__await__` from scratch. This lack of an API can be seen in some Python-to-C transpilers (such as `mypyc`) having limited support for asynchronous code.
 
@@ -13,8 +13,6 @@ In the C API, developers are forced to do one of three things when it comes to a
 -   Manually implementing coroutines using extension types.
 -   Use an external tool to compile their asynchronous code to C.
 -   Defer their asynchronous logic to a synchronous Python function, and then call that natively.
-
-## Introduction
 
 Since there are other event loop implementations, PyAwaitable aims to be a _generic_ interface for working with asynchronous operations from C (as in, we'll only be implementing features like `async def` and `await`, but not things like `asyncio.create_task`.)
 
