@@ -42,7 +42,7 @@ static PyObject *
 hello(PyObject *self, PyObject *nothing) // METH_NOARGS
 {
     PyObject *awaitable = PyAwaitable_New();
-    if (awiatable == NULL) {
+    if (awaitable == NULL) {
         return NULL;
     }
 
