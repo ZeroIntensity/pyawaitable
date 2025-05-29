@@ -37,7 +37,7 @@ jobs:
 
     run-tests:
         needs: changes
-        if: ${{ needs.changes.outputs.source == 'true' || needs.changes.outputs.tests }}
+        if: ${{ needs.changes.outputs.source == 'true' || needs.changes.outputs.tests == 'true' }}
         name: Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
         runs-on: ${{ matrix.os }}
         strategy:
