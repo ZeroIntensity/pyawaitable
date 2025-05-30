@@ -92,9 +92,10 @@ Now, we can use the result of `silly` in C:
 static int
 callback(PyObject *awaitable, PyObject *value)
 {
-    printf("silly() returned: ");
-    PyObject_Print(value, stdout, Py_PRINT_RAW);
-    printf("\n");
+    if (PyAwaitable_SetResult(awaitable, value) < 0) {
+        return -1;
+    }
+
     return 0;
 }
 
