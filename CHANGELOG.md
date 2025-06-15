@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+Nothing yet!
+
 ## [2.0.1] - 2025-06-15
 
 -   Pinned dependencies to a specific version to prevent incompatibility problems.
