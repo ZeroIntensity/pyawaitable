@@ -8,7 +8,7 @@ packages = ["src/pyawaitable"]
 only-include = ["src/pyawaitable", "include/", "src/_pyawaitable"]
 
 [build.targets.wheel.hooks.autorun]
-dependencies = ["hatch-autorun"]
+dependencies = ["hatch-autorun~=1.1"]
 code = """
 import pyawaitable
 import os
@@ -18,10 +18,10 @@ os.environ['PYAWAITABLE_INCLUDE'] = pyawaitable.include(suppress_error=True)
 
 [build.hooks.custom]
 enable-by-default = true
-dependencies = ["typing_extensions"]
+dependencies = ["typing_extensions~=4.14"]
 
 [envs.hatch-test]
-dependencies = ["pyawaitable_test @ {root:uri}/tests", "pytest"]
+dependencies = ["pyawaitable_test @ {root:uri}/tests", "pytest~=8.4"]
 default-args = ["--verbose"]
 
 [[envs.hatch-test.matrix]]
