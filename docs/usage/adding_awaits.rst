@@ -86,6 +86,9 @@ hidden; you give PyAwaitable your coroutine, and it handles the rest!
 
 Yay! We called an asynchronous function from C!
 
+
+.. _return-value-callbacks:
+
 Getting the Return Value in a Callback
 --------------------------------------
 
@@ -160,6 +163,8 @@ This can be used from Python as such:
     >>> await call_silly(silly)  # Sleeps for 2 seconds
     silly() returned: 42
 
+
+.. _error-callbacks:
 
 Handling Errors with Callbacks
 ------------------------------
