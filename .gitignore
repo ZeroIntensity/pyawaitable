@@ -11,6 +11,7 @@ src/pyawaitable/pyawaitable.h
 pcbuild/
 *.o
 site/
+_build/
 
 # LSP
 compile_flags.txt

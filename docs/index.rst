@@ -15,8 +15,5 @@ documentation for details.
    :maxdepth: 2
    :caption: Contents:
 
-   installation
-   usage/c_async
    usage/adding_awaits
-   usage/value_storage
    reference
