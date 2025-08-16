@@ -10,6 +10,7 @@ dist/
 src/pyawaitable/pyawaitable.h
 pcbuild/
 *.o
+site/
 
 # LSP
 compile_flags.txt
