@@ -1,6 +1,31 @@
 Reference
 =========
 
+General
+-------
+
+.. c:function:: int PyAwaitable_Init(void)
+
+   Initialize PyAwaitable. This should typically be done in the :c:data:`Py_mod_exec`
+   slot of a module.
+
+   This can safely be called multiple times.
+
+   Return ``0`` on success, and ``-1`` with an exception set on failure.
+
+
+.. c:function:: PyObject *PyAwaitable_New(void)
+
+   Create a new empty PyAwaitable object.
+
+   This returns a new :term:`strong reference` to a PyAwaitable object on
+   success, and returns ``NULL`` with an exception set on failure.
+
+
+Coroutines
+----------
+
+
 .. c:type:: int (*PyAwaitable_Callback)(PyObject *awaitable, PyObject *result)
 
    The type of a result callback, as submitted in :c:func:`PyAwaitable_AddAwait`.
@@ -45,3 +70,129 @@ Reference
 
     This function will return ``0`` on success, and ``-1`` with an exception
     set on failure.
+
+
+Value Storage
+-------------
+
+.. c:function:: int PyAwaitable_SaveValues(PyObject *awaitable, Py_ssize_t nargs, ...)
+
+   Store *nargs* amount of :ref:`object values <object-values>` in the
+   PyAwaitable object.
+
+   The number of arguments passed to ``...`` must match *nargs*. The objects
+   passed will be stored in the PyAwaitable object internally to be unpacked
+   by :c:func:`PyAwaitable_UnpackValues` later.
+
+   Return ``0`` with the values stored on success, and ``-1`` with an
+   exception set on failure.
+
+
+.. c:function:: int PyAwaitable_UnpackValues(PyObject *awaitable, ...)
+
+   Unpack :ref:`object values <object-values>` stored in the PyAwaitable
+   object.
+
+   This function expects ``PyObject **`` pointers passed to the ``...``.
+   These will then be set to :term:`borrowed references`. The number of
+   arguments passed to the ``...`` must match the sum of all *nargs* to prior
+   :c:func:`PyAwaitable_SaveValues` calls. For example, if one call stored
+   two values, and then another call stored three values, this function would
+   expect five pointers to be passed.
+
+   Pointers passed to the ``...`` may be ``NULL``, in which case the object at
+   that position is skipped.
+
+   Return ``0`` will all references set on success, and ``-1`` with an
+   exception set on failure.
+
+
+.. c:function:: int PyAwaitable_SetValue(PyObject *awaitable, Py_ssize_t index, PyObject *value)
+
+   Replace a single :ref:`object value <object-values>` at the position *index*
+   with *value*. The old reference to the object stored at the position *index*
+   is released, so *value* must not be ``NULL``.
+
+   If *index* is below zero or out of bounds for the number of stored object
+   values, this function will fail. As such, this function cannot be used to
+   append new object values -- use :c:func:`PyAwaitable_SaveValues` for that.
+
+   Return ``0`` with the object replaced on success, and ``-1`` with an exception
+   set on failure.
+
+
+.. c:function:: PyObject *PyAwaitable_GetValue(PyObject *awaitable, Py_ssize_t index)
+
+   Unpack a single :ref:`object value <object-values>` at the position *index*.
+
+   If *index* is below zero or out of bounds for the number of stored object
+   values, this function will sanely fail.
+
+   This is a low-level routine meant for complete-ness; always prefer using
+   :c:func:`PyAwaitable_UnpackValues` over this function.
+
+   Return a :term:`borrowed reference` to the value on success, and ``NULL``
+   with an exception set on failure.
+
+
+.. c:function:: int PyAwaitable_SaveArbValues(PyObject *awaitable, Py_ssize_t nargs, ...)
+
+   Similar to :c:func:`PyAwaitable_SaveValues`, but saves
+   :ref:`arbitrary values <arbitrary-values>` (``void *`` pointers) instead
+   of :c:type:`PyObject * <PyObject>` references.
+
+   Arbitrary values are separate from object values, so the number of Python
+   objects stored through :c:func:`PyAwaitable_SaveValues` has no effect
+   on this function.
+
+   Return ``0`` with all pointers stored on success, and ``-1`` with an
+   exception set on failure.
+
+
+.. c:function:: int PyAwaitable_UnpackArbValues(PyObject *awaitable, ...)
+
+   Similar to :c:func:`PyAwaitable_UnpackValues`, but unpacks
+   :ref:`arbitrary values <arbitrary-values>` (``void *`` pointers) instead
+   of :c:type:`PyObject * <PyObject>` references.
+
+   Arbitrary values are separate from object values, so the number of Python
+   objects stored through :c:func:`PyAwaitable_SaveValues` has no effect
+   on this function.
+   
+   This function expects ``void **`` pointers passed to the ``...``.
+   The number of arguments passed to the ``...`` must match the sum of
+   all *nargs* to prior :c:func:`PyAwaitable_SaveArbValues` calls. For
+   example, if one call stored two values, and then another call stored
+   three values, this function would expect five pointers to be passed.
+
+   Return ``0`` with all pointers set on success, and ``-1`` with an
+   exception set on failure.
+
+
+.. c:function:: int PyAwaitable_SetArbValue(PyObject *awaitable, Py_ssize_t index, void *value)
+
+   Similar to :c:func:`PyAwaitable_SetValue`, but replaces a single
+   :ref:`arbitrary value <arbitrary-values>` instead.
+
+   If *index* is below zero or out of bounds for the number of stored object
+   values, this function will fail. As such, this function cannot be used to
+   append new object values -- use :c:func:`PyAwaitable_SaveArbValues` for that.
+
+   Return ``0`` with the object replaced on success, and ``-1`` with an exception
+   set on failure.
+
+
+.. c:function:: void *PyAwaitable_GetArbValue(PyObject *awaitable, Py_ssize_t index)
+
+   Similar to :c:func:`PyAwaitable_GetValue`, but unpacks a single
+   :ref:`arbitrary value <arbitrary-values>` at the position *index*.
+
+   If *index* is below zero or out of bounds for the number of stored object
+   values, this function will sanely fail.
+
+   This is a low-level routine meant for complete-ness; always prefer using
+   :c:func:`PyAwaitable_UnpackArbValues` over this function.
+
+   Return the ``void *`` pointer stored at *index* on success, and ``NULL``
+   with an exception set on failure. If ``NULL`` is a valid value for the
+   arbitrary value, use :c:func:`PyErr_Occurred` to differentiate.
