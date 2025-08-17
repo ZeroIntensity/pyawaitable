@@ -73,7 +73,7 @@ object (these may be ``NULL``, in which case the value is skipped).
 
     Both :c:func:`PyAwaitable_SaveValues` and
     :c:func:`PyAwaitable_UnpackValues` can fail. They return ``-1`` with an
-    exception set on failure, and `0` on success.
+    exception set on failure, and ``0`` on success.
 
 For example, if you called ``PyAwaitable_SaveValues(awaitable, 3, /* ... */)``,
 you must pass three non-``NULL`` ``PyObject *`` references, and then pass

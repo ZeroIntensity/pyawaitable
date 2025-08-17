@@ -15,7 +15,6 @@ author = 'Peter Bierma'
 
 extensions = ["sphinx.ext.intersphinx"]
 
-templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
 
@@ -25,4 +24,6 @@ intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'shibuya'
-html_static_path = ['_static']
+html_theme_options = {
+  "accent_color": "sky",
+}
