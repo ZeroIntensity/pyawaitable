@@ -1,6 +1,6 @@
 # PyAwaitable
 
-!!! note
+.. note::
 
     This project originates from a scrapped PEP. For the original text, see [here](https://gist.github.com/ZeroIntensity/8d32e94b243529c7e1c27349e972d926).
 
