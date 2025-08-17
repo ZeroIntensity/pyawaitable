@@ -157,6 +157,29 @@ coroutine_trampoline(PyObject *self, PyObject *coro)
     return awaitable;
 }
 
+static PyObject *
+test_add_await_expr(PyObject *self, PyObject *nothing)
+{
+    PyObject *awaitable = PyAwaitable_New();
+    if (awaitable == NULL) {
+        return NULL;
+    }
+
+    int res = PyAwaitable_AddExpr(awaitable, NULL, NULL, NULL);
+    TEST_ASSERT(res == -1);
+
+    res = PyAwaitable_AddExpr(awaitable, PyAwaitable_New(), NULL, NULL);
+    TEST_ASSERT(res == 0);
+
+    Test_SetNoMemory();
+    res = PyAwaitable_AddExpr(awaitable, PyAwaitable_New(), NULL, NULL);
+    Test_UnSetNoMemory();
+    TEST_ASSERT(res == -1);
+
+    PyAwaitable_Cancel(awaitable);
+    Py_RETURN_NONE;
+}
+
 TESTS(awaitable) = {
     TEST_UTIL(generic_awaitable),
     TEST(test_awaitable_new),
@@ -164,5 +187,6 @@ TESTS(awaitable) = {
     TEST_CORO(test_add_await),
     TEST_CORO(test_add_await_special_cases),
     TEST_UTIL(coroutine_trampoline),
+    TEST(test_add_await_expr),
     {NULL}
 };

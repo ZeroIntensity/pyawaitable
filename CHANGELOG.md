@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-Nothing yet!
+-   Added `PyAwaitable_AddExpr`.
 
 ## [2.0.1] - 2025-06-15
 

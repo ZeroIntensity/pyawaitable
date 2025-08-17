@@ -210,6 +210,24 @@ PyAwaitable_AddAwait(
 }
 
 _PyAwaitable_API(int)
+PyAwaitable_AddExpr(
+    PyObject * self,
+    PyObject * expr,
+    PyAwaitable_Callback cb,
+    PyAwaitable_Error err
+)
+{
+    assert(self != NULL);
+    if (expr == NULL) {
+        return -1;
+    }
+
+    int res = PyAwaitable_AddAwait(self, expr, cb, err);
+    Py_DECREF(expr);
+    return res;
+}
+
+_PyAwaitable_API(int)
 PyAwaitable_DeferAwait(PyObject * awaitable, PyAwaitable_Defer cb)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
