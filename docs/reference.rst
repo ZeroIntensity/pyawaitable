@@ -22,6 +22,19 @@ General
    success, and returns ``NULL`` with an exception set on failure.
 
 
+.. c:function:: int PyAwaitable_SetResult(PyObject *awaitable, PyObject *result)
+
+   Set *result* to the :ref:`result <return-values>` of the PyAwaitable object.
+   The result will be returned to the :keyword:`await` expression on this
+   PyAwaitable object.
+
+   *result* will not be stolen; this function will create its own reference to
+   *result* internally.
+
+   Return ``0`` with the return value set on success, and ``-1`` with an
+   exception set on failure.
+
+
 Coroutines
 ----------
 
