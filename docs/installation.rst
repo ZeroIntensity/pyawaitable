@@ -27,7 +27,7 @@ number of different build systems. Namely:
     but only if Python has been started without :py:option:`-S` (this is
     useful for ``scikit-build-core`` projects).
 -   ``pyawaitable --include`` on the command line returns the path of the
-  include directory (useful for ``meson-python`` projects).
+    include directory (useful for ``meson-python`` projects).
 
 .. note::
 

@@ -4,6 +4,18 @@ Reference
 General
 -------
 
+.. function:: pyawaitable.include()
+
+   Return the include path of ``pyawaitable.h``.
+
+
+.. envvar:: PYAWAITABLE_INCLUDE
+
+   Result of :func:`pyawaitable.include`, stored as an environment variable
+   through a ``.pth`` file (only available when Python isn't run through
+   :py:option:`-S`).
+
+
 .. c:function:: int PyAwaitable_Init(void)
 
    Initialize PyAwaitable. This should typically be done in the :c:data:`Py_mod_exec`
@@ -107,11 +119,11 @@ Value Storage
    object.
 
    This function expects ``PyObject **`` pointers passed to the ``...``.
-   These will then be set to :term:`borrowed references`. The number of
-   arguments passed to the ``...`` must match the sum of all *nargs* to prior
-   :c:func:`PyAwaitable_SaveValues` calls. For example, if one call stored
-   two values, and then another call stored three values, this function would
-   expect five pointers to be passed.
+   These will then be set to :term:`borrowed reference <borrowed reference>`.
+   The number of arguments passed to the ``...`` must match the sum of all
+   *nargs* to prior :c:func:`PyAwaitable_SaveValues` calls. For example, if
+   one call stored two values, and then another call stored three values, this
+   function would expect five pointers to be passed.
 
    Pointers passed to the ``...`` may be ``NULL``, in which case the object at
    that position is skipped.
