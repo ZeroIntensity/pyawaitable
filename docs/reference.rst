@@ -97,6 +97,23 @@ Coroutines
     set on failure.
 
 
+.. c:function:: int PyAwaitable_AddExpr(PyObject *awaitable, PyObject *expr, PyAwaitable_Callback result_callback, PyAwaitable_Error error_callback)
+
+   Similar to :c:func:`PyAwaitable_AddAwait`, but designed for convenience.
+
+   If *expr* is ``NULL``, this function returns ``-1`` without an exception
+   set. If *expr* is non-``NULL``, this function calls
+   :c:func:`PyAwaitable_AddAwait` with all the provided arguments, and then
+   steals a reference to *expr*.
+
+   This behavior allows you to use other C API functions directly with this
+   one. For example, if you had an ``async def`` function ``coro``, it could
+   be added to the PyAwaitable object with
+   ``PyAwaitable_AddExpr(awaitable, PyObject_CallNoArgs(coro), NULL, NULL)``.
+
+   .. versionadded:: 2.1
+   
+
 Value Storage
 -------------
 

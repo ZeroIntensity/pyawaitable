@@ -86,6 +86,73 @@ hidden; you give PyAwaitable your coroutine, and it handles the rest!
 
 Yay! We called an asynchronous function from C!
 
+Simpler ``PyAwaitable_AddAwait`` Calls
+--------------------------------------
+
+But, what if we wanted to call the ``async def`` function from the C API?
+With our current knowledge, that would look like this:
+
+.. code-block:: c
+
+    static PyObject *
+    trampoline(PyObject *self, PyObject *func) // METH_O
+    {
+        PyObject *awaitable = PyAwaitable_New();
+        if (awaitable == NULL) {
+            return NULL;
+        }
+
+        PyObject *coro = PyObject_CallNoArgs(func);
+        if (coro == NULL) {
+            Py_DECREF(awaitable);
+            return NULL;
+        }
+
+        if (PyAwaitable_AddAwait(awaitable, coro, NULL, NULL) < 0) {
+            Py_DECREF(awaitable);
+            Py_DECREF(coro);
+            return NULL;
+        }
+
+        Py_DECREF(coro);
+        return awaitable;
+    }
+
+Ouch, that's a lot of boilerplate. Luckily, PyAwaitable provides a convenience
+function for this case: :c:func:`PyAwaitable_AddExpr`. This function is very
+similar to :c:func:`PyAwaitable_AddAwait`, but it has two additional semantics
+for the passed coroutine:
+
+-   If the coroutine is ``NULL``, it returns ``-1`` without setting an
+    exception.
+-   If the coroutine is non-``NULL``, it passes it to
+    :c:func:`PyAwaitable_AddAwait` and then decrements its reference count
+    ("stealing a reference").
+
+These properties make it possible to directly use the result of a C API
+function without extra boilerplate, because errors will be propagated when
+it fails (when the coroutine is ``NULL``) and the reference count will be
+decremented, preventing leaks.
+
+So, with that in mind, we can rewrite our example as the following:
+
+.. code-block:: c
+
+    static PyObject *
+    trampoline(PyObject *self, PyObject *func) // METH_O
+    {
+        PyObject *awaitable = PyAwaitable_New();
+        if (awaitable == NULL) {
+            return NULL;
+        }
+
+        if (PyAwaitable_AddExpr(awaitable, PyObject_CallNoArgs(func), NULL, NULL) < 0) {
+            Py_DECREF(awaitable);
+            return NULL;
+        }
+
+        return awaitable;
+    }
 
 .. _return-value-callbacks:
 
@@ -138,14 +205,7 @@ Now, we can use the result of ``silly()`` in C:
             return NULL;
         }
 
-        // Get the coroutine by calling silly()
-        PyObject *coro = PyObject_CallNoArgs(silly);
-        if (coro == NULL) {
-            Py_DECREF(awaitable);
-            return NULL;
-        }
-
-        if (PyAwaitable_AddAwait(awaitable, coro, callback, NULL) < 0) {
+        if (PyAwaitable_AddExpr(awaitable, PyObject_CallNoArgs(silly), callback, NULL) < 0) {
             Py_DECREF(awaitable);
             Py_DECREF(coro);
             return NULL;
@@ -279,24 +339,11 @@ In C, all that would be implemented like this:
             return NULL;
         }
 
-        // Remember, this isn't the same as executing the coroutine, so
-        // the timeout doesn't show up here. But, we still need to handle
-        // an exception case, because something might have gone wrong
-        // in getting the coroutine object, e.g., the object isn't callable
-        // or we're out of memory.
-        PyObject *coro = PyObject_CallNoArgs(make_request);
-        if (coro == NULL) {
+        if (PyAwaitable_AddExpr(awaitable, PyObject_CallNoArgs(coro), return_true, return_false)) {
             Py_DECREF(awaitable);
             return NULL;
         }
 
-        if (PyAwaitable_AddAwait(awaitable, coro, return_true, return_false)) {
-            Py_DECREF(awaitable);
-            Py_DECREF(coro);
-            return NULL;
-        }
-
-        Py_DECREF(coro);
         return awaitable;
     }
 

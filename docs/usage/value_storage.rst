@@ -127,19 +127,12 @@ as such:
             return NULL;
         }
 
-        PyObject *coro = PyObject_CallNoArgs(get_number_io);
-        if (coro == NULL) {
+        if (PyAwaitable_AddExpr(awaitable, PyObject_CallNoArgs(get_number_io),
+                                multiply_callback, NULL) < 0) {
             Py_DECREF(awaitable);
             return NULL;
         }
 
-        if (PyAwaitable_AddAwait(awaitable, coro, multiply_callback, NULL) < 0) {
-            Py_DECREF(awaitable);
-            Py_DECREF(coro);
-            return NULL;
-        }
-
-        Py_DECREF(coro);
         return awaitable;
     }
 
