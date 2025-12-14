@@ -160,7 +160,7 @@ PyAwaitable_AddAwait(
 )
 {
     PyAwaitableObject *aw = (PyAwaitableObject *) self;
-    assert(Py_IS_TYPE(Py_TYPE(self), PyAwaitable_GetType()));
+    assert(Py_IS_TYPE(self, PyAwaitable_GetType()));
     if (coro == NULL) {
         PyErr_SetString(
             PyExc_ValueError,
@@ -231,7 +231,7 @@ _PyAwaitable_API(int)
 PyAwaitable_DeferAwait(PyObject * awaitable, PyAwaitable_Defer cb)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
-    assert(Py_IS_TYPE(Py_TYPE(awaitable), PyAwaitable_GetType()));
+    assert(Py_IS_TYPE(awaitable, PyAwaitable_GetType()));
     pyawaitable_callback *aw_c = PyMem_Malloc(sizeof(pyawaitable_callback));
     if (aw_c == NULL) {
         PyErr_NoMemory();
@@ -256,7 +256,7 @@ _PyAwaitable_API(int)
 PyAwaitable_SetResult(PyObject * awaitable, PyObject * result)
 {
     PyAwaitableObject *aw = (PyAwaitableObject *) awaitable;
-    assert(Py_IS_TYPE(Py_TYPE(awaitable), PyAwaitable_GetType()));
+    assert(Py_IS_TYPE(awaitable, PyAwaitable_GetType()));
     aw->aw_result = Py_NewRef(result);
     return 0;
 }
