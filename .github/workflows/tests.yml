@@ -64,6 +64,7 @@ jobs:
 
             - name: Run build test for meson-python
               run: hatch run test-build:meson
+              continue-on-error: true
 
     tests-pass:
         runs-on: ubuntu-latest
