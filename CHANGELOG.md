@@ -3,6 +3,7 @@
 ## Unreleased
 
 -   Added `PyAwaitable_AddExpr`.
+-   Fix assertion failures when running in debug mode.
 
 ## [2.0.1] - 2025-06-15
 
