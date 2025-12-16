@@ -90,6 +90,9 @@ PyAwaitable_AsyncWith(
     PyAwaitable_Error err
 )
 {
+    if (aw == NULL || ctx == NULL) {
+        return -1;
+    }
     PyObject *with = PyObject_GetAttrString(ctx, "__aenter__");
     if (with == NULL) {
         PyErr_Format(

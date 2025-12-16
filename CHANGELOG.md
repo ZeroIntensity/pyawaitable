@@ -3,6 +3,7 @@
 ## Unreleased
 
 -   Added `PyAwaitable_AddExpr`.
+-   `PyAwaitable_AsyncWith` now returns `-1` when `aw` or `ctx` is `NULL`.
 
 ## [2.0.1] - 2025-06-15
 
