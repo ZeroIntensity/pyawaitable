@@ -91,6 +91,10 @@ PyAwaitable_AsyncWith(
 )
 {
     if (aw == NULL || ctx == NULL) {
+        PyErr_Format(
+            PyExc_TypeError,
+            "PyAwaitable: invalid NULL argument to PyAwaitable_AsyncWith"
+        );
         return -1;
     }
     PyObject *with = PyObject_GetAttrString(ctx, "__aenter__");

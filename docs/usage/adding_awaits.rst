@@ -160,8 +160,8 @@ Using ``async with`` from C
 ---------------------------
 Unlike the :c:func:`PyAwaitable_AddAwait` and the :c:func:`PyAwaitable_AddExpr`
 functions there exists :c:func:`PyAwaitable_AsyncWith` that will call the
-`__aenter__` and `__aexit__` members of a class if it implements the Async Context
-Manager.
+:meth:`~object.__aenter__` and :meth:`~object.__aexit__` members of a class
+if it implements the Async Context Manager.
 
 Using this on a type that is designed with `async with` in mind that automatically
 cleans up resources when the scope leaves the context manager can be much easier
@@ -177,11 +177,30 @@ than manually making those calls to clean them up.
 .. note::
 
     This example uses the `asqlite` library created by Rapptz to allow using the
-    `sqlite3` module from within Asynchronous code safely. It also uses a helper header
-    file called `awaitfunc.h` from the https://github.com/AraHaan/awaitfunc github
-    repository.
+    `sqlite3` module from within Asynchronous code safely.
 
 .. code-block:: c
+
+    static PyObject *
+    _PyObject_GetCallableMethod(PyObject *obj, PyObject *attr_name) {
+        if (attr_name == NULL) {
+            // the python string is null.
+            return NULL;
+        }
+
+        PyObject *method = PyObject_GetAttr(obj, attr_name);
+        if (!PyCallable_Check(method)) {
+            Py_DECREF(attr_name);
+            Py_XDECREF(method);
+            return NULL;
+        }
+
+        Py_DECREF(attr_name);
+        return method;
+    }
+
+    #define PyObject_GetCallableMethod(obj, name) _PyObject_GetCallableMethod(_PyObject_CAST(obj), name)
+    #define PyObject_GetCallableMethodString(obj, name) PyObject_GetCallableMethod(obj, PyUnicode_FromString(name))
 
     static int
     add_or_delete_items_cursor_cb(PyObject *awaitable, PyObject *cursor) {
@@ -192,11 +211,11 @@ than manually making those calls to clean them up.
                 return -1;
             }
 
-            if (PyAwaitable_AwaitFunction(awaitable, PyObject_GetCallableMethodString(cursor, "executemany"), "OO", NULL, NULL, PySequence_GetItem(args, 0), PySequence_GetItem(args, 1)) < 0) {
+            if (PyAwaitable_AddExpr(awaitable, PyObject_CallFunction(PyObject_GetCallableMethodString(cursor, "executemany"), "OO", PySequence_GetItem(args, 0), PySequence_GetItem(args, 1)), NULL, NULL) < 0) {
                 return -1;
             }
 
-            if (PyAwaitable_AwaitFunctionNoArgs(awaitable, PyObject_GetCallableMethodString(connection, "commit"), NULL, NULL) < 0) {
+            if (PyAwaitable_AddExpr(awaitable, PyObject_CallNoArgs(PyObject_GetCallableMethodString(connection, "commit")), NULL, NULL) < 0) {
                 return -1;
             }
 
@@ -220,7 +239,7 @@ than manually making those calls to clean them up.
                 return -1;
             }
 
-            if (PyAwaitable_AsyncWithFunctionNoArgs(awaitable, PyObject_GetCallableMethodString(connection, "cursor"), add_or_delete_items_cursor_cb, NULL) < 0) {
+            if (PyAwaitable_AsyncWith(awaitable, PyObject_CallNoArgs(PyObject_GetCallableMethodString(connection, "cursor")), add_or_delete_items_cursor_cb, NULL) < 0) {
                 return -1;
             }
 
@@ -249,7 +268,7 @@ than manually making those calls to clean them up.
         }
 
         DiscordBot_State *state = get_DiscordBot_state(mod);
-        if (PyAwaitable_AsyncWithFunction(awaitable, PyObject_GetCallableMethodString(state->asqliteModule, "connect"), "N", add_or_delete_items_connect_cb, NULL, dbString) < 0) {
+        if (PyAwaitable_AsyncWith(awaitable, PyObject_CallFunction(PyObject_GetCallableMethodString(state->asqliteModule, "connect"), "N", dbString), add_or_delete_items_connect_cb, NULL) < 0) {
             Py_XDECREF(awaitable);
             return NULL;
         }

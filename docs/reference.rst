@@ -114,6 +114,22 @@ Coroutines
    .. versionadded:: 2.1
    
 
+.. c:function:: int PyAwaitable_AsyncWith(PyObject *awaitable, PyObject *context, PyAwaitable_Callback result_callback, PyAwaitable_Error error_callback)
+
+    Similar to :c:func:`PyAwaitable_AddAwait` and :c:func:`PyAwaitable_AddExpr`
+    except the target class implements the Async Context Manager.
+
+    if *awaitable* or *context* is ``NULL``, this function returns ``-1`` and sets
+    an exception. if *awaitable* and *context* are non-``NULL``, this function
+    then calls its :meth:`~object.__aenter__` and :meth:`~object.__aexit__` members
+    for the user.
+
+    .. note::
+
+        If *context* does not implement one of :meth:`~object.__aenter__` or
+        :meth:`~object.__aexit__` the result is ``-1`` and sets an exception
+        as it is then not considered to be an Async Context Manager.
+
 Value Storage
 -------------
 
