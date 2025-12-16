@@ -54,16 +54,18 @@ jobs:
                   python-version: ${{ matrix.python-version }}
 
             - name: Install Hatch
-              uses: pypa/hatch@install
+              # Commented for now due to high failure rates at the moment.
+              # uses: pypa/hatch@install
+              run: python -m pip install --upgrade hatch
 
             - name: Run tests
-              run: hatch test
+              run: hatch test -py ${{ matrix.python-version }}
 
             - name: Run build test for scikit-build-core
-              run: hatch run test-build:scikit-build-core
+              run: hatch run test-build:scikit-build-core -py ${{ matrix.python-version }}
 
             - name: Run build test for meson-python
-              run: hatch run test-build:meson
+              run: hatch run test-build:meson -py ${{ matrix.python-version }}
               continue-on-error: true
 
     tests-pass:
