@@ -23,6 +23,7 @@ async_with_inner(PyObject *aw, PyObject *res)
     Py_DECREF(res);
     Py_DECREF(aw);
 
+    PyObject *args[3];
     if (callback_result < 0) {
         PyObject *tp, *val, *tb;
         PyErr_Fetch(&tp, &val, &tb);
@@ -40,46 +41,33 @@ async_with_inner(PyObject *aw, PyObject *res)
         if (tb == NULL)
             tb = Py_NewRef(Py_None);
 
-        PyObject *coro = PyObject_Vectorcall(
-            exit,
-            (PyObject *[]) { tp, val, tb },
-            3,
-            NULL
-        );
-        Py_DECREF(tp);
-        Py_DECREF(val);
-        Py_DECREF(tb);
-        if (coro == NULL) {
-            return -1;
-        }
-
-        if (PyAwaitable_AddAwait(aw, coro, NULL, NULL) < 0) {
-            Py_DECREF(coro);
-            return -1;
-        }
-
-        Py_DECREF(coro);
-        return 0;
+        args[0] = tp;
+        args[1] = val;
+        args[2] = tb;
     }
     else {
         // OK
-        PyObject *coro = PyObject_Vectorcall(
-            exit,
-            (PyObject *[]) { Py_None, Py_None, Py_None },
-            3,
-            NULL
-        );
-        if (coro == NULL) {
-            return -1;
-        }
-
-        if (PyAwaitable_AddAwait(aw, coro, NULL, NULL) < 0) {
-            Py_DECREF(coro);
-            return -1;
-        }
-        Py_DECREF(coro);
-        return 0;
+        args[0] = Py_NewRef(Py_None);
+        args[1] = Py_NewRef(Py_None);
+        args[2] = Py_NewRef(Py_None);
     }
+
+    int result = PyAwaitable_AddExpr(
+        aw,
+        PyObject_Vectorcall(
+            exit,
+            args,
+            3,
+            NULL),
+        NULL,
+        NULL);
+    Py_DECREF(args[0]);
+    Py_DECREF(args[1]);
+    Py_DECREF(args[2]);
+    if (result < 0) {
+        return -1;
+    }
+    return 0;
 }
 
 _PyAwaitable_API(int)
@@ -134,35 +122,25 @@ PyAwaitable_AsyncWith(
 
     Py_DECREF(exit);
 
-    PyObject *coro = PyObject_CallNoArgs(with);
-    Py_DECREF(with);
-
-    if (coro == NULL) {
-        Py_DECREF(inner_aw);
-        return -1;
-    }
-
     // Note: Errors in __aenter__ are not sent to __aexit__
     if (
-        PyAwaitable_AddAwait(
+        PyAwaitable_AddExpr(
             inner_aw,
-            coro,
+            PyObject_CallNoArgs(with),
             async_with_inner,
             NULL
         ) < 0
     ) {
         Py_DECREF(inner_aw);
-        Py_DECREF(coro);
+        Py_DECREF(with);
         return -1;
     }
 
-    Py_DECREF(coro);
+    Py_DECREF(with);
 
-    if (PyAwaitable_AddAwait(aw, inner_aw, NULL, err) < 0) {
-        Py_DECREF(inner_aw);
+    if (PyAwaitable_AddExpr(aw, inner_aw, NULL, err) < 0) {
         return -1;
     }
 
-    Py_DECREF(inner_aw);
     return 0;
 }
